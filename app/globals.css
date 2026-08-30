@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f7f2e3;
+  --card: #fffefb;
+  --ink: #171614;
+  --ink-soft: #6e6a62;
+  --accent: #1e5c4b;
+  --accent-soft: #dce9e3;
+  --hairline: #e6dfcc;
+  --danger: #8b3a4a;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-hairline: var(--hairline);
+  --color-danger: var(--danger);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+
+  --font-sans: var(--font-karla);
+  --font-mono: var(--font-jetbrains-mono);
+  --font-display: var(--font-fraunces);
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
