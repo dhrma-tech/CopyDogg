@@ -8,6 +8,7 @@ interface GenerateRequestBody {
   platform: Platform;
   promptInput: string;
   toneOverride?: string;
+  variationCount?: number;
 }
 
 export async function POST(request: Request) {
@@ -21,7 +22,11 @@ export async function POST(request: Request) {
   }
 
   const body = (await request.json()) as Partial<GenerateRequestBody>;
-  const { personaId, platform, promptInput, toneOverride } = body;
+  const { personaId, platform, promptInput, toneOverride, variationCount } = body;
+  const clampedVariationCount =
+    variationCount && variationCount >= 1 && variationCount <= 3
+      ? Math.floor(variationCount)
+      : undefined;
 
   if (!personaId || !platform || !promptInput?.trim()) {
     return NextResponse.json(
@@ -75,6 +80,7 @@ export async function POST(request: Request) {
       promptInput: promptInput.trim(),
       toneOverride: toneOverride?.trim() || null,
       recentLikedExamples,
+      variationCount: clampedVariationCount,
     });
   } catch {
     return NextResponse.json(

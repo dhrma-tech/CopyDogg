@@ -3,7 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import PersonaSelector from "@/components/PersonaSelector";
 import PlatformPicker from "@/components/PlatformPicker";
-import GenerateCard from "@/components/GenerateCard";
+import GenerateCard, { type CardOutput } from "@/components/GenerateCard";
 import type { Platform } from "@/lib/platformRules";
 
 const IDEA_PLACEHOLDERS = [
@@ -23,11 +23,6 @@ interface GenerationScreenProps {
 
 type Status = "idle" | "loading" | "error";
 
-interface Output {
-  id: string;
-  text: string;
-}
-
 export default function GenerationScreen({
   personaId,
   personaName,
@@ -35,13 +30,14 @@ export default function GenerationScreen({
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [platform, setPlatform] = useState<Platform>("x");
   const [ideaInput, setIdeaInput] = useState("");
+  const [submittedIdea, setSubmittedIdea] = useState("");
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [tone, setTone] = useState<string | null>(null);
   const [length, setLength] = useState<string | null>(null);
   const [hook, setHook] = useState<string | null>(null);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [outputs, setOutputs] = useState<Output[]>([]);
+  const [outputs, setOutputs] = useState<CardOutput[]>([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -86,13 +82,36 @@ export default function GenerationScreen({
       return;
     }
 
+    setSubmittedIdea(ideaInput);
     setOutputs(
       (data.outputs as string[]).map((text, i) => ({
-        id: `${data.generationId}-${i}`,
+        key: `${data.generationId}-${i}`,
+        generationId: data.generationId as string,
         text,
+        platform,
       }))
     );
     setStatus("idle");
+  }
+
+  function handleReplace(
+    key: string,
+    next: { generationId: string; text: string }
+  ) {
+    setOutputs((prev) =>
+      prev.map((o) => (o.key === key ? { ...o, ...next } : o))
+    );
+  }
+
+  function handleRemixed(next: {
+    generationId: string;
+    text: string;
+    platform: Platform;
+  }) {
+    setOutputs((prev) => [
+      ...prev,
+      { key: `${next.generationId}-remix`, ...next },
+    ]);
   }
 
   return (
@@ -147,9 +166,12 @@ export default function GenerationScreen({
         <div className="mt-6 flex flex-col gap-4">
           {outputs.map((output) => (
             <GenerateCard
-              key={output.id}
-              generationId={output.id.split("-")[0]}
-              text={output.text}
+              key={output.key}
+              output={output}
+              personaId={personaId}
+              promptInput={submittedIdea}
+              onReplace={handleReplace}
+              onRemixed={handleRemixed}
             />
           ))}
         </div>
