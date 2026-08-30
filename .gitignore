@@ -41,4 +41,5 @@ next-env.d.ts
 
 # local planning/checkpoint notes (not part of repo history)
 /PLAN.md
+/IMPROVEMENT-PLAN.md
 /checkpoints/

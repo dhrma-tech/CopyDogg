@@ -1,13 +1,17 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isDevMode } from "@/lib/devMode";
+import AppHeader from "@/components/AppHeader";
 import LibraryList from "./LibraryList";
 
 export default async function LibraryPage() {
   if (isDevMode) {
     return (
-      <main className="flex flex-1 justify-center px-6 py-12">
-        <LibraryList generations={[]} />
-      </main>
+      <>
+        <AppHeader />
+        <main className="flex flex-1 justify-center px-6 pb-12">
+          <LibraryList generations={[]} />
+        </main>
+      </>
     );
   }
 
@@ -24,8 +28,11 @@ export default async function LibraryPage() {
     .order("created_at", { ascending: false });
 
   return (
-    <main className="flex flex-1 justify-center px-6 py-12">
-      <LibraryList generations={generations ?? []} />
-    </main>
+    <>
+      <AppHeader />
+      <main className="flex flex-1 justify-center px-6 pb-12">
+        <LibraryList generations={generations ?? []} />
+      </main>
+    </>
   );
 }

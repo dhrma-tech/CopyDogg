@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isDevMode } from "@/lib/devMode";
+import type { Sliders } from "@/lib/voicePreview";
+import ToneSliders from "@/components/ToneSliders";
+import ChipEditor from "@/components/ChipEditor";
 
 const RULE_SUGGESTIONS = [
   `never use "in today's world"`,
@@ -12,43 +15,6 @@ const RULE_SUGGESTIONS = [
   "no emoji unless it's 🔥",
   "keep sentences short",
   `never open with "I'm excited to announce"`,
-];
-
-interface Sliders {
-  formality: number;
-  humor: number;
-  bluntness: number;
-  warmth: number;
-  emojiDensity: number;
-}
-
-function bucket(value: number, low: string, mid: string, high: string) {
-  if (value < 34) return low;
-  if (value < 67) return mid;
-  return high;
-}
-
-function previewSentence(s: Sliders) {
-  const formality = bucket(s.formality, "loose and unfiltered", "conversational", "polished and buttoned-up");
-  const humor = bucket(s.humor, "straight-faced", "a little playful", "genuinely funny");
-  const bluntness = bucket(s.bluntness, "soft and diplomatic", "matter-of-fact", "no-nonsense direct");
-  const warmth = bucket(s.warmth, "cool and detached", "friendly", "warm and personal");
-  const emoji =
-    s.emojiDensity < 10
-      ? "practically no emoji"
-      : s.emojiDensity < 40
-        ? "the occasional emoji"
-        : "emoji sprinkled throughout";
-
-  return `Your posts will sound ${formality}, ${humor}, and ${warmth} — ${bluntness}, with ${emoji}.`;
-}
-
-const SLIDER_FIELDS: { key: keyof Sliders; label: string }[] = [
-  { key: "formality", label: "Formality" },
-  { key: "humor", label: "Humor" },
-  { key: "bluntness", label: "Bluntness" },
-  { key: "warmth", label: "Warmth" },
-  { key: "emojiDensity", label: "Emoji density" },
 ];
 
 export default function OnboardingFlow() {
@@ -72,24 +38,18 @@ export default function OnboardingFlow() {
   });
 
   const [rules, setRules] = useState<string[]>([]);
-  const [ruleInput, setRuleInput] = useState("");
   const [topics, setTopics] = useState<string[]>([]);
-  const [topicInput, setTopicInput] = useState("");
 
   function setSlider(key: keyof Sliders, value: number) {
     setSliders((s) => ({ ...s, [key]: value }));
   }
 
   function addRule(rule: string) {
-    const trimmed = rule.trim();
-    if (trimmed && !rules.includes(trimmed)) setRules((r) => [...r, trimmed]);
-    setRuleInput("");
+    if (!rules.includes(rule)) setRules((r) => [...r, rule]);
   }
 
-  function addTopic() {
-    const trimmed = topicInput.trim();
-    if (trimmed && !topics.includes(trimmed)) setTopics((t) => [...t, trimmed]);
-    setTopicInput("");
+  function addTopic(topic: string) {
+    if (!topics.includes(topic)) setTopics((t) => [...t, topic]);
   }
 
   async function handleExtractVoice() {
@@ -246,25 +206,7 @@ export default function OnboardingFlow() {
               </div>
             )}
 
-            <div className="flex flex-col gap-4">
-              {SLIDER_FIELDS.map(({ key, label }) => (
-                <label key={key} className="flex flex-col gap-1">
-                  <span className="text-sm text-ink">{label}</span>
-                  <input
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={sliders[key]}
-                    onChange={(e) => setSlider(key, Number(e.target.value))}
-                    className="accent-accent"
-                  />
-                </label>
-              ))}
-            </div>
-
-            <p className="rounded-md border border-hairline bg-paper px-4 py-3 text-sm text-ink-soft">
-              {previewSentence(sliders)}
-            </p>
+            <ToneSliders sliders={sliders} onChange={setSlider} />
 
             <div className="mt-2 flex gap-3">
               <button
@@ -291,96 +233,22 @@ export default function OnboardingFlow() {
               Your rules &amp; topics
             </h1>
 
-            <div>
-              <p className="text-sm text-ink">Rules</p>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {RULE_SUGGESTIONS.map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => addRule(suggestion)}
-                    disabled={rules.includes(suggestion)}
-                    className="rounded-full border border-hairline px-3 py-1.5 text-xs font-medium text-ink-soft disabled:opacity-40"
-                  >
-                    + {suggestion}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-3 flex gap-2">
-                <input
-                  value={ruleInput}
-                  onChange={(e) => setRuleInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addRule(ruleInput))}
-                  placeholder="Add your own rule"
-                  className="flex-1 rounded-md border border-hairline bg-card px-3 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => addRule(ruleInput)}
-                  className="rounded-full border border-hairline px-4 py-2 text-sm font-medium text-ink-soft"
-                >
-                  Add
-                </button>
-              </div>
-              {rules.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {rules.map((rule) => (
-                    <span
-                      key={rule}
-                      className="flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent"
-                    >
-                      {rule}
-                      <button
-                        type="button"
-                        onClick={() => setRules((r) => r.filter((x) => x !== rule))}
-                        aria-label={`Remove rule: ${rule}`}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ChipEditor
+              label="Rules"
+              items={rules}
+              onAdd={addRule}
+              onRemove={(rule) => setRules((r) => r.filter((x) => x !== rule))}
+              placeholder="Add your own rule"
+              suggestions={RULE_SUGGESTIONS}
+            />
 
-            <div>
-              <p className="text-sm text-ink">Topics you post about</p>
-              <div className="mt-2 flex gap-2">
-                <input
-                  value={topicInput}
-                  onChange={(e) => setTopicInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTopic())}
-                  placeholder="indie hacking, fitness, parenting..."
-                  className="flex-1 rounded-md border border-hairline bg-card px-3 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={addTopic}
-                  className="rounded-full border border-hairline px-4 py-2 text-sm font-medium text-ink-soft"
-                >
-                  Add
-                </button>
-              </div>
-              {topics.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {topics.map((topic) => (
-                    <span
-                      key={topic}
-                      className="flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent"
-                    >
-                      {topic}
-                      <button
-                        type="button"
-                        onClick={() => setTopics((t) => t.filter((x) => x !== topic))}
-                        aria-label={`Remove topic: ${topic}`}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            <ChipEditor
+              label="Topics you post about"
+              items={topics}
+              onAdd={addTopic}
+              onRemove={(topic) => setTopics((t) => t.filter((x) => x !== topic))}
+              placeholder="indie hacking, fitness, parenting..."
+            />
 
             {submitError && <p className="text-sm text-danger">{submitError}</p>}
 
