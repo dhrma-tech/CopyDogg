@@ -1,8 +1,17 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isDevMode } from "@/lib/devMode";
 import OnboardingFlow from "./OnboardingFlow";
 
 export default async function OnboardingPage() {
+  if (isDevMode) {
+    return (
+      <main className="flex flex-1 justify-center px-6 py-12">
+        <OnboardingFlow />
+      </main>
+    );
+  }
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },

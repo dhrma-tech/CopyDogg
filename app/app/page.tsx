@@ -1,8 +1,20 @@
 import Link from "next/link";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isDevMode, MOCK_PERSONA_ID, MOCK_PERSONA_NAME } from "@/lib/devMode";
 import GenerationScreen from "./GenerationScreen";
 
 export default async function AppScreen() {
+  if (isDevMode) {
+    return (
+      <main className="flex flex-1 justify-center px-6 py-12">
+        <GenerationScreen
+          personaId={MOCK_PERSONA_ID}
+          personaName={MOCK_PERSONA_NAME}
+        />
+      </main>
+    );
+  }
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },

@@ -1,7 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { platformRules, type Platform } from "./platformRules";
 
-const client = new Anthropic();
+// Falls back to a placeholder key so the client can construct in test mode
+// (see lib/devMode.ts), where this client is never actually called.
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || "dev-mode-placeholder",
+});
 
 export interface PersonaForPrompt {
   voiceDescription: string | null;

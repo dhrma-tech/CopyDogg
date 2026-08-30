@@ -1,7 +1,16 @@
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isDevMode } from "@/lib/devMode";
 import LibraryList from "./LibraryList";
 
 export default async function LibraryPage() {
+  if (isDevMode) {
+    return (
+      <main className="flex flex-1 justify-center px-6 py-12">
+        <LibraryList generations={[]} />
+      </main>
+    );
+  }
+
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },

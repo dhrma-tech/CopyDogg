@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { generatePostVariations } from "@/lib/claude";
 import { PLATFORMS, type Platform } from "@/lib/platformRules";
+import { isDevMode, MOCK_OUTPUTS } from "@/lib/devMode";
 
 interface GenerateRequestBody {
   personaId: string;
@@ -12,15 +13,6 @@ interface GenerateRequestBody {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-  }
-
   const body = (await request.json()) as Partial<GenerateRequestBody>;
   const { personaId, platform, promptInput, toneOverride, variationCount } = body;
   const clampedVariationCount =
@@ -37,6 +29,22 @@ export async function POST(request: Request) {
 
   if (!PLATFORMS.includes(platform)) {
     return NextResponse.json({ error: "Unknown platform." }, { status: 400 });
+  }
+
+  if (isDevMode) {
+    return NextResponse.json({
+      generationId: `dev-${Date.now()}`,
+      outputs: MOCK_OUTPUTS.slice(0, clampedVariationCount ?? 3),
+    });
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
   const { data: persona, error: personaError } = await supabase

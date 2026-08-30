@@ -1,19 +1,15 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isDevMode, MOCK_VOICE_DESCRIPTION } from "@/lib/devMode";
 
-const client = new Anthropic();
+// Falls back to a placeholder key so the client can construct in test mode,
+// where it's never actually called.
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || "dev-mode-placeholder",
+});
 
 export async function POST(request: Request) {
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-  }
-
   const { samples } = (await request.json()) as { samples?: string };
 
   if (!samples?.trim()) {
@@ -21,6 +17,19 @@ export async function POST(request: Request) {
       { error: "Paste something first." },
       { status: 400 }
     );
+  }
+
+  if (isDevMode) {
+    return NextResponse.json({ voiceDescription: MOCK_VOICE_DESCRIPTION });
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
   let voiceDescription: string;

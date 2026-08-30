@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { isDevMode } from "@/lib/devMode";
 
 const RULE_SUGGESTIONS = [
   `never use "in today's world"`,
@@ -116,6 +117,12 @@ export default function OnboardingFlow() {
   async function createPersona(defaultsOnly: boolean) {
     setSubmitting(true);
     setSubmitError("");
+
+    if (isDevMode) {
+      setTimeout(() => router.push("/app"), 400);
+      return;
+    }
+
     const supabase = createBrowserSupabaseClient();
     const {
       data: { user },

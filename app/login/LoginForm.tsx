@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { isDevMode } from "@/lib/devMode";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
 export default function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const linkExpired = searchParams.get("error") === "link-expired";
 
@@ -18,6 +20,11 @@ export default function LoginForm() {
     e.preventDefault();
     setStatus("sending");
     setErrorMessage("");
+
+    if (isDevMode) {
+      setTimeout(() => router.push("/app"), 500);
+      return;
+    }
 
     const supabase = createBrowserSupabaseClient();
     const { error } = await supabase.auth.signInWithOtp({
@@ -71,7 +78,11 @@ export default function LoginForm() {
             disabled={status === "sending"}
             className="rounded-full bg-ink px-5 py-3 font-bold text-card disabled:opacity-60"
           >
-            {status === "sending" ? "sending the link..." : "Send magic link"}
+            {status === "sending"
+              ? isDevMode
+                ? "test mode — signing you in..."
+                : "sending the link..."
+              : "Send magic link"}
           </button>
           {status === "error" && (
             <p className="text-sm text-danger">

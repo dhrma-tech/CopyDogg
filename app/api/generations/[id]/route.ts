@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isDevMode } from "@/lib/devMode";
 
 interface PatchBody {
   saved?: boolean;
@@ -11,6 +12,10 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (isDevMode) {
+    return NextResponse.json({ ok: true });
+  }
+
   const { id } = await params;
   const supabase = await createServerSupabaseClient();
   const {
