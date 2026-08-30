@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { isDevMode } from "@/lib/devMode";
+import PrimaryButton from "@/components/PrimaryButton";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -73,17 +74,13 @@ export default function LoginForm() {
             placeholder="you@example.com"
             className="rounded-md border border-hairline bg-card px-4 py-3 text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
           />
-          <button
-            type="submit"
-            disabled={status === "sending"}
-            className="rounded-full bg-ink px-5 py-3 font-bold text-card disabled:opacity-60"
-          >
+          <PrimaryButton type="submit" disabled={status === "sending"}>
             {status === "sending"
               ? isDevMode
                 ? "test mode — signing you in..."
                 : "sending the link..."
               : "Send magic link"}
-          </button>
+          </PrimaryButton>
           {status === "error" && (
             <p className="text-sm text-danger">
               {errorMessage ||

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import PersonaSelector from "@/components/PersonaSelector";
 import PlatformPicker from "@/components/PlatformPicker";
+import PrimaryButton from "@/components/PrimaryButton";
 import GenerateCard, { type CardOutput } from "@/components/GenerateCard";
 import type { Platform } from "@/lib/platformRules";
 
@@ -30,6 +32,7 @@ export default function GenerationScreen({
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [platform, setPlatform] = useState<Platform>("x");
   const [ideaInput, setIdeaInput] = useState("");
+  const [ideaFocused, setIdeaFocused] = useState(false);
   const [submittedIdea, setSubmittedIdea] = useState("");
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [tone, setTone] = useState<string | null>(null);
@@ -116,6 +119,10 @@ export default function GenerationScreen({
 
   return (
     <div className="w-full max-w-xl">
+      <h1 className="mb-6 text-center font-display text-2xl font-semibold text-ink sm:text-left sm:text-3xl">
+        What are we writing today?
+      </h1>
+
       <div className="rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
         <PersonaSelector name={personaName} />
 
@@ -127,16 +134,25 @@ export default function GenerationScreen({
           <textarea
             value={ideaInput}
             onChange={(e) => setIdeaInput(e.target.value)}
+            onFocus={() => setIdeaFocused(true)}
+            onBlur={() => setIdeaFocused(false)}
             placeholder={IDEA_PLACEHOLDERS[placeholderIndex]}
             rows={3}
-            className="resize-none rounded-md border border-hairline bg-card px-4 py-3 text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+            required
+            style={ideaFocused ? { borderColor: "var(--accent)" } : undefined}
+            className="resize-none rounded-md border border-hairline bg-card px-4 py-3 text-ink outline-none transition-colors placeholder:text-ink-soft focus:ring-2 focus:ring-accent-soft"
           />
 
           <button
             type="button"
             onClick={() => setOverridesOpen((v) => !v)}
-            className="self-start text-xs uppercase tracking-[0.1em] text-ink-soft font-mono"
+            className="flex items-center gap-1 self-start py-1 font-mono text-xs uppercase tracking-[0.1em] text-ink-soft"
           >
+            {overridesOpen ? (
+              <ChevronUp size={14} strokeWidth={2.5} />
+            ) : (
+              <ChevronDown size={14} strokeWidth={2.5} />
+            )}
             {overridesOpen ? "hide options" : "more options"}
           </button>
 
@@ -148,13 +164,9 @@ export default function GenerationScreen({
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={status === "loading" || !ideaInput.trim()}
-            className="rounded-full bg-ink px-5 py-3 font-bold text-card disabled:opacity-60"
-          >
+          <PrimaryButton type="submit" disabled={status === "loading"}>
             {status === "loading" ? "sniffing out your tone..." : "Generate posts"}
-          </button>
+          </PrimaryButton>
 
           {status === "error" && (
             <p className="text-sm text-danger">{errorMessage}</p>
