@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { PLATFORMS, platformRules, type Platform } from "@/lib/platformRules";
+import { chipClasses } from "@/components/ui/Chip";
 
 const PLATFORM_ICONS: Record<Platform, LucideIcon> = {
   x: XIcon,
@@ -25,10 +26,8 @@ const PLATFORM_ICONS: Record<Platform, LucideIcon> = {
   workchat: Hash,
 };
 
-const ACTIVE_PILL =
-  "flex items-center gap-1.5 rounded-full bg-accent-soft px-4 py-2 text-sm font-medium text-accent";
-const INACTIVE_PILL =
-  "flex items-center gap-1.5 rounded-full border border-hairline px-4 py-2 text-sm font-medium text-ink-soft";
+const ACTIVE_PILL = chipClasses(true);
+const INACTIVE_PILL = chipClasses(false);
 
 function PlatformPill({
   platform,

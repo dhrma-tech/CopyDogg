@@ -7,6 +7,9 @@ import type { Sliders } from "@/lib/voicePreview";
 import type { ExtractedVoice } from "@/lib/claude";
 import ToneSliders from "@/components/ToneSliders";
 import { PlatformMultiPicker } from "@/components/PlatformPicker";
+import Card from "@/components/ui/Card";
+import { buttonClasses } from "@/components/ui/Button";
+import { FIELD } from "@/components/ui/Field";
 
 interface PlatformAnswers {
   samples: [string, string, string];
@@ -23,13 +26,11 @@ const DEFAULT_SLIDERS: Sliders = {
   emojiDensity: 20,
 };
 
-const PRIMARY_BUTTON =
-  "flex-1 rounded-full bg-ink px-5 py-3 text-sm font-bold text-card disabled:opacity-60";
-const SECONDARY_BUTTON =
-  "rounded-full border border-hairline px-5 py-3 text-sm font-bold text-ink-soft disabled:opacity-60";
-const TEXTAREA =
-  "w-full resize-none rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none";
-const META_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
+const PRIMARY_BUTTON = `flex-1 ${buttonClasses({ variant: "primary" })}`;
+const SECONDARY_BUTTON = buttonClasses({ variant: "secondary" });
+const TEXTAREA = `${FIELD} resize-none`;
+const META_LABEL = "label";
+const HEADING = "font-display text-title text-ink";
 
 function hasContent(a: PlatformAnswers | undefined) {
   return !!a && (a.rewrite.trim() !== "" || a.samples.some((s) => s.trim() !== ""));
@@ -183,18 +184,18 @@ export default function OnboardingFlow() {
   const totalSteps = platforms.length + 2;
 
   return (
-    <div className="w-full max-w-lg">
+    <div className="w-full max-w-xl">
       <p className={META_LABEL}>
         {step === 0 ? "Getting started" : `Step ${step + 1} of ${totalSteps}`}
       </p>
 
-      <div className="mt-4 rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
+      <Card variant="main" className="mt-3">
         {step === 0 && (
           <div className="flex flex-col gap-4">
-            <h1 className="font-display text-2xl font-semibold text-ink">
+            <h1 className={HEADING}>
               Where do you post?
             </h1>
-            <p className="text-sm text-ink-soft">
+            <p className="text-body text-ink-soft">
               Pick every place you want CopyDogg to write for. You can change
               this later.
             </p>
@@ -229,10 +230,10 @@ export default function OnboardingFlow() {
         {step === resultsStep && step > 0 && (
           <div className="flex flex-col gap-6">
             <div>
-              <h1 className="font-display text-2xl font-semibold text-ink">
+              <h1 className={HEADING}>
                 Here&rsquo;s how you sound
               </h1>
-              <p className="mt-2 text-sm text-ink-soft">
+              <p className="mt-2 text-body text-ink-soft">
                 {usedDefaults
                   ? "You skipped the samples, so these are starting defaults. Adjust them now, or fine-tune later in Profile."
                   : "This is what CopyDogg uses every time it writes for you. Change anything that's off."}
@@ -262,7 +263,7 @@ export default function OnboardingFlow() {
               <span className={META_LABEL}>Per platform</span>
               {platforms.map((p) => (
                 <label key={p} className="flex flex-col gap-2">
-                  <span className="text-sm text-ink">{platformRules[p].label}</span>
+                  <span className="text-small font-medium text-ink">{platformRules[p].label}</span>
                   <textarea
                     value={platformVoices[p] ?? ""}
                     onChange={(e) =>
@@ -276,7 +277,7 @@ export default function OnboardingFlow() {
               ))}
             </div>
 
-            {saveError && <p className="text-sm text-danger">{saveError}</p>}
+            {saveError && <p role="alert" className="text-small text-danger">{saveError}</p>}
 
             <div className="flex gap-3">
               <button
@@ -298,7 +299,7 @@ export default function OnboardingFlow() {
             </div>
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
@@ -334,13 +335,13 @@ function PlatformStep({
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">
+        <h1 className={HEADING}>
           How you sound on {label}
         </h1>
       </div>
 
       <div className="flex flex-col gap-2">
-        <p className="text-sm text-ink">
+        <p className="text-body font-medium text-ink">
           Paste up to 3 {sampleNoun} you&rsquo;ve written. Real ones, typos and all.
         </p>
         {answers.samples.map((sample, i) => (
@@ -359,9 +360,9 @@ function PlatformStep({
         ))}
       </div>
 
-      <div className="flex flex-col gap-2 border-t border-dashed border-hairline pt-5">
-        <p className="text-sm text-ink">Now rewrite this the way you&rsquo;d actually say it:</p>
-        <p className="rounded-md border border-hairline bg-paper px-4 py-3 text-sm italic text-ink-soft">
+      <div className="flex flex-col gap-3 border-t border-dashed border-control pt-5">
+        <p className="text-body font-medium text-ink">Now rewrite this the way you&rsquo;d actually say it:</p>
+        <p className="rounded-md bg-paper px-4 py-3 text-body italic text-ink-soft">
           {blandPost}
         </p>
         <textarea
@@ -375,12 +376,8 @@ function PlatformStep({
 
       {readError && (
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-danger">{readError}</p>
-          <button
-            type="button"
-            onClick={onUseDefaults}
-            className="self-start text-sm font-medium text-accent underline"
-          >
+          <p role="alert" className="text-small text-danger">{readError}</p>
+          <button type="button" onClick={onUseDefaults} className="link self-start text-small">
             Continue with defaults
           </button>
         </div>
@@ -404,7 +401,7 @@ function PlatformStep({
         type="button"
         onClick={onSkip}
         disabled={reading}
-        className="self-center text-sm text-ink-soft underline disabled:opacity-60"
+        className={`self-center ${buttonClasses({ variant: "quiet", size: "sm" })}`}
       >
         Skip {label}
       </button>
