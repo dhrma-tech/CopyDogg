@@ -159,7 +159,7 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
   }
 
   return (
-    <div className="w-full max-w-xl">
+    <div className="w-full max-w-2xl">
       <h1 className="font-display text-title text-ink">
         {name.trim() || "Your voice"}
       </h1>

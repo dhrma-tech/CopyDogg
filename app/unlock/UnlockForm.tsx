@@ -2,7 +2,9 @@
 
 import { useState, type FormEvent } from "react";
 import { unlock } from "@/app/actions";
-import PrimaryButton from "@/components/PrimaryButton";
+import Button from "@/components/ui/Button";
+import { FIELD } from "@/components/ui/Field";
+import Logo from "@/components/Logo";
 
 export default function UnlockForm({ next }: { next: string }) {
   const [password, setPassword] = useState("");
@@ -28,10 +30,13 @@ export default function UnlockForm({ next }: { next: string }) {
 
   return (
     <div className="w-full max-w-sm">
-      <h1 className="text-center font-display text-3xl font-semibold text-ink">
+      <div className="mb-6 flex justify-center">
+        <Logo />
+      </div>
+      <h1 className="text-center font-display text-title text-ink">
         This CopyDogg is locked
       </h1>
-      <p className="mt-2 text-center text-sm text-ink-soft">
+      <p className="mt-2 text-center text-body text-ink-soft">
         Enter the password set in COPYDOGG_PASSWORD.
       </p>
       <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-3">
@@ -43,12 +48,12 @@ export default function UnlockForm({ next }: { next: string }) {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          className="rounded-md border border-hairline bg-card px-4 py-3 text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+          className={FIELD}
         />
-        <PrimaryButton type="submit" disabled={checking}>
+        <Button type="submit" block disabled={checking}>
           {checking ? "checking..." : "Unlock"}
-        </PrimaryButton>
-        {error && <p className="text-sm text-danger">{error}</p>}
+        </Button>
+        {error && <p role="alert" className="text-small text-danger">{error}</p>}
       </form>
     </div>
   );

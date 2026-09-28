@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { lock, resetAllData, setVoiceInput } from "@/app/actions";
 import BackupsSection from "./BackupsSection";
+import Button, { buttonClasses } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
 import ThemeSwitch from "./ThemeSwitch";
 
 interface SettingsPanelProps {
@@ -16,9 +18,8 @@ interface SettingsPanelProps {
   backupFolder: string;
 }
 
-const META_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
-const SECONDARY_BUTTON =
-  "rounded-full border border-hairline px-5 py-3 text-sm font-bold text-ink disabled:opacity-60";
+const META_LABEL = "label";
+const SECONDARY_BUTTON = buttonClasses({ variant: "secondary" });
 
 export default function SettingsPanel({
   generationCount,
@@ -65,18 +66,18 @@ export default function SettingsPanel({
   }
 
   return (
-    <div className="w-full max-w-lg">
-      <h1 className="font-display text-2xl font-semibold text-ink">Settings</h1>
+    <div className="w-full max-w-2xl">
+      <h1 className="font-display text-title text-ink">Settings</h1>
 
-      <div className="mt-6 flex flex-col gap-8 rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
+      <Card variant="main" className="mt-5 flex flex-col gap-8">
         <section>
           <p className={META_LABEL}>Usage</p>
-          <p className="mt-3 text-sm text-ink-soft">
+          <p className="mt-3 text-body text-ink-soft">
             {generationCount === 0
               ? "No posts generated yet."
               : `You've generated ${generationCount} post${generationCount === 1 ? "" : "s"} and saved ${savedCount}.`}
           </p>
-          <p className="mt-2 text-sm text-ink-soft">
+          <p className="mt-2 text-body text-ink-soft">
             {demoMode
               ? "Demo mode: no Claude API key found, so posts are placeholders. Add ANTHROPIC_API_KEY to .env.local and restart."
               : "Posts are written with your own Claude API key, billed to your Anthropic account."}
@@ -85,13 +86,13 @@ export default function SettingsPanel({
 
         <section>
           <p className={META_LABEL}>Your data</p>
-          <p className="mt-3 text-sm text-ink-soft">
+          <p className="mt-3 text-body text-ink-soft">
             Everything lives in one file on this machine:
           </p>
-          <p className="mt-2 break-all rounded-md border border-hairline bg-paper px-3 py-2 font-mono text-xs text-ink">
+          <p className="mt-2 break-all rounded-md bg-paper px-3 py-2 font-mono text-label text-ink">
             {dataFile}
           </p>
-          <a href="/api/export" download className={`mt-4 inline-block ${SECONDARY_BUTTON}`}>
+          <a href="/api/export" download className={`mt-4 ${SECONDARY_BUTTON}`}>
             Export my data
           </a>
         </section>
@@ -102,11 +103,11 @@ export default function SettingsPanel({
 
         <section>
           <p className={META_LABEL}>Voice input</p>
-          <p className="mt-3 text-sm text-ink-soft">
+          <p className="mt-3 text-body text-ink-soft">
             Adds a mic button to the writing screen so you can say your idea
             instead of typing it.
           </p>
-          <p className="mt-2 text-sm text-ink">
+          <p className="mt-2 text-body text-ink">
             Heads up: your browser does the listening, and most browsers
             (Chrome, Edge, Safari) send the audio to their own speech service
             — Google, Microsoft or Apple — to turn it into text. That&rsquo;s the
@@ -118,19 +119,19 @@ export default function SettingsPanel({
               type="checkbox"
               checked={voiceInput}
               onChange={toggleVoiceInput}
-              className="h-4 w-4 accent-accent"
+              className="h-5 w-5 accent-ink"
             />
-            <span className="text-sm font-medium text-ink">
+            <span className="text-body font-medium text-ink">
               Turn on voice input
             </span>
           </label>
-          {voiceError && <p className="mt-2 text-sm text-danger">{voiceError}</p>}
+          {voiceError && <p role="alert" className="mt-2 text-small text-danger">{voiceError}</p>}
         </section>
 
         {passwordEnabled && (
           <section>
             <p className={META_LABEL}>Password</p>
-            <p className="mt-3 text-sm text-ink-soft">
+            <p className="mt-3 text-body text-ink-soft">
               This copy is password protected. Lock it to require the password
               again on this device.
             </p>
@@ -148,16 +149,14 @@ export default function SettingsPanel({
           </section>
         )}
 
-        <section className="border-t border-hairline pt-6">
-          <p className="font-mono text-xs uppercase tracking-[0.1em] text-danger">
-            Start over
-          </p>
+        <section className="border-t border-dashed border-control pt-6">
+          <p className="label text-danger">Start over</p>
 
           {resetStep === "idle" && (
             <button
               type="button"
               onClick={() => setResetStep("confirm")}
-              className="mt-3 text-sm font-medium text-danger underline"
+              className={`mt-2 -ml-3.5 ${buttonClasses({ variant: "danger", size: "sm" })}`}
             >
               Reset everything
             </button>
@@ -165,34 +164,28 @@ export default function SettingsPanel({
 
           {resetStep !== "idle" && (
             <div className="mt-3 flex flex-col gap-3">
-              <p className="text-sm text-ink">
+              <p className="text-body text-ink">
                 This deletes your voice profile, rules, topics, and every
                 generated post from the data file. Export first if you want a
                 copy — this can&rsquo;t be undone.
               </p>
-              {resetError && <p className="text-sm text-danger">{resetError}</p>}
-              <div className="flex gap-3">
-                <button
-                  type="button"
+              {resetError && <p role="alert" className="text-small text-danger">{resetError}</p>}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
                   onClick={() => setResetStep("idle")}
                   disabled={resetStep === "resetting"}
-                  className="rounded-full border border-hairline px-5 py-3 text-sm font-bold text-ink-soft"
                 >
                   Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  disabled={resetStep === "resetting"}
-                  className="rounded-full bg-danger px-5 py-3 text-sm font-bold text-card disabled:opacity-60"
-                >
+                </Button>
+                <Button variant="destructive" onClick={handleReset} disabled={resetStep === "resetting"}>
                   {resetStep === "resetting" ? "resetting..." : "Yes, reset everything"}
-                </button>
+                </Button>
               </div>
             </div>
           )}
         </section>
-      </div>
+      </Card>
     </div>
   );
 }

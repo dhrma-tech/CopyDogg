@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { restoreFromBackup } from "@/app/actions";
+import { buttonClasses } from "@/components/ui/Button";
 
 interface Backup {
   name: string;
@@ -10,7 +11,8 @@ interface Backup {
   bytes: number;
 }
 
-const META = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
+const META = "label";
+const QUIET = buttonClasses({ variant: "quiet", size: "sm" });
 
 function describe(backup: Backup) {
   const day = backup.name.match(/copydogg-(\d{4}-\d{2}-\d{2})/)?.[1] ?? backup.date.slice(0, 10);
@@ -49,37 +51,37 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
   return (
     <section>
       <p className={META}>Backups</p>
-      <p className="mt-3 text-sm text-ink-soft">
+      <p className="mt-3 text-body text-ink-soft">
         CopyDogg keeps a copy of your data from each day you use it (the last 14), in:
       </p>
-      <p className="mt-2 break-all rounded-md border border-hairline bg-paper px-3 py-2 font-mono text-xs text-ink">
+      <p className="mt-2 break-all rounded-md bg-paper px-3 py-2 font-mono text-label text-ink">
         {folder}
       </p>
 
       {backups.length === 0 ? (
-        <p className="mt-3 text-sm text-ink-soft">
+        <p className="mt-3 text-body text-ink-soft">
           No backups yet — the first one is made the next day you use CopyDogg.
         </p>
       ) : (
         <ul className="mt-3 flex flex-col divide-y divide-dashed divide-hairline">
           {backups.map((b) => (
-            <li key={b.name} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+            <li key={b.name} className="flex flex-wrap items-center justify-between gap-2 py-2 text-small">
               <span className="text-ink">
                 {describe(b)}{" "}
-                <span className="font-mono text-xs text-ink-soft">{Math.max(1, Math.round(b.bytes / 1024))} KB</span>
+                <span className="label">{Math.max(1, Math.round(b.bytes / 1024))} KB</span>
               </span>
               {confirming === b.name ? (
-                <span className="flex items-center gap-3">
+                <span className="flex flex-wrap items-center gap-1">
                   <span className="text-ink-soft">Replace your current data?</span>
                   <button
                     type="button"
                     onClick={() => restore(b)}
                     disabled={pending}
-                    className="font-bold text-accent disabled:opacity-60"
+                    className={buttonClasses({ size: "sm" })}
                   >
                     {pending ? "restoring..." : "Restore"}
                   </button>
-                  <button type="button" onClick={() => setConfirming(null)} className="text-ink-soft">
+                  <button type="button" onClick={() => setConfirming(null)} className={QUIET}>
                     Cancel
                   </button>
                 </span>
@@ -87,7 +89,7 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
                 <button
                   type="button"
                   onClick={() => setConfirming(b.name)}
-                  className="text-ink-soft underline hover:text-ink"
+                  className={buttonClasses({ variant: "secondary", size: "sm" })}
                 >
                   Restore
                 </button>
@@ -98,7 +100,7 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
       )}
 
       {message && (
-        <p className={`mt-2 text-sm ${message.ok ? "text-accent" : "text-danger"}`}>{message.text}</p>
+        <p role={message.ok ? "status" : "alert"} className={`mt-2 text-small font-medium ${message.ok ? "text-success" : "text-danger"}`}>{message.text}</p>
       )}
     </section>
   );

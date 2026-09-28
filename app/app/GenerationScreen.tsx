@@ -618,7 +618,7 @@ export default function GenerationScreen({
           : SUBMIT_LABELS[mode];
 
   return (
-    <div className="w-full max-w-xl">
+    <div className="w-full max-w-2xl">
       <h1 className="mb-5 text-center font-display text-title text-ink sm:text-left">
         What are we writing today?
       </h1>

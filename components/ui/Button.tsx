@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "quiet" | "danger";
+export type ButtonVariant = "primary" | "secondary" | "quiet" | "danger" | "destructive";
 export type ButtonSize = "md" | "sm";
 
 interface ButtonStyle {
@@ -26,6 +26,9 @@ const VARIANTS: Record<ButtonVariant, string> = {
     "border-transparent bg-transparent font-medium text-ink-soft hover:bg-highlight-soft hover:text-ink disabled:bg-transparent disabled:text-ink-soft",
   danger:
     "border-transparent bg-transparent font-medium text-danger hover:underline disabled:no-underline disabled:text-ink-soft",
+  // Only for the final "yes, delete it" of an irreversible action.
+  destructive:
+    "border-transparent bg-danger text-card hover:bg-ink hover:text-paper disabled:bg-hairline disabled:text-ink-soft",
 };
 
 /** Class string for anything that should look like a button (e.g. a Link). */
