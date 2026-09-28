@@ -1,25 +1,24 @@
 import type { Metadata } from "next";
-import { Fraunces, Karla, JetBrains_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
+// Highlighter type (docs/design-system.md). Variable fonts, self-hosted by
+// next/font at build time; Bricolage keeps its optical-size axis.
+const bricolage = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
-  weight: ["500", "600"],
-  style: ["normal", "italic"],
+  axes: ["opsz"],
 });
 
-const karla = Karla({
-  variable: "--font-karla",
+const geist = Geist({
+  variable: "--font-geist",
   subsets: ["latin"],
-  weight: ["400", "500", "700"],
 });
 
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-jetbrains-mono",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
@@ -31,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${karla.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      className={`${bricolage.variable} ${geist.variable} ${geistMono.variable} h-full antialiased`}
       // The theme script sets data-theme before React loads.
       suppressHydrationWarning
     >
