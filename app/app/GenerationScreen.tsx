@@ -11,7 +11,11 @@ import {
 import Link from "next/link";
 import { Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 import PlatformPicker from "@/components/PlatformPicker";
-import PrimaryButton from "@/components/PrimaryButton";
+import Button, { buttonClasses } from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { chipClasses } from "@/components/ui/Chip";
+import { FIELD, SELECT } from "@/components/ui/Field";
+import { SEGMENT_TRACK, segmentClasses } from "@/components/ui/Segmented";
 import MicButton from "@/components/MicButton";
 import CheckResultCard, { type CheckResult } from "@/components/CheckResult";
 import GenerateCard, {
@@ -99,14 +103,11 @@ const SHORTCUTS: [string, string][] = [
 ];
 
 const VARIATION_COUNT = 3;
-const META = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
-const PILL_ON = "shrink-0 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent";
-const PILL_OFF =
-  "shrink-0 rounded-full border border-hairline px-3 py-1.5 text-xs font-medium text-ink-soft";
-const FIELD =
-  "rounded-md border border-hairline bg-card px-4 py-3 text-ink outline-none transition-colors placeholder:text-ink-soft focus:border-accent focus:ring-2 focus:ring-accent-soft";
-const SELECT =
-  "rounded-full border border-hairline bg-card px-3 py-1.5 text-xs font-medium text-ink outline-none focus:border-accent";
+const META = "label";
+const PILL_ON = chipClasses(true, "sm");
+const PILL_OFF = chipClasses(false, "sm");
+// Small text-only controls in the row under the text box.
+const QUIET = buttonClasses({ variant: "quiet", size: "sm" });
 
 interface Voice {
   id: string;
@@ -618,18 +619,18 @@ export default function GenerationScreen({
 
   return (
     <div className="w-full max-w-xl">
-      <h1 className="mb-6 text-center font-display text-2xl font-semibold text-ink sm:text-left sm:text-3xl">
+      <h1 className="mb-5 text-center font-display text-title text-ink sm:text-left">
         What are we writing today?
       </h1>
 
-      <div className="rounded-lg border border-hairline bg-card p-5 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)] sm:p-6">
+      <Card variant="main">
         {voices.length > 1 && (
           <label className="relative mb-3 inline-flex">
             <span className="sr-only">Voice</span>
             <select
               value={voice.id}
               onChange={(e) => switchVoice(e.target.value)}
-              className="cursor-pointer appearance-none rounded-full bg-accent-soft py-1.5 pl-4 pr-9 text-sm font-medium text-accent outline-none focus:ring-2 focus:ring-accent"
+              className={`${SELECT} cursor-pointer appearance-none pl-3.5 pr-9`}
             >
               {voices.map((v) => (
                 <option key={v.id} value={v.id}>
@@ -640,23 +641,19 @@ export default function GenerationScreen({
             <ChevronDown
               size={14}
               strokeWidth={2.5}
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-accent"
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink"
             />
           </label>
         )}
 
-        <div className="flex gap-1 rounded-full border border-hairline p-1" role="group" aria-label="Mode">
+        <div className={SEGMENT_TRACK} role="group" aria-label="Mode">
           {MODES.map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => switchMode(m)}
               aria-pressed={mode === m}
-              className={
-                mode === m
-                  ? "flex-1 rounded-full bg-accent-soft py-1.5 text-sm font-medium text-accent"
-                  : "flex-1 rounded-full py-1.5 text-sm font-medium text-ink-soft"
-              }
+              className={segmentClasses(mode === m)}
             >
               {MODE_LABELS[m]}
             </button>
@@ -685,7 +682,7 @@ export default function GenerationScreen({
               placeholder={mainPlaceholder}
               rows={usesContext ? (conversation && mode === "reply" ? 6 : 4) : 3}
               aria-label={usesContext ? CONTEXT_PLACEHOLDERS[mode as Exclude<Mode, "write">] : "Your idea"}
-              className={`w-full resize-none pr-11 ${FIELD}`}
+              className={`${FIELD} resize-none pr-11`}
             />
             {voiceInput && (
               <MicButton
@@ -714,7 +711,7 @@ export default function GenerationScreen({
                 onKeyDown={handleKeyDown}
                 placeholder="What do you want to say? (optional)"
                 aria-label="What you want to say"
-                className={`text-sm ${FIELD}`}
+                className={FIELD}
               />
             </div>
           )}
@@ -734,7 +731,7 @@ export default function GenerationScreen({
                   </button>
                 ))}
               </div>
-              <span aria-hidden className="h-5 w-px shrink-0 bg-hairline" />
+              <span aria-hidden className="h-5 w-px shrink-0 bg-control" />
               <div className="flex gap-2" role="group" aria-label="Who it's for">
                 {SCENARIO_KEYS.map((key) => (
                   <button
@@ -757,7 +754,7 @@ export default function GenerationScreen({
                 type="button"
                 onClick={() => setOverridesOpen((v) => !v)}
                 aria-expanded={overridesOpen}
-                className={`flex items-center gap-1 whitespace-nowrap py-1 ${META}`}
+                className={`-ml-3.5 whitespace-nowrap ${QUIET}`}
               >
                 {overridesOpen ? <ChevronUp size={14} strokeWidth={2.5} /> : <ChevronDown size={14} strokeWidth={2.5} />}
                 {overridesOpen ? "hide options" : "more options"}
@@ -771,30 +768,33 @@ export default function GenerationScreen({
                   type="button"
                   onClick={handleSaveIdea}
                   disabled={ideaSaved !== "idle"}
-                  className={`flex items-center gap-1 whitespace-nowrap py-1 ${META}`}
+                  className={`whitespace-nowrap ${QUIET}`}
                 >
                   <Bookmark size={13} strokeWidth={2.5} fill={ideaSaved === "saved" ? "currentColor" : "none"} />
                   {ideaSaved === "saved" ? "saved for later" : "save idea"}
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setHelpOpen((v) => !v)}
-                aria-expanded={helpOpen}
-                className={`hidden whitespace-nowrap py-1 sm:pointer-fine:inline ${META}`}
-              >
-                shortcuts ?
-              </button>
+              {/* Keyboard help only makes sense with a keyboard: desktop, fine pointer. */}
+              <span className="hidden sm:pointer-fine:inline-flex">
+                <button
+                  type="button"
+                  onClick={() => setHelpOpen((v) => !v)}
+                  aria-expanded={helpOpen}
+                  className={`-mr-3.5 whitespace-nowrap ${QUIET}`}
+                >
+                  shortcuts ?
+                </button>
+              </span>
             </div>
           </div>
 
           {helpOpen && (
-            <div className="rounded-md border border-dashed border-hairline p-3" aria-label="Keyboard shortcuts">
+            <div className="border-t border-dashed border-control pt-3" aria-label="Keyboard shortcuts">
               <p className={META}>Keyboard shortcuts</p>
-              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-small">
                 {SHORTCUTS.map(([keys, what]) => (
                   <div key={keys} className="contents">
-                    <dt className="font-mono text-xs text-ink">{keys}</dt>
+                    <dt className="label text-ink">{keys}</dt>
                     <dd className="text-ink-soft">{what}</dd>
                   </div>
                 ))}
@@ -803,7 +803,7 @@ export default function GenerationScreen({
           )}
 
           {overridesOpen && mode !== "check" && (
-            <div className="flex flex-col gap-3 rounded-md border border-dashed border-hairline p-3">
+            <div className="flex flex-col gap-3 border-t border-dashed border-control pt-3">
               <ChipRow options={TONE_CHIPS} value={tone} onToggle={(v) => toggle(v, tone, setTone)} />
               <ChipRow options={LENGTH_CHIPS} value={length} onToggle={(v) => toggle(v, length, setLength)} />
               {mode === "write" && (
@@ -829,7 +829,7 @@ export default function GenerationScreen({
                       ))}
                     </select>
                   ) : (
-                    <Link href="/app/profile#people" className="text-xs font-medium text-accent underline">
+                    <Link href="/app/profile#people" className="link text-small">
                       add people
                     </Link>
                   )}
@@ -857,7 +857,7 @@ export default function GenerationScreen({
                       ))}
                     </select>
                   ) : (
-                    <Link href="/app/profile#templates" className="text-xs font-medium text-accent underline">
+                    <Link href="/app/profile#templates" className="link text-small">
                       add templates
                     </Link>
                   )}
@@ -866,13 +866,13 @@ export default function GenerationScreen({
             </div>
           )}
 
-          <PrimaryButton type="submit" disabled={status === "loading" || !canSubmit}>
+          <Button type="submit" block disabled={status === "loading" || !canSubmit}>
             {submitLabel}
-          </PrimaryButton>
+          </Button>
 
-          {status === "error" && <p className="text-sm text-danger">{errorMessage}</p>}
+          {status === "error" && <p role="alert" className="text-small text-danger">{errorMessage}</p>}
         </form>
-      </div>
+      </Card>
 
       {mode === "check" ? (
         status === "loading" ? (

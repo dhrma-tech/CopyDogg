@@ -6,6 +6,9 @@ import { PLATFORMS, SEND_LABELS, platformRules, sendLink, type Platform } from "
 import { TWEAKS, type Tweak } from "@/lib/writingOptions";
 import { patchGeneration } from "@/lib/generateClient";
 import { wordDiff } from "@/lib/diff";
+import Button, { buttonClasses } from "@/components/ui/Button";
+import { chipClasses } from "@/components/ui/Chip";
+import { SELECT } from "@/components/ui/Field";
 
 export interface CardOutput {
   key: string;
@@ -29,12 +32,17 @@ export interface CardHandle {
   tweak: (tweak: Tweak) => void;
 }
 
-const CARD = "rounded-md border border-hairline bg-card p-4";
-const PLATFORM_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
+const CARD = "rounded-md border border-hairline bg-card p-4 transition-colors";
+// Keyboard-shortcut target: an ink edge instead of the hairline.
+const ACTIVE_CARD = "rounded-md border border-ink bg-card p-4 transition-colors";
+const PLATFORM_LABEL = "label";
 const ACTION_ROW = "mt-4 border-t border-dashed border-hairline pt-3";
-const TEXT_BUTTON = "-my-1.5 py-1.5 text-ink-soft hover:text-ink disabled:opacity-60";
-const SMALL_PILL =
-  "rounded-full border border-hairline px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink";
+const TEXT_BUTTON = buttonClasses({ variant: "quiet", size: "sm" });
+const SMALL_PILL = chipClasses(false, "sm");
+const ICON_BASE = "grid h-9 w-9 place-items-center rounded-sm transition-colors";
+const ICON_BUTTON = `${ICON_BASE} text-ink-soft hover:bg-highlight-soft hover:text-ink`;
+const ICON_LIKED = `${ICON_BASE} bg-highlight text-on-highlight hover:bg-highlight-hover`;
+const ICON_DISLIKED = `${ICON_BASE} text-danger hover:bg-highlight-soft`;
 
 function WritingRow() {
   return (
@@ -46,11 +54,11 @@ function WritingRow() {
 
 function StreamingText({ text }: { text: string }) {
   return (
-    <p className="mt-2 whitespace-pre-wrap text-sm text-ink">
+    <p className="mt-2 whitespace-pre-wrap text-body text-ink">
       {text}
       <span
         aria-hidden
-        className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-accent motion-safe:animate-pulse"
+        className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-ink motion-safe:animate-pulse"
       />
     </p>
   );
@@ -87,7 +95,7 @@ export function SkeletonCard() {
 interface GenerateCardProps {
   output: CardOutput;
   ref?: Ref<CardHandle>;
-  /** Target of keyboard shortcuts; shown with an accent border. */
+  /** Target of keyboard shortcuts; shown with an ink border. */
   active?: boolean;
   /**
    * Start with the tweak / regenerate / remix row open. Other cards show a
@@ -247,7 +255,7 @@ export default function GenerateCard({
 
   return (
     <div
-      className={active ? "rounded-md border border-accent bg-card p-4" : CARD}
+      className={active ? ACTIVE_CARD : CARD}
       onClickCapture={onActivate}
       onFocusCapture={(e) => {
         if ((e.target as HTMLElement).matches(":focus-visible")) onActivate?.();
@@ -256,7 +264,7 @@ export default function GenerateCard({
       <div className="flex items-center justify-between gap-3">
         <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
         {shortcutNumber !== undefined && shortcutNumber <= 9 && (
-          <kbd className="hidden rounded-sm border border-hairline px-1.5 font-mono text-xs text-ink-soft pointer-fine:inline">
+          <kbd className="label hidden rounded-sm border border-control px-1.5 pointer-fine:inline">
             {shortcutNumber}
           </kbd>
         )}
@@ -274,12 +282,12 @@ export default function GenerateCard({
             rows={Math.min(12, Math.max(3, editDraft.split("\n").length + 1))}
             autoFocus
             aria-label="Edit this version"
-            className="w-full resize-y rounded-md border border-accent bg-card px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-accent-soft"
+            className="w-full resize-y rounded-md border border-ink bg-card px-3 py-2 text-body text-ink ring-[3px] ring-highlight focus:outline-none"
           />
-          <div className="flex gap-4 text-sm">
-            <button type="button" onClick={handleEditDone} className="font-bold text-accent">
+          <div className="flex gap-2">
+            <Button size="sm" onClick={handleEditDone}>
               Done
-            </button>
+            </Button>
             <button type="button" onClick={() => setEditing(false)} className={TEXT_BUTTON}>
               Cancel
             </button>
@@ -287,13 +295,13 @@ export default function GenerateCard({
         </div>
       ) : showChanges ? (
         diff ? (
-          <p className="mt-2 whitespace-pre-wrap text-sm text-ink" aria-label="Changes from your draft">
+          <p className="mt-2 whitespace-pre-wrap text-body text-ink" aria-label="Changes from your draft">
             {diff.map((part, i) =>
               part.type === "same" ? (
                 <span key={i}>{part.text}</span>
               ) : part.type === "add" ? (
                 <span key={i}>
-                  <ins className="rounded-sm bg-accent-soft text-accent no-underline">{part.text}</ins>
+                  <ins className="rounded-sm bg-highlight-soft text-ink no-underline">{part.text}</ins>
                   {diff[i + 1]?.type === "del" && !/\s$/.test(part.text) && !/^\s/.test(diff[i + 1].text) && " "}
                 </span>
               ) : (
@@ -306,13 +314,13 @@ export default function GenerateCard({
             )}
           </p>
         ) : (
-          <p className="mt-2 text-sm text-ink-soft">Too long to compare word by word.</p>
+          <p className="mt-2 text-small text-ink-soft">Too long to compare word by word.</p>
         )
       ) : (
-        <p className="mt-2 whitespace-pre-wrap text-sm text-ink">{text}</p>
+        <p className="mt-2 whitespace-pre-wrap text-body text-ink">{text}</p>
       )}
 
-      <div className={`${ACTION_ROW} flex flex-wrap items-center gap-x-4 gap-y-2 text-sm`}>
+      <div className={`${ACTION_ROW} -ml-3.5 flex flex-wrap items-center gap-1`}>
         <button type="button" onClick={handleCopy} className={TEXT_BUTTON}>
           {copied ? "copied" : "Copy"}
         </button>
@@ -323,7 +331,7 @@ export default function GenerateCard({
             rel="noopener noreferrer"
             // Copy too: some apps ignore the prefilled text, so it's ready to paste.
             onClick={() => void copyText()}
-            className="-my-1.5 py-1.5 font-medium text-accent hover:underline"
+            className="link mx-2 text-small"
           >
             {SEND_LABELS[platform]}
           </a>
@@ -341,13 +349,13 @@ export default function GenerateCard({
         <button type="button" onClick={handleSave} disabled={saved || saving} className={TEXT_BUTTON}>
           {saved ? "saved" : saving ? "saving..." : "Save"}
         </button>
-        <span className="ml-auto flex gap-3">
+        <span className="ml-auto flex gap-1">
           <button
             type="button"
             onClick={() => handleFeedback(1)}
             aria-label="Good post"
             aria-pressed={feedback === 1}
-            className={feedback === 1 ? "text-accent" : "text-ink-soft"}
+            className={feedback === 1 ? ICON_LIKED : ICON_BUTTON}
           >
             <ThumbsUp size={16} strokeWidth={2} fill={feedback === 1 ? "currentColor" : "none"} />
           </button>
@@ -356,7 +364,7 @@ export default function GenerateCard({
             onClick={() => handleFeedback(-1)}
             aria-label="Not this"
             aria-pressed={feedback === -1}
-            className={feedback === -1 ? "text-danger" : "text-ink-soft"}
+            className={feedback === -1 ? ICON_DISLIKED : ICON_BUTTON}
           >
             <ThumbsDown size={16} strokeWidth={2} fill={feedback === -1 ? "currentColor" : "none"} />
           </button>
@@ -383,11 +391,7 @@ export default function GenerateCard({
             type="button"
             onClick={() => setShowChanges((v) => !v)}
             aria-pressed={showChanges}
-            className={
-              showChanges
-                ? "rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent"
-                : SMALL_PILL
-            }
+            className={chipClasses(showChanges, "sm")}
           >
             {showChanges ? "hide changes" : "show changes"}
           </button>
@@ -422,7 +426,7 @@ export default function GenerateCard({
             value={remixPlatform}
             onChange={(e) => setRemixPlatform(e.target.value as Platform)}
             aria-label="Remix for which platform"
-            className="rounded-md border border-hairline bg-card px-2 py-1.5 text-sm text-ink"
+            className={SELECT}
           >
             {remixChoices.map((p) => (
               <option key={p} value={p}>
@@ -430,17 +434,13 @@ export default function GenerateCard({
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={handleRemix}
-            className="rounded-full bg-ink px-4 py-1.5 text-sm font-bold text-card"
-          >
+          <Button size="sm" onClick={handleRemix}>
             Remix
-          </button>
+          </Button>
         </div>
       )}
 
-      {actionError && <p className="mt-2 text-sm text-danger">{actionError}</p>}
+      {actionError && <p role="alert" className="mt-2 text-small text-danger">{actionError}</p>}
     </div>
   );
 }

@@ -72,8 +72,8 @@ export default function MicButton({ onText }: { onText: (text: string) => void }
       aria-pressed={listening}
       className={
         listening
-          ? "absolute right-2 top-2 rounded-sm bg-accent-soft p-1.5 text-accent motion-safe:animate-pulse"
-          : "absolute right-2 top-2 rounded-sm p-1.5 text-ink-soft hover:text-ink"
+          ? "absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-sm bg-highlight text-on-highlight motion-safe:animate-pulse"
+          : "absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-sm text-ink-soft transition-colors hover:bg-highlight-soft hover:text-ink"
       }
     >
       <Mic size={16} strokeWidth={2} />
