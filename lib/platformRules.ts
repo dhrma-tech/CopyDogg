@@ -125,6 +125,16 @@ export function sendLink(platform: Platform, text: string): string | null {
   }
 }
 
+/** Label for the "open it where it goes" link; matches sendLink's platforms. */
+export const SEND_LABELS: Partial<Record<Platform, string>> = {
+  x: "Post on X",
+  threads: "Post on Threads",
+  linkedin: "Open LinkedIn",
+  reddit: "Open Reddit",
+  email: "Open in email",
+  text: "Open in messages",
+};
+
 interface OnboardingPrompt {
   /** What to call the user's own writing on this platform, e.g. "tweets". */
   sampleNoun: string;

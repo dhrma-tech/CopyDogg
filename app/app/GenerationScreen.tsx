@@ -720,7 +720,7 @@ export default function GenerationScreen({
           )}
 
           {showChips && (
-            <div className="-mx-5 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6">
+            <div className="scroll-fade-x -mx-5 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6">
               <div className="flex gap-2" role="group" aria-label="Situation">
                 {SITUATIONS.map((s) => (
                   <button
@@ -908,6 +908,7 @@ export default function GenerationScreen({
                   }}
                   output={output}
                   active={readyCards.length > 1 && activeCard?.key === output.key}
+                  defaultExpanded={readyCards[0]?.key === output.key || activeCard?.key === output.key}
                   shortcutNumber={readyCards.findIndex((o) => o.key === output.key) + 1 || undefined}
                   onActivate={() => setActiveKey(output.key)}
                   remixOptions={platformOptions}

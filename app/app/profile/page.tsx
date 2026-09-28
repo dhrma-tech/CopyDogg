@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { activePersona, generationBelongsTo, readStore } from "@/lib/store";
-import AppHeader from "@/components/AppHeader";
 import ProfileForm from "./ProfileForm";
 import PeopleEditor from "./PeopleEditor";
 import TemplatesEditor from "./TemplatesEditor";
@@ -21,27 +20,24 @@ export default async function ProfilePage() {
   ).length;
 
   return (
-    <>
-      <AppHeader />
-      <main className="flex flex-1 flex-col items-center gap-6 px-6 pb-12">
-        <div className="flex w-full max-w-lg flex-col gap-4">
-          <VoiceSwitcher
-            voices={data.personas.map(({ id, name }) => ({ id, name }))}
-            activeId={persona.id}
-          />
-        </div>
-        {/* Keyed by voice, so switching voices resets the form. */}
-        <ProfileForm
-          key={persona.id}
-          persona={persona}
-          initialTopics={data.topics.map((t) => t.label)}
-          learnableCount={learnableCount}
+    <main className="flex flex-1 flex-col items-center gap-6 px-6 pb-12">
+      <div className="flex w-full max-w-lg flex-col gap-4">
+        <VoiceSwitcher
+          voices={data.personas.map(({ id, name }) => ({ id, name }))}
+          activeId={persona.id}
         />
-        <div className="flex w-full max-w-lg flex-col gap-6">
-          <PeopleEditor initial={data.contacts} />
-          <TemplatesEditor initial={data.templates} />
-        </div>
-      </main>
-    </>
+      </div>
+      {/* Keyed by voice, so switching voices resets the form. */}
+      <ProfileForm
+        key={persona.id}
+        persona={persona}
+        initialTopics={data.topics.map((t) => t.label)}
+        learnableCount={learnableCount}
+      />
+      <div className="flex w-full max-w-lg flex-col gap-6">
+        <PeopleEditor initial={data.contacts} />
+        <TemplatesEditor initial={data.templates} />
+      </div>
+    </main>
   );
 }

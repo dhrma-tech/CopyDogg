@@ -221,6 +221,7 @@ Added on request, after v1: CopyDogg covers daily messages, not just social post
 - **Show changes:** Rewrite and tweak results can show a word-level before/after.
 - **Backups:** a copy of the data file before the first write of each day (last 14 kept) in `data/backups/`, with restore in Settings (the current data is backed up first).
 - **Dark mode:** approved dark tokens (design-system.md); follows the system, with a System/Light/Dark switch in Settings stored per browser, applied before first paint.
+- **UI pass:** no demo-mode banner (Settings still explains demo mode); shared nav with the current page marked and a Write link; bottom tab bar on phones; loading placeholders between pages; only the first result card opens its tweak row (others: "tweak & more", rows never auto-collapse); visible keyboard focus; faded edge on scrolling chip rows; sticky "Unsaved changes" bar on Profile; short data paths in Settings.
 - **Deferred:** installable app / share-to target (needs HTTPS).
 
 ## 8. What to Explicitly Cut from v1

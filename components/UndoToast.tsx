@@ -58,7 +58,7 @@ export function useUndoToast() {
   const element = toast ? (
     <div
       role="status"
-      className="fixed inset-x-0 bottom-5 z-50 flex justify-center px-4"
+      className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 sm:bottom-5"
     >
       <div className="flex items-center gap-4 rounded-full bg-ink py-2 pl-5 pr-2 text-sm text-card shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
         <span>{toast.message}</span>

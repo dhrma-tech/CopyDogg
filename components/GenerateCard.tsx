@@ -2,7 +2,7 @@
 
 import { useImperativeHandle, useMemo, useState, type Ref } from "react";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { PLATFORMS, platformRules, sendLink, type Platform } from "@/lib/platformRules";
+import { PLATFORMS, SEND_LABELS, platformRules, sendLink, type Platform } from "@/lib/platformRules";
 import { TWEAKS, type Tweak } from "@/lib/writingOptions";
 import { patchGeneration } from "@/lib/generateClient";
 import { wordDiff } from "@/lib/diff";
@@ -32,18 +32,9 @@ export interface CardHandle {
 const CARD = "rounded-md border border-hairline bg-card p-4";
 const PLATFORM_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
 const ACTION_ROW = "mt-4 border-t border-dashed border-hairline pt-3";
-const TEXT_BUTTON = "text-ink-soft hover:text-ink disabled:opacity-60";
+const TEXT_BUTTON = "-my-1.5 py-1.5 text-ink-soft hover:text-ink disabled:opacity-60";
 const SMALL_PILL =
   "rounded-full border border-hairline px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink";
-
-const SEND_LABELS: Partial<Record<Platform, string>> = {
-  x: "Post on X",
-  threads: "Post on Threads",
-  linkedin: "Open LinkedIn",
-  reddit: "Open Reddit",
-  email: "Open in email",
-  text: "Open in messages",
-};
 
 function WritingRow() {
   return (
@@ -98,6 +89,12 @@ interface GenerateCardProps {
   ref?: Ref<CardHandle>;
   /** Target of keyboard shortcuts; shown with an accent border. */
   active?: boolean;
+  /**
+   * Start with the tweak / regenerate / remix row open. Other cards show a
+   * "tweak & more" pill that opens it. Rows only ever open, never close on
+   * their own, so nothing shifts under a finger mid-tap.
+   */
+  defaultExpanded?: boolean;
   /** 1-based position, shown as the shortcut number on desktop. */
   shortcutNumber?: number;
   onActivate?: () => void;
@@ -115,6 +112,7 @@ export default function GenerateCard({
   output,
   ref,
   active = false,
+  defaultExpanded = true,
   shortcutNumber,
   onActivate,
   remixOptions,
@@ -142,6 +140,7 @@ export default function GenerateCard({
 
   const link = sendLink(platform, text);
   const [showChanges, setShowChanges] = useState(false);
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const diff = useMemo(
     () => (showChanges && output.compareTo ? wordDiff(output.compareTo, text) : null),
     [showChanges, output.compareTo, text]
@@ -249,8 +248,10 @@ export default function GenerateCard({
   return (
     <div
       className={active ? "rounded-md border border-accent bg-card p-4" : CARD}
-      onFocusCapture={onActivate}
-      onPointerDown={onActivate}
+      onClickCapture={onActivate}
+      onFocusCapture={(e) => {
+        if ((e.target as HTMLElement).matches(":focus-visible")) onActivate?.();
+      }}
     >
       <div className="flex items-center justify-between gap-3">
         <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
@@ -322,7 +323,7 @@ export default function GenerateCard({
             rel="noopener noreferrer"
             // Copy too: some apps ignore the prefilled text, so it's ready to paste.
             onClick={() => void copyText()}
-            className="font-medium text-accent hover:underline"
+            className="-my-1.5 py-1.5 font-medium text-accent hover:underline"
           >
             {SEND_LABELS[platform]}
           </a>
@@ -362,6 +363,20 @@ export default function GenerateCard({
         </span>
       </div>
 
+      {!expanded ? (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => {
+              setExpanded(true);
+              onActivate?.();
+            }}
+            className={SMALL_PILL}
+          >
+            tweak &amp; more
+          </button>
+        </div>
+      ) : (
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {output.compareTo && (
           <button
@@ -399,8 +414,9 @@ export default function GenerateCard({
           remix for...
         </button>
       </div>
+      )}
 
-      {remixOpen && (
+      {expanded && remixOpen && (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-hairline pt-3">
           <select
             value={remixPlatform}

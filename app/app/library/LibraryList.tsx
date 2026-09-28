@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { platformRules, sendLink, type Platform } from "@/lib/platformRules";
+import { SEND_LABELS, platformRules, sendLink, type Platform } from "@/lib/platformRules";
 import { MODE_LABELS, type GenerateMode } from "@/lib/writingOptions";
 import { patchGeneration } from "@/lib/generateClient";
 import { prefillIdea } from "@/lib/draft";
@@ -339,7 +339,7 @@ function SavedCard({
         <CopyButton text={text} />
         {link && (
           <a href={link} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-accent hover:underline">
-            Open
+            {SEND_LABELS[g.platform] ?? "Open"}
           </a>
         )}
         <button type="button" onClick={onUnsave} className={TEXT_BUTTON}>

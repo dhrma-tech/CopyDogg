@@ -1,6 +1,5 @@
 import { connection } from "next/server";
 import { readStore } from "@/lib/store";
-import AppHeader from "@/components/AppHeader";
 import LibraryList, { type LibraryGeneration } from "./LibraryList";
 
 const RECENT_LIMIT = 100;
@@ -43,14 +42,11 @@ export default async function LibraryPage() {
     }));
 
   return (
-    <>
-      <AppHeader />
-      <main className="flex flex-1 justify-center px-6 pb-12">
-        <LibraryList
-          generations={[...items, ...olderSaved]}
-          ideas={[...ideas].reverse()}
-        />
-      </main>
-    </>
+    <main className="flex flex-1 justify-center px-6 pb-12">
+      <LibraryList
+        generations={[...items, ...olderSaved]}
+        ideas={[...ideas].reverse()}
+      />
+    </main>
   );
 }

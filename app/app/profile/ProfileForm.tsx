@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { saveProfile } from "@/app/actions";
 import type { Persona } from "@/lib/store";
 import type { Sliders } from "@/lib/voicePreview";
@@ -37,6 +38,7 @@ type RetuneState =
 type Status = "idle" | "saving" | "saved" | "error";
 
 export default function ProfileForm({ persona, initialTopics, learnableCount }: ProfileFormProps) {
+  const router = useRouter();
   const [retune, setRetune] = useState<RetuneState>({ state: "idle" });
   const [name, setName] = useState(persona.name);
   const [voiceDescription, setVoiceDescription] = useState(
@@ -55,6 +57,20 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
   const [topics, setTopics] = useState<string[]>(initialTopics);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // Unsaved-changes tracking: compare the form to what was last saved.
+  const snapshot = (v = { voiceDescription, sliders, platformVoices }) =>
+    JSON.stringify([name, v.voiceDescription, v.sliders, rules, platforms, v.platformVoices, topics]);
+  const [savedSnapshot, setSavedSnapshot] = useState(() => snapshot());
+  const dirty = snapshot() !== savedSnapshot;
+
+  // Closing the tab with unsaved edits asks first.
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
 
   function setSlider(key: keyof Sliders, value: number) {
     setSliders((s) => ({ ...s, [key]: value }));
@@ -96,7 +112,10 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
       setErrorMessage(result.error);
       return;
     }
+    setSavedSnapshot(snapshot(v));
     setStatus("saved");
+    // Voice names show elsewhere on the page (switcher); pull them fresh.
+    router.refresh();
   }
 
   async function handleRetune() {
@@ -264,13 +283,33 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
           <PrimaryButton onClick={() => handleSave()} disabled={status === "saving"}>
             {status === "saving" ? "saving..." : "Save changes"}
           </PrimaryButton>
-          {status === "saved" && (
+          {status === "saved" && !dirty && (
             <span className="text-sm text-accent">
               Saved.
             </span>
           )}
         </div>
       </div>
+
+      {/* Keeps Save in reach while editing anywhere on this long page. */}
+      {dirty && (
+        <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4 sm:bottom-6">
+          <div
+            role="status"
+            className="flex items-center gap-4 rounded-full border border-hairline bg-card py-2 pl-5 pr-2 text-sm text-ink shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]"
+          >
+            <span>Unsaved changes</span>
+            <button
+              type="button"
+              onClick={() => handleSave()}
+              disabled={status === "saving"}
+              className="rounded-full bg-ink px-4 py-1.5 text-sm font-bold text-card disabled:opacity-60"
+            >
+              {status === "saving" ? "saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
