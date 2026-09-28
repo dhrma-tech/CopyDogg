@@ -94,7 +94,7 @@ On the last platform, "Read my voice" sends everything to `/api/voice-extract` (
 
 Layout top to bottom, all on one viewport if possible:
 
-1. **Persona selector** (pill/dropdown, defaults to last used)
+1. **Mode switch** (Write / Reply / Rewrite / Check), replacing the persona pill, which only ever said "Default" with v1's single persona (*2026-09-28*)
 2. **Platform selector** (icon row: X, LinkedIn, Instagram, Threads, Reddit, Newsletter) — each carries baked-in format rules (char limit, hashtag norms, line-break style) so the user never types "keep it short"
 3. **Idea input** — single large textarea, placeholder rotates through examples: *"just shipped a side project and I'm proud of it"* / *"hot take on remote work"* — accepts messy brain-dump text too
 4. **One-tap overrides** (optional, collapsed by default): tone-for-this-post chips (funnier / more serious / more vulnerable), length (short/medium/long), hook style (question / bold claim / story)
@@ -199,6 +199,20 @@ Landing page section order (*revised 2026-09-28: simpler, light humor that isn't
 No sign-in page: the CTA opens the app directly (setup on first visit). Hero sub-line: "Free and open source. Runs on your own Claude API key."
 
 ---
+
+## 4b. Everyday communication features (*added 2026-09-28*)
+
+Added on request, after v1: CopyDogg covers daily messages, not just social posts. All of it stays on the one `/app` card, with modes swapping the input rather than adding steps, and every text result streams in.
+
+- **Formats:** Email (subject line + body), Text message, Work chat, next to the social platforms. Picked in onboarding or Profile.
+- **Modes:** Write (an idea), Reply (paste what they said, plus an optional "what do you want to say"), Rewrite (paste your draft), Check (how pasted text comes across: one-sentence verdict, trait chips, up to 3 fixes, and "Rewrite it in my voice").
+- **Situation chips** (Write/Reply): say no nicely, follow up, apologize, say thanks, ask a favor, decline an invite, give feedback, set a boundary.
+- **More options** (collapsed): tone/length/hook chips, "as a thread" (X/Threads) or "as a carousel" (Instagram), who it's **to** (people saved in Profile, with relationship + note), language to write **in**, and a template **shape**.
+- **On each result:** Copy, Open in… (X/Threads intents, LinkedIn, Reddit, mailto:, sms:), Edit (the edit is saved and marked as a strong voice signal), Save, thumbs, one-tap tweaks (shorter / warmer / more direct / funnier), regenerate, remix.
+- **Library:** Saved / Recent / Ideas tabs, search, platform filter, newest/oldest sort, unsave, delete, copy. Ideas are saved from `/app` and "Write it now" puts one back in the box.
+- **Profile:** people you write to, templates, and "Retune my voice", which proposes an updated voice from 3+ liked or edited posts and saves it only if you keep it.
+- **Voice input:** opt-in mic (Settings), using browser speech recognition, with the privacy trade-off stated plainly.
+- **Deferred:** installable app / share-to target (needs HTTPS).
 
 ## 8. What to Explicitly Cut from v1
 

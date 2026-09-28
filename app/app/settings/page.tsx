@@ -6,7 +6,7 @@ import SettingsPanel from "./SettingsPanel";
 
 export default async function SettingsPage() {
   await connection(); // reads the data file, so render per request
-  const { generations } = await readStore();
+  const { generations, settings } = await readStore();
 
   return (
     <>
@@ -18,6 +18,7 @@ export default async function SettingsPage() {
           dataFile={DATA_FILE}
           demoMode={isDemoMode}
           passwordEnabled={!!process.env.COPYDOGG_PASSWORD}
+          voiceInput={settings.voiceInput}
         />
       </main>
     </>

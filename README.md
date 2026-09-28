@@ -4,6 +4,8 @@ Posts that sound like you. Not like a press release.
 
 CopyDogg is a small, personal writing tool. You show it how you write once: pick the platforms you post on, paste a few old posts, and rewrite one boring post your way. After that you type an idea in a few words ("hot take on remote work") and get 2–3 posts that already sound like you, formatted for X, LinkedIn, Instagram, Threads, Reddit or a newsletter.
 
+It also handles everyday messages: reply to a text or email in your voice, rewrite a rough draft, check how something will come across before you send it, and write to specific people (your boss, a client, a friend) the way you'd actually talk to them.
+
 It's built for **one person running their own copy**. There are no accounts, no sign-up and no database service. You bring your own Claude API key, and your voice profile and posts stay in a single file on your machine.
 
 ## Run it
@@ -29,6 +31,22 @@ npm start
 
 **No key yet?** Leave `ANTHROPIC_API_KEY` empty and CopyDogg runs in demo mode: everything works and saves normally, but posts are placeholders and no API calls are made.
 
+## What you can do
+
+- **Write**: type an idea in a few words and get 2–3 versions for X, LinkedIn, Instagram, Threads, Reddit, a newsletter, an email, a text or a work chat. Output streams in as it's written.
+- **Reply**: paste a message you got, optionally say what you want to say back, and get replies.
+- **Rewrite**: paste your own messy draft and get it back clearer, still sounding like you.
+- **Check**: paste something before sending it and see how it comes across.
+- **One-tap situations**: say no nicely, follow up, apologize, say thanks, ask a favor, and more.
+- **Tweak any result**: shorter, warmer, more direct, funnier. Or edit it by hand, and CopyDogg learns from your edits.
+- **Open it where it goes**: post on X or Threads, or open your email or messages app with the text filled in.
+- **Library**: saved posts, everything you've written recently, and ideas saved for later.
+- **People, templates, languages, threads and carousels**, under "more options".
+- **Retune**: refresh your voice profile from the posts you've liked and edited.
+- **Voice input** (optional): speak your idea. Off by default, because your browser sends the audio to its speech service (Google, Microsoft or Apple) to transcribe it.
+
+Keyboard: **Ctrl/⌘ + Enter** writes, and your half-typed idea survives a refresh.
+
 ## Settings (`.env.local`)
 
 | Variable | Required | What it does |
@@ -45,7 +63,7 @@ Everything (voice profile, rules, topics, generated and saved posts) is stored i
 
 Settings → **Export my data** downloads a copy, and **Reset everything** empties the file.
 
-The only thing that leaves your machine is what's needed to write a post: your voice profile, your idea, and a few posts you liked, sent to the Claude API.
+The only thing that leaves your machine is what's needed to write: your voice profile, your idea or pasted text, and a few posts you liked or edited, sent to the Claude API. If you turn on voice input, your browser's speech service also hears what you dictate.
 
 ## Running it somewhere other than your laptop
 

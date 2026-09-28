@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { isPlatform, type Platform } from "./platformRules";
+import type { GenerateMode, Relationship } from "./writingOptions";
 
 /**
  * CopyDogg is single-user and self-hosted: everything lives in one JSON file
@@ -34,13 +35,43 @@ export interface Topic {
 export interface Generation {
   id: string;
   platform: Platform;
+  /** Older entries (before modes existed) have no mode — treat as "write". */
+  mode?: GenerateMode;
   promptInput: string;
+  /** The message replied to, the draft rewritten, or the post tweaked. */
+  context?: string | null;
   toneOverride: string | null;
   outputs: string[];
   chosenOutput: string | null;
   feedback: -1 | 0 | 1;
+  /** The user edited chosenOutput by hand — the strongest "this is me" signal. */
+  edited?: boolean;
   saved: boolean;
   createdAt: string;
+}
+
+export interface Contact {
+  id: string;
+  name: string;
+  relationship: Relationship;
+  note: string;
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  body: string;
+}
+
+export interface Idea {
+  id: string;
+  text: string;
+  createdAt: string;
+}
+
+export interface Settings {
+  /** Opt-in: browser speech recognition sends audio to the browser vendor. */
+  voiceInput: boolean;
 }
 
 export interface StoreData {
@@ -48,6 +79,10 @@ export interface StoreData {
   persona: Persona | null;
   topics: Topic[];
   generations: Generation[];
+  contacts: Contact[];
+  templates: Template[];
+  ideas: Idea[];
+  settings: Settings;
 }
 
 // Resolved at runtime; the ignore comment stops the bundler tracing the whole project.
@@ -57,8 +92,19 @@ export const DATA_DIR = path.resolve(
 );
 export const DATA_FILE = path.join(DATA_DIR, "copydogg.json");
 
+const DEFAULT_SETTINGS: Settings = { voiceInput: false };
+
 function emptyStore(): StoreData {
-  return { version: 1, persona: null, topics: [], generations: [] };
+  return {
+    version: 1,
+    persona: null,
+    topics: [],
+    generations: [],
+    contacts: [],
+    templates: [],
+    ideas: [],
+    settings: { ...DEFAULT_SETTINGS },
+  };
 }
 
 async function readFile(): Promise<StoreData> {
@@ -70,12 +116,17 @@ async function readFile(): Promise<StoreData> {
     throw error;
   }
   try {
+    // Files from older versions lack newer collections; fill in defaults.
     const parsed = JSON.parse(raw) as Partial<StoreData>;
     return {
       version: 1,
       persona: parsed.persona ?? null,
       topics: parsed.topics ?? [],
       generations: parsed.generations ?? [],
+      contacts: parsed.contacts ?? [],
+      templates: parsed.templates ?? [],
+      ideas: parsed.ideas ?? [],
+      settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
     };
   } catch {
     // Never silently replace a file we can't read — that would wipe the user's data.
@@ -120,7 +171,8 @@ export async function getPersona(): Promise<Persona | null> {
 export async function getRecentLikedOutputs(limit: number): Promise<string[]> {
   const { generations } = await readFile();
   return generations
-    .filter((g) => g.feedback === 1)
+    // Liked or hand-edited: both say "this is how I actually sound".
+    .filter((g) => g.feedback === 1 || g.edited)
     .slice(-limit)
     .reverse()
     .map((g) => g.chosenOutput ?? g.outputs[0]);
@@ -164,7 +216,7 @@ export function setTopics(labels: string[]): Promise<void> {
 }
 
 export function addGeneration(
-  input: Pick<Generation, "platform" | "promptInput" | "toneOverride" | "outputs">
+  input: Pick<Generation, "platform" | "mode" | "promptInput" | "context" | "toneOverride" | "outputs">
 ): Promise<Generation> {
   return mutate((data) => {
     const generation: Generation = {
@@ -182,7 +234,7 @@ export function addGeneration(
 
 export function updateGeneration(
   id: string,
-  patch: Partial<Pick<Generation, "saved" | "feedback" | "chosenOutput">>
+  patch: Partial<Pick<Generation, "saved" | "feedback" | "chosenOutput" | "edited">>
 ): Promise<boolean> {
   return mutate((data) => {
     const generation = data.generations.find((g) => g.id === id);
@@ -227,4 +279,54 @@ export function cleanStrings(value: unknown, maxItems: number, maxLength: number
     .map((v) => v.trim().slice(0, maxLength))
     .filter(Boolean)
     .slice(0, maxItems);
+}
+
+export function deleteGeneration(id: string): Promise<boolean> {
+  return mutate((data) => {
+    const before = data.generations.length;
+    data.generations = data.generations.filter((g) => g.id !== id);
+    return data.generations.length < before;
+  });
+}
+
+// ---- Contacts, templates, ideas, settings ---------------------------------
+
+/** Replaces the whole list; entries keep their id when one is given. */
+export function setContacts(
+  contacts: { id?: string; name: string; relationship: Relationship; note: string }[]
+): Promise<Contact[]> {
+  return mutate((data) => {
+    data.contacts = contacts.map((c) => ({ ...c, id: c.id || randomUUID() }));
+    return data.contacts;
+  });
+}
+
+export function setTemplates(
+  templates: { id?: string; name: string; body: string }[]
+): Promise<Template[]> {
+  return mutate((data) => {
+    data.templates = templates.map((t) => ({ ...t, id: t.id || randomUUID() }));
+    return data.templates;
+  });
+}
+
+export function addIdea(text: string): Promise<Idea> {
+  return mutate((data) => {
+    const idea: Idea = { id: randomUUID(), text, createdAt: new Date().toISOString() };
+    data.ideas.push(idea);
+    return idea;
+  });
+}
+
+export function deleteIdea(id: string): Promise<void> {
+  return mutate((data) => {
+    data.ideas = data.ideas.filter((i) => i.id !== id);
+  });
+}
+
+export function updateSettings(patch: Partial<Settings>): Promise<Settings> {
+  return mutate((data) => {
+    data.settings = { ...data.settings, ...patch };
+    return data.settings;
+  });
 }

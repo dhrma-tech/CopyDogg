@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
-import { PLATFORMS, platformRules, type Platform } from "@/lib/platformRules";
+import { PLATFORMS, platformRules, sendLink, type Platform } from "@/lib/platformRules";
+import { TWEAKS, type Tweak } from "@/lib/writingOptions";
 import { patchGeneration } from "@/lib/generateClient";
 
 export interface CardOutput {
@@ -11,13 +12,25 @@ export interface CardOutput {
   generationId: string;
   text: string;
   platform: Platform;
-  /** Replacement text streaming in (regenerate / remix); undefined when idle. */
+  /** Replacement text streaming in (regenerate / tweak / remix); undefined when idle. */
   liveText?: string;
 }
 
 const CARD = "rounded-md border border-hairline bg-card p-4";
 const PLATFORM_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
 const ACTION_ROW = "mt-4 border-t border-dashed border-hairline pt-3";
+const TEXT_BUTTON = "text-ink-soft hover:text-ink disabled:opacity-60";
+const SMALL_PILL =
+  "rounded-full border border-hairline px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink";
+
+const SEND_LABELS: Partial<Record<Platform, string>> = {
+  x: "Post on X",
+  threads: "Post on Threads",
+  linkedin: "Open LinkedIn",
+  reddit: "Open Reddit",
+  email: "Open in email",
+  text: "Open in messages",
+};
 
 function WritingRow() {
   return (
@@ -69,15 +82,30 @@ export function SkeletonCard() {
 
 interface GenerateCardProps {
   output: CardOutput;
+  /** Platforms offered under "Remix for..." (the current one is left out). */
+  remixOptions: readonly Platform[];
   /** Streams a replacement; resolves to an error message, or null. */
   onRegenerate: () => Promise<string | null>;
+  /** Streams an adjusted version of `text`; resolves to an error message, or null. */
+  onTweak: (text: string, tweak: Tweak) => Promise<string | null>;
   /** Streams a version for another platform as a new card; resolves to an error message, or null. */
   onRemix: (platform: Platform) => Promise<string | null>;
 }
 
-export default function GenerateCard({ output, onRegenerate, onRemix }: GenerateCardProps) {
-  const { generationId, text, platform, liveText } = output;
-  const regenerating = liveText !== undefined;
+export default function GenerateCard({
+  output,
+  remixOptions,
+  onRegenerate,
+  onTweak,
+  onRemix,
+}: GenerateCardProps) {
+  const { generationId, platform, liveText } = output;
+  const busy = liveText !== undefined;
+
+  // The card's own copy of the text, so hand edits stick.
+  const [text, setText] = useState(output.text);
+  const [editing, setEditing] = useState(false);
+  const [editDraft, setEditDraft] = useState(output.text);
 
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -85,16 +113,24 @@ export default function GenerateCard({ output, onRegenerate, onRemix }: Generate
   const [feedback, setFeedback] = useState<-1 | 0 | 1>(0);
   const [actionError, setActionError] = useState("");
   const [remixOpen, setRemixOpen] = useState(false);
-  const [remixPlatform, setRemixPlatform] = useState<Platform>(
-    PLATFORMS.find((p) => p !== platform) ?? platform
-  );
-  const [remixing, setRemixing] = useState(false);
+  const otherPlatforms = remixOptions.filter((p) => p !== platform);
+  const remixChoices = otherPlatforms.length > 0 ? otherPlatforms : PLATFORMS.filter((p) => p !== platform);
+  const [remixPlatform, setRemixPlatform] = useState<Platform>(remixChoices[0]);
+
+  const link = sendLink(platform, text);
+
+  async function copyText(): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
 
   async function handleCopy() {
     setActionError("");
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
+    if (!(await copyText())) {
       setActionError("Couldn't copy. Select the text and copy it by hand.");
       return;
     }
@@ -105,10 +141,7 @@ export default function GenerateCard({ output, onRegenerate, onRemix }: Generate
   async function handleSave() {
     setSaving(true);
     setActionError("");
-    const ok = await patchGeneration(generationId, {
-      saved: true,
-      chosen_output: text,
-    });
+    const ok = await patchGeneration(generationId, { saved: true, chosen_output: text });
     setSaving(false);
     if (ok) setSaved(true);
     else setActionError("Couldn't save that. Try again.");
@@ -131,22 +164,33 @@ export default function GenerateCard({ output, onRegenerate, onRemix }: Generate
     }
   }
 
-  async function handleRegenerate() {
+  async function handleEditDone() {
+    const edited = editDraft.trim();
+    setEditing(false);
+    if (!edited || edited === text) return;
+    const previous = text;
+    setText(edited);
     setActionError("");
-    const error = await onRegenerate();
+    // Hand edits are the clearest signal of how they actually write.
+    const ok = await patchGeneration(generationId, { chosen_output: edited, edited: true });
+    if (!ok) {
+      setText(previous);
+      setActionError("Couldn't keep that edit. Try again.");
+    }
+  }
+
+  async function run(action: () => Promise<string | null>) {
+    setActionError("");
+    const error = await action();
     if (error) setActionError(error);
   }
 
   async function handleRemix() {
-    setRemixing(true);
-    setActionError("");
     setRemixOpen(false); // the new card streams in below
-    const error = await onRemix(remixPlatform);
-    setRemixing(false);
-    if (error) setActionError(error);
+    await run(() => onRemix(remixPlatform));
   }
 
-  if (regenerating) {
+  if (busy) {
     return (
       <div className={CARD}>
         <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
@@ -159,29 +203,62 @@ export default function GenerateCard({ output, onRegenerate, onRemix }: Generate
   return (
     <div className={CARD}>
       <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
-      <p className="mt-2 whitespace-pre-wrap text-sm text-ink">{text}</p>
 
-      <div className={`${ACTION_ROW} flex flex-wrap items-center gap-4 text-sm`}>
-        <button type="button" onClick={handleCopy} className="text-ink-soft">
+      {editing ? (
+        <div className="mt-2 flex flex-col gap-2">
+          <textarea
+            value={editDraft}
+            onChange={(e) => setEditDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleEditDone();
+              if (e.key === "Escape") setEditing(false);
+            }}
+            rows={Math.min(12, Math.max(3, editDraft.split("\n").length + 1))}
+            autoFocus
+            aria-label="Edit this version"
+            className="w-full resize-y rounded-md border border-accent bg-card px-3 py-2 text-sm text-ink outline-none focus:ring-2 focus:ring-accent-soft"
+          />
+          <div className="flex gap-4 text-sm">
+            <button type="button" onClick={handleEditDone} className="font-bold text-accent">
+              Done
+            </button>
+            <button type="button" onClick={() => setEditing(false)} className={TEXT_BUTTON}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-2 whitespace-pre-wrap text-sm text-ink">{text}</p>
+      )}
+
+      <div className={`${ACTION_ROW} flex flex-wrap items-center gap-x-4 gap-y-2 text-sm`}>
+        <button type="button" onClick={handleCopy} className={TEXT_BUTTON}>
           {copied ? "copied" : "Copy"}
         </button>
-        <button type="button" onClick={handleRegenerate} className="text-ink-soft">
-          Regenerate
-        </button>
+        {link && (
+          <a
+            href={link}
+            target="_blank"
+            rel="noopener noreferrer"
+            // Copy too: some apps ignore the prefilled text, so it's ready to paste.
+            onClick={() => void copyText()}
+            className="font-medium text-accent hover:underline"
+          >
+            {SEND_LABELS[platform]}
+          </a>
+        )}
         <button
           type="button"
-          onClick={handleSave}
-          disabled={saved || saving}
-          className="text-ink-soft disabled:opacity-60"
+          onClick={() => {
+            setEditDraft(text);
+            setEditing(true);
+          }}
+          className={TEXT_BUTTON}
         >
-          {saved ? "saved" : saving ? "saving..." : "Save to library"}
+          Edit
         </button>
-        <button
-          type="button"
-          onClick={() => setRemixOpen((v) => !v)}
-          className="text-ink-soft"
-        >
-          Remix for...
+        <button type="button" onClick={handleSave} disabled={saved || saving} className={TEXT_BUTTON}>
+          {saved ? "saved" : saving ? "saving..." : "Save"}
         </button>
         <span className="ml-auto flex gap-3">
           <button
@@ -205,14 +282,39 @@ export default function GenerateCard({ output, onRegenerate, onRemix }: Generate
         </span>
       </div>
 
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        {TWEAKS.map((tweak) => (
+          <button
+            key={tweak}
+            type="button"
+            onClick={() => run(() => onTweak(text, tweak))}
+            className={SMALL_PILL}
+          >
+            {tweak}
+          </button>
+        ))}
+        <button type="button" onClick={() => run(onRegenerate)} className={SMALL_PILL}>
+          regenerate
+        </button>
+        <button
+          type="button"
+          onClick={() => setRemixOpen((v) => !v)}
+          aria-expanded={remixOpen}
+          className={SMALL_PILL}
+        >
+          remix for...
+        </button>
+      </div>
+
       {remixOpen && (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-hairline pt-3">
           <select
             value={remixPlatform}
             onChange={(e) => setRemixPlatform(e.target.value as Platform)}
+            aria-label="Remix for which platform"
             className="rounded-md border border-hairline bg-card px-2 py-1.5 text-sm text-ink"
           >
-            {PLATFORMS.filter((p) => p !== platform).map((p) => (
+            {remixChoices.map((p) => (
               <option key={p} value={p}>
                 {platformRules[p].label}
               </option>
@@ -221,10 +323,9 @@ export default function GenerateCard({ output, onRegenerate, onRemix }: Generate
           <button
             type="button"
             onClick={handleRemix}
-            disabled={remixing}
-            className="rounded-full bg-ink px-4 py-1.5 text-sm font-bold text-card disabled:opacity-60"
+            className="rounded-full bg-ink px-4 py-1.5 text-sm font-bold text-card"
           >
-            {remixing ? "remixing..." : "Remix"}
+            Remix
           </button>
         </div>
       )}

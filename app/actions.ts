@@ -3,16 +3,24 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { GATE_COOKIE, gatePassword, isCorrectPassword, tokenFor } from "@/lib/passwordGate";
+import { RELATIONSHIPS, isOneOf } from "@/lib/writingOptions";
 import {
+  addIdea,
   cleanPlatformVoices,
   cleanPlatforms,
   cleanStrings,
   cleanTone,
+  deleteIdea,
   getPersona,
   resetStore,
   savePersona,
+  setContacts,
+  setTemplates,
   setTopics,
   updatePersona,
+  updateSettings,
+  type Contact,
+  type Template,
 } from "@/lib/store";
 
 export interface VoiceProfileInput {
@@ -133,4 +141,72 @@ export async function unlock(password: string, next: string): Promise<ActionResu
 export async function lock(): Promise<void> {
   (await cookies()).delete(GATE_COOKIE);
   redirect("/unlock");
+}
+
+// ---- Ideas, people, templates, settings -----------------------------------
+
+export async function saveIdea(text: string): Promise<ActionResult> {
+  const idea = typeof text === "string" ? text.trim().slice(0, 2000) : "";
+  if (!idea) return { ok: false, error: "Type an idea first." };
+  try {
+    await addIdea(idea);
+  } catch {
+    return { ok: false, error: "Couldn't save that idea. Try again." };
+  }
+  return { ok: true };
+}
+
+export async function removeIdea(id: string): Promise<ActionResult> {
+  try {
+    await deleteIdea(String(id));
+  } catch {
+    return { ok: false, error: "Couldn't delete that idea. Try again." };
+  }
+  return { ok: true };
+}
+
+export async function saveContacts(
+  input: { id?: string; name: string; relationship: string; note: string }[]
+): Promise<{ ok: true; items: Contact[] } | { ok: false; error: string }> {
+  const contacts = (Array.isArray(input) ? input : [])
+    .map((c) => ({
+      id: typeof c.id === "string" ? c.id : undefined,
+      name: String(c.name ?? "").trim().slice(0, 80),
+      relationship: isOneOf(RELATIONSHIPS, c.relationship) ? c.relationship : "other",
+      note: String(c.note ?? "").trim().slice(0, 300),
+    }))
+    .filter((c) => c.name)
+    .slice(0, 100);
+  try {
+    return { ok: true, items: await setContacts(contacts) };
+  } catch {
+    return { ok: false, error: "Couldn't save your people. Try again." };
+  }
+}
+
+export async function saveTemplates(
+  input: { id?: string; name: string; body: string }[]
+): Promise<{ ok: true; items: Template[] } | { ok: false; error: string }> {
+  const templates = (Array.isArray(input) ? input : [])
+    .map((t) => ({
+      id: typeof t.id === "string" ? t.id : undefined,
+      name: String(t.name ?? "").trim().slice(0, 60),
+      body: String(t.body ?? "").trim().slice(0, 3000),
+    }))
+    .filter((t) => t.name && t.body)
+    .slice(0, 50);
+  try {
+    return { ok: true, items: await setTemplates(templates) };
+  } catch {
+    return { ok: false, error: "Couldn't save your templates. Try again." };
+  }
+}
+
+export async function setVoiceInput(enabled: boolean): Promise<ActionResult> {
+  try {
+    await updateSettings({ voiceInput: enabled === true });
+  } catch {
+    return { ok: false, error: "Couldn't save that setting. Try again." };
+  }
+  return { ok: true };
 }

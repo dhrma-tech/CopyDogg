@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { streamPostVariations } from "@/lib/claude";
-import { isPlatform } from "@/lib/platformRules";
+import { isPlatform, platformRules, type Structure } from "@/lib/platformRules";
 import { isDemoMode, demoStream } from "@/lib/demoMode";
 import { splitVariations } from "@/lib/variations";
-import { addGeneration, getPersona, getRecentLikedOutputs } from "@/lib/store";
+import { LANGUAGES, SITUATIONS, TWEAKS, isOneOf, type GenerateMode } from "@/lib/writingOptions";
+import { addGeneration, getRecentLikedOutputs, readStore } from "@/lib/store";
+
+const GENERATE_MODES: readonly GenerateMode[] = ["write", "reply", "rewrite", "tweak"];
+
+function text(value: unknown, max: number): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
 
 /**
  * Validation failures come back as plain JSON with a status code. Once the
@@ -14,32 +21,54 @@ import { addGeneration, getPersona, getRecentLikedOutputs } from "@/lib/store";
  */
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
-  const { platform, promptInput, toneOverride, variationCount } = body;
 
-  const idea = typeof promptInput === "string" ? promptInput.trim().slice(0, 2000) : "";
-  const override =
-    typeof toneOverride === "string" && toneOverride.trim()
-      ? toneOverride.trim().slice(0, 200)
-      : null;
-  const count =
-    typeof variationCount === "number" && variationCount >= 1 && variationCount <= 3
-      ? Math.floor(variationCount)
-      : 3;
+  const mode: GenerateMode = isOneOf(GENERATE_MODES, body.mode) ? body.mode : "write";
+  const platform = body.platform;
+  const idea = text(body.promptInput, 2000);
+  const context = text(body.context, 8000);
+  const override = text(body.toneOverride, 200) || null;
+  const situation = isOneOf(SITUATIONS, body.situation) ? body.situation : null;
+  const language = isOneOf(LANGUAGES, body.language) ? body.language : null;
+  const tweak = isOneOf(TWEAKS, body.tweak) ? body.tweak : null;
 
-  if (!idea) {
-    return NextResponse.json({ error: "Type an idea first." }, { status: 400 });
-  }
   if (!isPlatform(platform)) {
     return NextResponse.json({ error: "Unknown platform." }, { status: 400 });
   }
+  if (mode === "write" && !idea) {
+    return NextResponse.json({ error: "Type an idea first." }, { status: 400 });
+  }
+  if (mode === "reply" && !context) {
+    return NextResponse.json({ error: "Paste the message you're replying to." }, { status: 400 });
+  }
+  if (mode === "rewrite" && !context) {
+    return NextResponse.json({ error: "Paste the draft you want rewritten." }, { status: 400 });
+  }
+  if (mode === "tweak" && (!context || !tweak)) {
+    return NextResponse.json({ error: "Nothing to tweak." }, { status: 400 });
+  }
 
-  const persona = await getPersona();
+  const { persona, contacts, templates } = await readStore();
   if (!persona) {
     return NextResponse.json(
       { error: "Set up your voice first — it takes about five minutes." },
       { status: 409 }
     );
   }
+
+  const structure: Structure | null =
+    body.structure && platformRules[platform].structure === body.structure
+      ? platformRules[platform].structure!
+      : null;
+  const contact = contacts.find((c) => c.id === body.contactId) ?? null;
+  const template = templates.find((t) => t.id === body.templateId) ?? null;
+
+  const requested =
+    typeof body.variationCount === "number" && body.variationCount >= 1 && body.variationCount <= 3
+      ? Math.floor(body.variationCount)
+      : structure
+        ? 2 // threads and carousels are long; two options is plenty
+        : 3;
+  const count = mode === "tweak" ? 1 : requested;
 
   const recentLikedExamples = isDemoMode ? [] : await getRecentLikedOutputs(3);
   const encoder = new TextEncoder();
@@ -61,21 +90,29 @@ export async function POST(request: Request) {
       let raw = "";
       try {
         const chunks = isDemoMode
-          ? demoStream(count, request.signal)
+          ? demoStream(mode, count, request.signal)
           : streamPostVariations(
               {
                 persona,
                 platform,
+                mode,
                 promptInput: idea,
+                context,
+                situation,
                 toneOverride: override,
+                contact,
+                language,
+                structure,
+                template,
+                tweak,
                 recentLikedExamples,
                 variationCount: count,
               },
               request.signal
             );
-        for await (const text of chunks) {
-          raw += text;
-          send({ type: "delta", text });
+        for await (const chunk of chunks) {
+          raw += chunk;
+          send({ type: "delta", text: chunk });
         }
       } catch {
         // A closed tab or a newer request aborted this one: nobody is listening.
@@ -98,12 +135,19 @@ export async function POST(request: Request) {
       let generationId: string;
       try {
         generationId = (
-          await addGeneration({ platform, promptInput: idea, toneOverride: override, outputs })
+          await addGeneration({
+            platform,
+            mode,
+            promptInput: idea,
+            context: context || null,
+            toneOverride: override,
+            outputs,
+          })
         ).id;
       } catch {
         send({
           type: "error",
-          error: "Wrote the posts but couldn't save them to the data file. Check the server log, then try again.",
+          error: "Wrote it but couldn't save it to the data file. Check the server log, then try again.",
         });
         return close();
       }

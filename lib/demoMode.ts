@@ -1,5 +1,6 @@
 import type { Platform } from "./platformRules";
 import type { ExtractedVoice } from "./claude";
+import type { GenerateMode } from "./writingOptions";
 
 /**
  * Demo mode: no ANTHROPIC_API_KEY set. The app still runs and saves data for
@@ -32,9 +33,28 @@ export function demoExtractedVoice(platforms: Platform[]): ExtractedVoice {
   };
 }
 
+const DEMO_BY_MODE: Record<GenerateMode, string[]> = {
+  write: DEMO_OUTPUTS,
+  reply: [
+    "Placeholder reply #1 — with an API key, this answers the message in your voice.",
+    "Placeholder reply #2, a bit warmer. Demo mode.",
+    "Placeholder reply #3, short and direct. Demo mode.",
+  ],
+  rewrite: [
+    "Placeholder rewrite #1 — your draft, tightened, in your voice.",
+    "Placeholder rewrite #2, a different angle. Demo mode.",
+    "Placeholder rewrite #3. Demo mode.",
+  ],
+  tweak: ["Placeholder tweak — the same post, adjusted as asked. Demo mode."],
+};
+
 /** Demo stand-in for streamPostVariations: same text shape, arriving in chunks. */
-export async function* demoStream(count: number, signal?: AbortSignal): AsyncGenerator<string> {
-  const text = DEMO_OUTPUTS.slice(0, count).join("\n---\n");
+export async function* demoStream(
+  mode: GenerateMode,
+  count: number,
+  signal?: AbortSignal
+): AsyncGenerator<string> {
+  const text = DEMO_BY_MODE[mode].slice(0, count).join("\n---\n");
   const words = text.split(/(?<= )/);
   // Pause like real thinking time, so the loading placeholders are visible.
   await new Promise((resolve) => setTimeout(resolve, 500));
@@ -44,3 +64,13 @@ export async function* demoStream(count: number, signal?: AbortSignal): AsyncGen
     yield words.slice(i, i + 3).join("");
   }
 }
+
+export const DEMO_TONE_CHECK = {
+  verdict: "Demo mode: with an API key, this says in one sentence how your message will land.",
+  traits: [
+    { label: "clear", level: "high" as const },
+    { label: "formal", level: "medium" as const },
+    { label: "warm", level: "low" as const },
+  ],
+  suggestions: ["Demo mode placeholder: a specific fix would go here."],
+};

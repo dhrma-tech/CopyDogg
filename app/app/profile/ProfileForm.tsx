@@ -9,6 +9,8 @@ import ChipEditor from "@/components/ChipEditor";
 import PrimaryButton from "@/components/PrimaryButton";
 import { PlatformMultiPicker } from "@/components/PlatformPicker";
 import { platformRules, type Platform } from "@/lib/platformRules";
+import { MIN_LEARNABLE_POSTS } from "@/lib/writingOptions";
+import type { ExtractedVoice } from "@/lib/claude";
 
 const RULE_SUGGESTIONS = [
   `never use "in today's world"`,
@@ -22,11 +24,20 @@ const RULE_SUGGESTIONS = [
 interface ProfileFormProps {
   persona: Persona;
   initialTopics: string[];
+  /** Posts liked or hand-edited so far — what retune learns from. */
+  learnableCount: number;
 }
+
+type RetuneState =
+  | { state: "idle" }
+  | { state: "loading" }
+  | { state: "error"; error: string }
+  | { state: "proposed"; proposal: ExtractedVoice };
 
 type Status = "idle" | "saving" | "saved" | "error";
 
-export default function ProfileForm({ persona, initialTopics }: ProfileFormProps) {
+export default function ProfileForm({ persona, initialTopics, learnableCount }: ProfileFormProps) {
+  const [retune, setRetune] = useState<RetuneState>({ state: "idle" });
   const [voiceDescription, setVoiceDescription] = useState(
     persona.voiceDescription ?? ""
   );
@@ -48,22 +59,28 @@ export default function ProfileForm({ persona, initialTopics }: ProfileFormProps
     setSliders((s) => ({ ...s, [key]: value }));
   }
 
-  async function handleSave() {
+  /** `next` lets retune save values it just set, before state has re-rendered. */
+  async function handleSave(next?: {
+    voiceDescription: string;
+    sliders: Sliders;
+    platformVoices: Partial<Record<Platform, string>>;
+  }) {
     setStatus("saving");
     setErrorMessage("");
+    const v = next ?? { voiceDescription, sliders, platformVoices };
 
     let result: Awaited<ReturnType<typeof saveProfile>>;
     try {
       result = await saveProfile({
-        voiceDescription,
-        toneFormality: sliders.formality,
-        toneHumor: sliders.humor,
-        toneBluntness: sliders.bluntness,
-        toneWarmth: sliders.warmth,
-        emojiDensity: sliders.emojiDensity,
+        voiceDescription: v.voiceDescription,
+        toneFormality: v.sliders.formality,
+        toneHumor: v.sliders.humor,
+        toneBluntness: v.sliders.bluntness,
+        toneWarmth: v.sliders.warmth,
+        emojiDensity: v.sliders.emojiDensity,
         platforms,
         // Notes for deselected platforms are kept, so re-adding one restores it.
-        platformVoices,
+        platformVoices: v.platformVoices,
         rules,
         topics,
       });
@@ -79,6 +96,40 @@ export default function ProfileForm({ persona, initialTopics }: ProfileFormProps
     setStatus("saved");
   }
 
+  async function handleRetune() {
+    setRetune({ state: "loading" });
+    try {
+      const res = await fetch("/api/voice-retune", { method: "POST" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.voiceDescription) {
+        setRetune({ state: "error", error: data.error ?? "Couldn't retune. Try again." });
+        return;
+      }
+      setRetune({ state: "proposed", proposal: data as ExtractedVoice });
+    } catch {
+      setRetune({ state: "error", error: "Couldn't reach CopyDogg. Check that it's still running." });
+    }
+  }
+
+  async function keepRetune(proposal: ExtractedVoice) {
+    const next = {
+      voiceDescription: proposal.voiceDescription,
+      sliders: {
+        formality: proposal.tone.formality,
+        humor: proposal.tone.humor,
+        bluntness: proposal.tone.bluntness,
+        warmth: proposal.tone.warmth,
+        emojiDensity: proposal.tone.emojiDensity,
+      },
+      platformVoices: { ...platformVoices, ...proposal.platformVoices },
+    };
+    setVoiceDescription(next.voiceDescription);
+    setSliders(next.sliders);
+    setPlatformVoices(next.platformVoices);
+    setRetune({ state: "idle" });
+    await handleSave(next);
+  }
+
   return (
     <div className="w-full max-w-lg">
       <h1 className="font-display text-2xl font-semibold text-ink">
@@ -89,6 +140,53 @@ export default function ProfileForm({ persona, initialTopics }: ProfileFormProps
       </p>
 
       <div className="mt-6 flex flex-col gap-6 rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
+        <div className="rounded-md border border-dashed border-hairline p-4">
+          <p className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
+            Learn from your posts
+          </p>
+          {retune.state === "proposed" ? (
+            <div className="mt-3 flex flex-col gap-3">
+              <p className="text-sm text-ink-soft">Here&rsquo;s your voice, updated from what you liked and edited:</p>
+              <p className="rounded-md bg-paper px-3 py-2 text-sm text-ink">
+                {retune.proposal.voiceDescription}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => keepRetune(retune.proposal)}
+                  className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-card"
+                >
+                  Keep this
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRetune({ state: "idle" })}
+                  className="rounded-full border border-hairline px-4 py-2 text-sm font-bold text-ink-soft"
+                >
+                  Keep my current one
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-2 flex flex-col gap-3">
+              <p className="text-sm text-ink-soft">
+                {learnableCount >= MIN_LEARNABLE_POSTS
+                  ? `You've liked or edited ${learnableCount} posts. CopyDogg can refresh your voice from them.`
+                  : `Like or edit ${MIN_LEARNABLE_POSTS - learnableCount} more post${MIN_LEARNABLE_POSTS - learnableCount === 1 ? "" : "s"} and CopyDogg can refresh your voice from them.`}
+              </p>
+              <button
+                type="button"
+                onClick={handleRetune}
+                disabled={retune.state === "loading" || learnableCount < MIN_LEARNABLE_POSTS}
+                className="self-start rounded-full border border-hairline px-4 py-2 text-sm font-bold text-ink disabled:opacity-60"
+              >
+                {retune.state === "loading" ? "re-reading your voice..." : "Retune my voice"}
+              </button>
+              {retune.state === "error" && <p className="text-sm text-danger">{retune.error}</p>}
+            </div>
+          )}
+        </div>
+
         <div>
           <p className="text-sm text-ink">Voice description</p>
           <textarea
@@ -145,7 +243,7 @@ export default function ProfileForm({ persona, initialTopics }: ProfileFormProps
         {status === "error" && <p className="text-sm text-danger">{errorMessage}</p>}
 
         <div className="flex items-center gap-3">
-          <PrimaryButton onClick={handleSave} disabled={status === "saving"}>
+          <PrimaryButton onClick={() => handleSave()} disabled={status === "saving"}>
             {status === "saving" ? "saving..." : "Save changes"}
           </PrimaryButton>
           {status === "saved" && (

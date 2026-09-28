@@ -1,7 +1,10 @@
 import {
+  AtSign,
   Briefcase,
   Camera,
+  Hash,
   Mail,
+  MessageCircle,
   MessagesSquare,
   Users,
   X as XIcon,
@@ -16,6 +19,9 @@ const PLATFORM_ICONS: Record<Platform, LucideIcon> = {
   threads: MessagesSquare,
   reddit: Users,
   newsletter: Mail,
+  email: AtSign,
+  text: MessageCircle,
+  workchat: Hash,
 };
 
 const ACTIVE_PILL =

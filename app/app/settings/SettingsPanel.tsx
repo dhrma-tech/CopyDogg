@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { lock, resetAllData } from "@/app/actions";
+import { lock, resetAllData, setVoiceInput } from "@/app/actions";
 
 interface SettingsPanelProps {
   generationCount: number;
@@ -9,6 +9,7 @@ interface SettingsPanelProps {
   dataFile: string;
   demoMode: boolean;
   passwordEnabled: boolean;
+  voiceInput: boolean;
 }
 
 const META_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
@@ -21,7 +22,22 @@ export default function SettingsPanel({
   dataFile,
   demoMode,
   passwordEnabled,
+  voiceInput: initialVoiceInput,
 }: SettingsPanelProps) {
+  const [voiceInput, setVoiceInputState] = useState(initialVoiceInput);
+  const [voiceError, setVoiceError] = useState("");
+
+  async function toggleVoiceInput() {
+    const next = !voiceInput;
+    setVoiceInputState(next);
+    setVoiceError("");
+    const result = await setVoiceInput(next).catch(() => ({ ok: false as const, error: "Couldn't reach CopyDogg." }));
+    if (!result.ok) {
+      setVoiceInputState(!next);
+      setVoiceError(result.error);
+    }
+  }
+
   const [resetStep, setResetStep] = useState<"idle" | "confirm" | "resetting">("idle");
   const [resetError, setResetError] = useState("");
   const [locking, setLocking] = useState(false);
@@ -72,6 +88,33 @@ export default function SettingsPanel({
           <a href="/api/export" download className={`mt-4 inline-block ${SECONDARY_BUTTON}`}>
             Export my data
           </a>
+        </section>
+
+        <section>
+          <p className={META_LABEL}>Voice input</p>
+          <p className="mt-3 text-sm text-ink-soft">
+            Adds a mic button to the writing screen so you can say your idea
+            instead of typing it.
+          </p>
+          <p className="mt-2 text-sm text-ink">
+            Heads up: your browser does the listening, and most browsers
+            (Chrome, Edge, Safari) send the audio to their own speech service
+            — Google, Microsoft or Apple — to turn it into text. That&rsquo;s the
+            one thing in CopyDogg that leaves your machine besides what goes to
+            Claude.
+          </p>
+          <label className="mt-4 flex cursor-pointer items-center gap-3">
+            <input
+              type="checkbox"
+              checked={voiceInput}
+              onChange={toggleVoiceInput}
+              className="h-4 w-4 accent-accent"
+            />
+            <span className="text-sm font-medium text-ink">
+              Turn on voice input
+            </span>
+          </label>
+          {voiceError && <p className="mt-2 text-sm text-danger">{voiceError}</p>}
         </section>
 
         {passwordEnabled && (

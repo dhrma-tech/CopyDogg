@@ -1,10 +1,20 @@
-import type { Platform } from "./platformRules";
+import type { Platform, Structure } from "./platformRules";
+import type { GenerateMode } from "./writingOptions";
 import { splitPartialVariations } from "./variations";
 
-interface GenerateBody {
+/** Everything /api/generate accepts. Only platform and mode are always needed. */
+export interface GenerateBody {
+  mode: GenerateMode;
   platform: Platform;
   promptInput: string;
+  context?: string;
+  situation?: string;
   toneOverride?: string;
+  contactId?: string;
+  language?: string;
+  structure?: Structure;
+  templateId?: string;
+  tweak?: string;
   variationCount?: number;
 }
 

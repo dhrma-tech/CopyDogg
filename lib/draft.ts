@@ -8,10 +8,14 @@ const KEY = "copydogg:draft";
 
 export interface Draft {
   idea: string;
+  /** Pasted text for Reply / Rewrite / Check. */
+  context: string;
   platform: string | null;
+  mode: string | null;
+  language: string | null;
 }
 
-const EMPTY: Draft = { idea: "", platform: null };
+const EMPTY: Draft = { idea: "", context: "", platform: null, mode: null, language: null };
 
 // useSyncExternalStore needs a stable object for an unchanged value.
 let cachedRaw: string | null = null;
@@ -28,9 +32,13 @@ export function getDraftSnapshot(): Draft {
   cachedRaw = raw;
   try {
     const parsed = raw ? JSON.parse(raw) : null;
+    const str = (v: unknown) => (typeof v === "string" ? v : null);
     cachedDraft = {
-      idea: typeof parsed?.idea === "string" ? parsed.idea : "",
-      platform: typeof parsed?.platform === "string" ? parsed.platform : null,
+      idea: str(parsed?.idea) ?? "",
+      context: str(parsed?.context) ?? "",
+      platform: str(parsed?.platform),
+      mode: str(parsed?.mode),
+      language: str(parsed?.language),
     };
   } catch {
     cachedDraft = EMPTY;
@@ -54,4 +62,10 @@ export function writeDraft(draft: Draft): void {
   } catch {
     // Storage unavailable — the draft just won't survive a refresh.
   }
+}
+
+/** Puts an idea into the draft (e.g. "Use" on a saved idea) before opening /app. */
+export function prefillIdea(idea: string): void {
+  const current = getDraftSnapshot();
+  writeDraft({ ...current, idea, mode: "write" });
 }
