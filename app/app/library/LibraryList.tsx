@@ -9,6 +9,11 @@ import { patchGeneration } from "@/lib/generateClient";
 import { prefillIdea } from "@/lib/draft";
 import { removeIdea } from "@/app/actions";
 import { useUndoToast } from "@/components/UndoToast";
+import { buttonClasses } from "@/components/ui/Button";
+import { chipClasses } from "@/components/ui/Chip";
+import { FIELD } from "@/components/ui/Field";
+import EmptyState from "@/components/ui/EmptyState";
+import { SEGMENT_TRACK, segmentClasses } from "@/components/ui/Segmented";
 
 export interface LibraryGeneration {
   id: string;
@@ -30,12 +35,13 @@ interface Idea {
 
 type Tab = "saved" | "recent" | "ideas";
 
-const META = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
-const PILL_ON = "rounded-full bg-accent-soft px-4 py-2 text-sm font-medium text-accent";
-const PILL_OFF = "rounded-full border border-hairline px-4 py-2 text-sm font-medium text-ink-soft";
+const META = "label";
+const PILL_ON = chipClasses(true, "sm");
+const PILL_OFF = chipClasses(false, "sm");
 const CARD = "rounded-md border border-hairline bg-card p-4";
-const TEXT_BUTTON = "text-sm text-ink-soft hover:text-ink disabled:opacity-60";
-const EMPTY = "mt-8 rounded-md border border-hairline bg-card px-4 py-6 text-center text-sm text-ink-soft";
+const TEXT_BUTTON = buttonClasses({ variant: "quiet", size: "sm" });
+const ACTION_ROW = "mt-3 -ml-3.5 flex flex-wrap items-center gap-1 border-t border-dashed border-hairline pt-2";
+const WRITE_LINK = buttonClasses({ variant: "secondary", size: "sm" });
 
 async function deleteGenerationRequest(id: string): Promise<boolean> {
   try {
@@ -169,9 +175,9 @@ export default function LibraryList({
 
   return (
     <div className="w-full max-w-2xl">
-      <h1 className="font-display text-2xl font-semibold text-ink">Library</h1>
+      <h1 className="font-display text-title text-ink">Library</h1>
 
-      <div className="mt-4 flex gap-2" role="tablist" aria-label="Library sections">
+      <div className={`mt-5 ${SEGMENT_TRACK}`} role="tablist" aria-label="Library sections">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -179,32 +185,33 @@ export default function LibraryList({
             role="tab"
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className={tab === t.id ? PILL_ON : PILL_OFF}
+            className={segmentClasses(tab === t.id)}
           >
-            {t.label} <span className="font-mono text-xs">{t.count}</span>
+            {t.label} <span className="font-mono text-label opacity-80">{t.count}</span>
           </button>
         ))}
       </div>
 
-      {error && <p className="mt-3 text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-small text-danger">{error}</p>}
 
       {tab === "ideas" ? (
         ideas.length === 0 ? (
-          <p className={EMPTY}>
-            no ideas saved yet — tap &ldquo;save idea&rdquo; on the{" "}
-            <Link href="/app" className="font-medium text-accent underline">
-              writing screen
-            </Link>{" "}
-            when one hits you
-          </p>
+          <div className="mt-6">
+            <EmptyState
+              title="No ideas saved yet"
+              action={<Link href="/app" className={WRITE_LINK}>Open the writing screen</Link>}
+            >
+              Tap &ldquo;save idea&rdquo; on the writing screen when one hits you.
+            </EmptyState>
+          </div>
         ) : (
           <div className="mt-6 flex flex-col gap-3">
             {ideas.map((idea) => (
               <div key={idea.id} className={CARD}>
                 <p className={META}>{formatDate(idea.createdAt)}</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm text-ink">{idea.text}</p>
-                <div className="mt-3 flex gap-4 border-t border-dashed border-hairline pt-3">
-                  <button type="button" onClick={() => writeFromIdea(idea)} className="text-sm font-bold text-accent">
+                <p className="mt-2 whitespace-pre-wrap text-body text-ink">{idea.text}</p>
+                <div className={ACTION_ROW}>
+                  <button type="button" onClick={() => writeFromIdea(idea)} className="link mx-3.5 text-small">
                     Write it now
                   </button>
                   <button type="button" onClick={() => deleteIdeaById(idea)} className={TEXT_BUTTON}>
@@ -224,12 +231,12 @@ export default function LibraryList({
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={tab === "saved" ? "Search saved posts" : "Search everything you've written"}
                 aria-label="Search"
-                className="min-w-0 flex-1 rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+                className={`${FIELD} min-w-0 flex-1`}
               />
               <button
                 type="button"
                 onClick={() => setNewestFirst((v) => !v)}
-                className="shrink-0 rounded-md border border-hairline bg-card px-3 text-xs font-medium text-ink-soft"
+                className={`shrink-0 ${buttonClasses({ variant: "secondary" })} px-3.5 text-small`}
                 aria-label={newestFirst ? "Showing newest first" : "Showing oldest first"}
               >
                 {newestFirst ? "newest ↓" : "oldest ↓"}
@@ -253,14 +260,18 @@ export default function LibraryList({
           </div>
 
           {(tab === "saved" ? saved : generations).length === 0 ? (
-            <p className={EMPTY}>
-              {tab === "saved" ? "nothing saved yet — " : "nothing written yet — "}
-              <Link href="/app" className="font-medium text-accent underline">
-                go write something worth keeping
-              </Link>
-            </p>
+            <div className="mt-6">
+              <EmptyState
+                title={tab === "saved" ? "Nothing saved yet" : "Nothing written yet"}
+                action={<Link href="/app" className={WRITE_LINK}>Write a post</Link>}
+              >
+                Go write something worth keeping.
+              </EmptyState>
+            </div>
           ) : list.length === 0 ? (
-            <p className={EMPTY}>nothing matches that — try another word or platform</p>
+            <div className="mt-6">
+              <EmptyState title="Nothing matches that">Try another word or platform.</EmptyState>
+            </div>
           ) : (
             <div className="mt-6 flex flex-col gap-4">
               {list.map((g) =>
@@ -313,7 +324,7 @@ function CardHeader({ g }: { g: LibraryGeneration }) {
         {platformRules[g.platform]?.label ?? g.platform}
         {g.mode !== "write" && ` · ${g.mode === "tweak" ? "tweak" : MODE_LABELS[g.mode]}`}
       </p>
-      <p className="font-mono text-xs text-ink-soft">{formatDate(g.createdAt)}</p>
+      <p className={META}>{formatDate(g.createdAt)}</p>
     </div>
   );
 }
@@ -333,12 +344,12 @@ function SavedCard({
   return (
     <div className={CARD}>
       <CardHeader g={g} />
-      <p className="mt-2 line-clamp-2 text-xs text-ink-soft">{sourceLine(g)}</p>
-      <p className="mt-2 whitespace-pre-wrap text-sm text-ink">{text}</p>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-dashed border-hairline pt-3">
+      <p className="mt-2 line-clamp-2 text-small text-ink-soft">{sourceLine(g)}</p>
+      <p className="mt-2 whitespace-pre-wrap text-body text-ink">{text}</p>
+      <div className={ACTION_ROW}>
         <CopyButton text={text} />
         {link && (
-          <a href={link} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-accent hover:underline">
+          <a href={link} target="_blank" rel="noopener noreferrer" className="link mx-2 text-small">
             {SEND_LABELS[g.platform] ?? "Open"}
           </a>
         )}
@@ -357,14 +368,14 @@ function RecentCard({ g, onSave }: { g: LibraryGeneration; onSave: (text: string
   return (
     <div className={CARD}>
       <CardHeader g={g} />
-      <p className="mt-2 line-clamp-2 text-xs text-ink-soft">{sourceLine(g)}</p>
+      <p className="mt-2 line-clamp-2 text-small text-ink-soft">{sourceLine(g)}</p>
       <div className="mt-2 flex flex-col divide-y divide-dashed divide-hairline">
         {g.outputs.map((text, i) => {
           const isSaved = g.saved && (g.chosenOutput ?? g.outputs[0]) === text;
           return (
             <div key={i} className="py-3 first:pt-1 last:pb-0">
-              <p className="whitespace-pre-wrap text-sm text-ink">{text}</p>
-              <div className="mt-2 flex gap-4">
+              <p className="whitespace-pre-wrap text-body text-ink">{text}</p>
+              <div className="mt-1 -ml-3.5 flex gap-1">
                 <CopyButton text={text} />
                 <button
                   type="button"
