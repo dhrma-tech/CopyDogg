@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { getPersona } from "@/lib/store";
+import { getActivePersona } from "@/lib/store";
 
 const DEMO_OUTPUTS = [
   {
@@ -32,7 +32,7 @@ const CTA_CLASSES = "rounded-full bg-ink px-6 py-3 text-sm font-bold text-card";
 
 export default async function Home() {
   await connection(); // CTA depends on whether a voice profile exists
-  const cta = (await getPersona()) ? "Open CopyDogg" : "Get started";
+  const cta = (await getActivePersona()) ? "Open CopyDogg" : "Get started";
 
   return (
     <main className="flex flex-1 flex-col items-center px-6">

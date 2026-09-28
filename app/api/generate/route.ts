@@ -3,8 +3,16 @@ import { streamPostVariations } from "@/lib/claude";
 import { isPlatform, platformRules, type Structure } from "@/lib/platformRules";
 import { isDemoMode, demoStream } from "@/lib/demoMode";
 import { splitVariations } from "@/lib/variations";
-import { LANGUAGES, SITUATIONS, TWEAKS, isOneOf, type GenerateMode } from "@/lib/writingOptions";
-import { addGeneration, getRecentLikedOutputs, readStore } from "@/lib/store";
+import {
+  LANGUAGES,
+  SCENARIOS,
+  SCENARIO_KEYS,
+  SITUATIONS,
+  TWEAKS,
+  isOneOf,
+  type GenerateMode,
+} from "@/lib/writingOptions";
+import { activePersona, addGeneration, getRecentLikedOutputs, readStore } from "@/lib/store";
 
 const GENERATE_MODES: readonly GenerateMode[] = ["write", "reply", "rewrite", "tweak"];
 
@@ -28,6 +36,8 @@ export async function POST(request: Request) {
   const context = text(body.context, 8000);
   const override = text(body.toneOverride, 200) || null;
   const situation = isOneOf(SITUATIONS, body.situation) ? body.situation : null;
+  const scenario = isOneOf(SCENARIO_KEYS, body.scenario) ? SCENARIOS[body.scenario].guidance : null;
+  const conversation = mode === "reply" && body.conversation === true;
   const language = isOneOf(LANGUAGES, body.language) ? body.language : null;
   const tweak = isOneOf(TWEAKS, body.tweak) ? body.tweak : null;
 
@@ -47,7 +57,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Nothing to tweak." }, { status: 400 });
   }
 
-  const { persona, contacts, templates } = await readStore();
+  const data = await readStore();
+  const { contacts, templates } = data;
+  // The voice picked on /app; falls back to the active one.
+  const persona = data.personas.find((p) => p.id === body.personaId) ?? activePersona(data);
   if (!persona) {
     return NextResponse.json(
       { error: "Set up your voice first — it takes about five minutes." },
@@ -70,7 +83,7 @@ export async function POST(request: Request) {
         : 3;
   const count = mode === "tweak" ? 1 : requested;
 
-  const recentLikedExamples = isDemoMode ? [] : await getRecentLikedOutputs(3);
+  const recentLikedExamples = isDemoMode ? [] : await getRecentLikedOutputs(persona.id, 3);
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream<Uint8Array>({
@@ -99,6 +112,8 @@ export async function POST(request: Request) {
                 promptInput: idea,
                 context,
                 situation,
+                scenario,
+                conversation,
                 toneOverride: override,
                 contact,
                 language,
@@ -136,6 +151,7 @@ export async function POST(request: Request) {
       try {
         generationId = (
           await addGeneration({
+            personaId: persona.id,
             platform,
             mode,
             promptInput: idea,

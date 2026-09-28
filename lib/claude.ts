@@ -37,6 +37,10 @@ export interface GenerateVariationsParams {
   /** Pasted text: the message replied to, the draft rewritten, or the version tweaked. */
   context?: string | null;
   situation?: string | null;
+  /** Guidance for an everyday scenario (landlord, refund request...). */
+  scenario?: string | null;
+  /** Reply mode: context is a whole conversation, not a single message. */
+  conversation?: boolean;
   toneOverride?: string | null;
   contact?: { name: string; relationship: string; note: string } | null;
   language?: string | null;
@@ -64,6 +68,7 @@ function buildTask({
   platform,
   promptInput,
   context,
+  conversation,
   tweak,
   variationCount,
 }: GenerateVariationsParams): string {
@@ -73,6 +78,9 @@ function buildTask({
 
   switch (mode) {
     case "reply":
+      if (conversation) {
+        return `Here's a conversation they're part of, oldest message first:\n${quoted(context ?? "")}\nWrite ${n} distinct replies from them to the latest message, as a ${noun}, using the earlier messages for context. Lines marked "me" (or with their name) are theirs.${note}`;
+      }
       return `They received this:\n${quoted(context ?? "")}\nWrite ${n} distinct replies from them, as a ${noun}.${note}`;
     case "rewrite":
       return `Here's a draft they wrote:\n${quoted(context ?? "")}\nRewrite it ${n} different ways so it sounds like them: clearer and tighter, same meaning and facts, as a ${noun}.${promptInput ? ` Their note: "${promptInput}".` : ""}`;
@@ -88,6 +96,7 @@ function buildSystemPrompt(params: GenerateVariationsParams): string {
     persona,
     platform,
     situation,
+    scenario,
     toneOverride,
     contact,
     language,
@@ -117,6 +126,7 @@ function buildSystemPrompt(params: GenerateVariationsParams): string {
       ? `WRITING TO: ${contact.name} (their ${contact.relationship}).${contact.note ? ` ${contact.note}` : ""} Match how they'd talk to this person.`
       : "",
     `RECENT POSTS THEY LIKED OR EDITED (match this energy, don't copy):\n${likedBlock}`,
+    scenario ? `CONTEXT: ${scenario}` : "",
     `TASK: ${buildTask(params)}`,
     situation ? `What they're trying to do: ${situation}.` : "",
     toneOverride ? `For this one specifically: ${toneOverride}` : "",

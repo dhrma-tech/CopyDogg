@@ -38,6 +38,7 @@ type Status = "idle" | "saving" | "saved" | "error";
 
 export default function ProfileForm({ persona, initialTopics, learnableCount }: ProfileFormProps) {
   const [retune, setRetune] = useState<RetuneState>({ state: "idle" });
+  const [name, setName] = useState(persona.name);
   const [voiceDescription, setVoiceDescription] = useState(
     persona.voiceDescription ?? ""
   );
@@ -72,6 +73,8 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
     let result: Awaited<ReturnType<typeof saveProfile>>;
     try {
       result = await saveProfile({
+        personaId: persona.id,
+        name,
         voiceDescription: v.voiceDescription,
         toneFormality: v.sliders.formality,
         toneHumor: v.sliders.humor,
@@ -99,7 +102,11 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
   async function handleRetune() {
     setRetune({ state: "loading" });
     try {
-      const res = await fetch("/api/voice-retune", { method: "POST" });
+      const res = await fetch("/api/voice-retune", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ personaId: persona.id }),
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.voiceDescription) {
         setRetune({ state: "error", error: data.error ?? "Couldn't retune. Try again." });
@@ -133,10 +140,10 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
   return (
     <div className="w-full max-w-lg">
       <h1 className="font-display text-2xl font-semibold text-ink">
-        Your voice
+        {name.trim() || "Your voice"}
       </h1>
       <p className="mt-1 text-sm text-ink-soft">
-        Edit your voice profile — this is what gets used on every generation.
+        This is what CopyDogg uses every time it writes as this voice.
       </p>
 
       <div className="mt-6 flex flex-col gap-6 rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
@@ -186,6 +193,17 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
             </div>
           )}
         </div>
+
+        <label className="flex flex-col gap-2">
+          <span className="text-sm text-ink">Voice name</span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={40}
+            placeholder="e.g. Work me"
+            className="w-full rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+          />
+        </label>
 
         <div>
           <p className="text-sm text-ink">Voice description</p>

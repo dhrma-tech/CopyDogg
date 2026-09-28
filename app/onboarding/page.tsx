@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { getPersona } from "@/lib/store";
+import { getActivePersona } from "@/lib/store";
 import OnboardingFlow from "./OnboardingFlow";
 
 export default async function OnboardingPage() {
   await connection(); // reads the data file, so render per request
-  if (await getPersona()) {
+  if (await getActivePersona()) {
     redirect("/app");
   }
 

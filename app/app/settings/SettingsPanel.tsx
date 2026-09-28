@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { lock, resetAllData, setVoiceInput } from "@/app/actions";
+import BackupsSection from "./BackupsSection";
+import ThemeSwitch from "./ThemeSwitch";
 
 interface SettingsPanelProps {
   generationCount: number;
@@ -10,6 +12,8 @@ interface SettingsPanelProps {
   demoMode: boolean;
   passwordEnabled: boolean;
   voiceInput: boolean;
+  backups: { name: string; date: string; bytes: number }[];
+  backupFolder: string;
 }
 
 const META_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
@@ -23,6 +27,8 @@ export default function SettingsPanel({
   demoMode,
   passwordEnabled,
   voiceInput: initialVoiceInput,
+  backups,
+  backupFolder,
 }: SettingsPanelProps) {
   const [voiceInput, setVoiceInputState] = useState(initialVoiceInput);
   const [voiceError, setVoiceError] = useState("");
@@ -89,6 +95,10 @@ export default function SettingsPanel({
             Export my data
           </a>
         </section>
+
+        <BackupsSection backups={backups} folder={backupFolder} />
+
+        <ThemeSwitch />
 
         <section>
           <p className={META_LABEL}>Voice input</p>

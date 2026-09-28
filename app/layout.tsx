@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Karla, JetBrains_Mono } from "next/font/google";
 import { connection } from "next/server";
 import { isDemoMode } from "@/lib/demoMode";
+import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -34,7 +35,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${fraunces.variable} ${karla.variable} ${jetbrainsMono.variable} h-full antialiased`}
+      // The theme script sets data-theme before React loads.
+      suppressHydrationWarning
     >
+      <head>
+        {/* Applies the saved Light/Dark choice before first paint (no flash). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
         {isDemoMode && (
           <div className="bg-accent px-4 py-1.5 text-center font-mono text-xs uppercase tracking-[0.1em] text-card">

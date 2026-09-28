@@ -6,7 +6,7 @@ import {
   useState,
   useSyncExternalStore,
   type FormEvent,
-  type KeyboardEvent,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import Link from "next/link";
 import { Bookmark, ChevronDown, ChevronUp } from "lucide-react";
@@ -17,16 +17,21 @@ import CheckResultCard, { type CheckResult } from "@/components/CheckResult";
 import GenerateCard, {
   SkeletonCard,
   StreamingCard,
+  type CardHandle,
   type CardOutput,
 } from "@/components/GenerateCard";
-import { PLATFORMS, platformRules, type Platform } from "@/lib/platformRules";
+import { useUndoToast } from "@/components/UndoToast";
+import { PLATFORMS, isPlatform, platformRules, type Platform } from "@/lib/platformRules";
 import {
   LANGUAGES,
   MODES,
   MODE_LABELS,
+  SCENARIOS,
+  SCENARIO_KEYS,
   SITUATIONS,
   isOneOf,
   type Mode,
+  type ScenarioKey,
   type Tweak,
 } from "@/lib/writingOptions";
 import { streamGenerate, type GenerateBody } from "@/lib/generateClient";
@@ -36,7 +41,7 @@ import {
   subscribeDraft,
   writeDraft,
 } from "@/lib/draft";
-import { saveIdea } from "@/app/actions";
+import { saveIdea, selectVoice } from "@/app/actions";
 
 const IDEA_PLACEHOLDERS = [
   "just shipped a side project and I'm proud of it",
@@ -51,6 +56,8 @@ const CONTEXT_PLACEHOLDERS: Record<Exclude<Mode, "write">, string> = {
   rewrite: "Paste your draft — messy is fine",
   check: "Paste something before you send it",
 };
+const CONVERSATION_PLACEHOLDER =
+  "Paste the whole conversation, oldest first. Start your own lines with \"me:\"";
 
 const SUBMIT_LABELS: Record<Mode, string> = {
   write: "Generate posts",
@@ -70,6 +77,27 @@ const TONE_CHIPS = ["funnier", "more serious", "more vulnerable"];
 const LENGTH_CHIPS = ["short", "medium", "long"];
 const HOOK_CHIPS = ["question hook", "bold claim hook", "story hook"];
 
+/** Second key after "t": which tweak to run. */
+const TWEAK_KEYS: Record<string, Tweak> = {
+  s: "shorter",
+  w: "warmer",
+  d: "more direct",
+  f: "funnier",
+};
+
+const SHORTCUTS: [string, string][] = [
+  ["1–9", "copy that version"],
+  ["e", "edit"],
+  ["s", "save"],
+  ["o", "open in its app"],
+  ["r", "regenerate"],
+  ["t then s / w / d / f", "shorter / warmer / more direct / funnier"],
+  ["/", "jump to the text box"],
+  ["ctrl / ⌘ + enter", "write"],
+  ["ctrl / ⌘ + z", "undo a tweak"],
+  ["?", "show or hide this list"],
+];
+
 const VARIATION_COUNT = 3;
 const META = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
 const PILL_ON = "shrink-0 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent";
@@ -80,9 +108,15 @@ const FIELD =
 const SELECT =
   "rounded-full border border-hairline bg-card px-3 py-1.5 text-xs font-medium text-ink outline-none focus:border-accent";
 
-interface GenerationScreenProps {
-  /** Platforms picked in onboarding; empty means all. */
+interface Voice {
+  id: string;
+  name: string;
   platforms: Platform[];
+}
+
+interface GenerationScreenProps {
+  voices: Voice[];
+  initialVoiceId: string;
   contacts: { id: string; name: string; relationship: string }[];
   templates: { id: string; name: string }[];
   voiceInput: boolean;
@@ -91,30 +125,39 @@ interface GenerationScreenProps {
 type Status = "idle" | "loading" | "error";
 
 export default function GenerationScreen({
-  platforms,
+  voices,
+  initialVoiceId,
   contacts,
   templates,
   voiceInput,
 }: GenerationScreenProps) {
-  const platformOptions: readonly Platform[] = platforms.length > 0 ? platforms : PLATFORMS;
+  const [voiceId, setVoiceId] = useState(initialVoiceId);
+  const voice = voices.find((v) => v.id === voiceId) ?? voices[0];
+  const platformOptions: readonly Platform[] =
+    voice.platforms.length > 0 ? voice.platforms : PLATFORMS;
 
   // Restored draft: empty on the server, localStorage in the browser.
   const draft = useSyncExternalStore(subscribeDraft, getDraftSnapshot, getServerDraftSnapshot);
   // null = untouched this visit, so the restored draft shows through.
   const [ideaInput, setIdeaInput] = useState<string | null>(null);
   const [contextInput, setContextInput] = useState<string | null>(null);
-  const [platformInput, setPlatformInput] = useState<Platform | null>(null);
+  const [platformChoice, setPlatformChoice] = useState<Platform | "all" | null>(null);
   const [modeInput, setModeInput] = useState<Mode | null>(null);
   const [languageInput, setLanguageInput] = useState<string | null>(null);
   const idea = ideaInput ?? draft.idea;
   const context = contextInput ?? draft.context;
-  const platform =
-    platformInput ?? platformOptions.find((p) => p === draft.platform) ?? platformOptions[0];
   const mode: Mode = modeInput ?? (isOneOf(MODES, draft.mode) ? draft.mode : "write");
   const language = languageInput ?? (isOneOf(LANGUAGES, draft.language) ? draft.language : "");
+  const choice = platformChoice ?? draft.platform;
+  const platform: Platform =
+    isPlatform(choice) && platformOptions.includes(choice) ? choice : platformOptions[0];
+  // "All": one version for every platform this voice uses (Write mode only).
+  const writeForAll = choice === "all" && mode === "write" && platformOptions.length > 1;
 
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [situation, setSituation] = useState<string | null>(null);
+  const [scenario, setScenario] = useState<ScenarioKey | null>(null);
+  const [conversation, setConversation] = useState(false);
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [tone, setTone] = useState<string | null>(null);
   const [length, setLength] = useState<string | null>(null);
@@ -125,11 +168,13 @@ export default function GenerationScreen({
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [ideaSaved, setIdeaSaved] = useState<"idle" | "saving" | "saved">("idle");
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const [outputs, setOutputs] = useState<CardOutput[]>([]);
   // Variations written so far for the in-flight request; null when not streaming.
   const [streaming, setStreaming] = useState<string[] | null>(null);
   const [checkResult, setCheckResult] = useState<CheckResult | null>(null);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
   // The request behind the cards on screen, reused by regenerate / remix / tweak.
   const lastRequest = useRef<GenerateBody | null>(null);
 
@@ -137,11 +182,17 @@ export default function GenerationScreen({
   const mainFieldRef = useRef<HTMLTextAreaElement>(null);
   const generateAbort = useRef<AbortController | null>(null);
   const cardAborts = useRef(new Set<AbortController>());
-  const remixCount = useRef(0);
+  const cardHandles = useRef(new Map<string, CardHandle>());
+  const tempCount = useRef(0);
+  const tweakKeyPending = useRef(false);
+  const shortcutHandler = useRef<(e: KeyboardEvent) => void>(() => {});
+  const toast = useUndoToast();
 
-  const structure = platformRules[platform].structure;
+  const structure = writeForAll ? undefined : platformRules[platform].structure;
   const usesContext = mode !== "write";
-  const showSituations = mode === "write" || mode === "reply";
+  const showChips = mode === "write" || mode === "reply";
+  const readyCards = outputs.filter((o) => o.generationId && o.liveText === undefined);
+  const activeCard = readyCards.find((o) => o.key === activeKey) ?? readyCards[0];
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -168,17 +219,89 @@ export default function GenerationScreen({
   const touched =
     ideaInput !== null ||
     contextInput !== null ||
-    platformInput !== null ||
+    platformChoice !== null ||
     modeInput !== null ||
     languageInput !== null;
+  const draftPlatform = choice === "all" ? "all" : platform;
   useEffect(() => {
     if (!touched) return;
     const timeout = setTimeout(
-      () => writeDraft({ idea, context, platform, mode, language: language || null }),
+      () => writeDraft({ idea, context, platform: draftPlatform, mode, language: language || null }),
       300
     );
     return () => clearTimeout(timeout);
-  }, [touched, idea, context, platform, mode, language]);
+  }, [touched, idea, context, draftPlatform, mode, language]);
+
+  function handleShortcut(e: KeyboardEvent) {
+    const typing = (e.target as HTMLElement | null)?.closest?.(
+      "input, textarea, select, [contenteditable='true']"
+    );
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z" && !typing) {
+      if (toast.undo()) e.preventDefault();
+      return;
+    }
+    if (typing || e.metaKey || e.ctrlKey || e.altKey) return;
+
+    if (e.key === "Escape") {
+      setHelpOpen(false);
+      tweakKeyPending.current = false;
+      return;
+    }
+    if (e.key === "?") {
+      setHelpOpen((open) => !open);
+      return;
+    }
+    if (e.key === "/") {
+      e.preventDefault();
+      mainFieldRef.current?.focus();
+      return;
+    }
+
+    const handle = activeCard ? cardHandles.current.get(activeCard.key) : undefined;
+    if (tweakKeyPending.current) {
+      tweakKeyPending.current = false;
+      const tweak = TWEAK_KEYS[e.key.toLowerCase()];
+      if (tweak && handle) {
+        e.preventDefault();
+        handle.tweak(tweak);
+      }
+      return;
+    }
+    if (/^[1-9]$/.test(e.key)) {
+      const card = readyCards[Number(e.key) - 1];
+      if (!card) return;
+      setActiveKey(card.key);
+      cardHandles.current.get(card.key)?.copy();
+      return;
+    }
+    if (!handle) return;
+    const actions: Record<string, () => void> = {
+      e: handle.edit,
+      s: handle.save,
+      o: handle.open,
+      r: handle.regenerate,
+      t: () => {
+        tweakKeyPending.current = true;
+        setTimeout(() => (tweakKeyPending.current = false), 1500);
+      },
+    };
+    const action = actions[e.key.toLowerCase()];
+    if (action) {
+      e.preventDefault();
+      action();
+    }
+  }
+
+  // Keyboard shortcuts. The listener is attached once; the handler is swapped
+  // after each render so it always sees current state.
+  useEffect(() => {
+    shortcutHandler.current = handleShortcut;
+  });
+  useEffect(() => {
+    const listener = (e: KeyboardEvent) => shortcutHandler.current(e);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
 
   function toggle(value: string, current: string | null, setter: (v: string | null) => void) {
     setter(current === value ? null : value);
@@ -191,7 +314,25 @@ export default function GenerationScreen({
     if (next !== "check") setCheckResult(null);
   }
 
-  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) {
+  function switchVoice(id: string) {
+    setVoiceId(id);
+    // Remember it for next time; the switch itself doesn't wait on the server.
+    void selectVoice(id).catch(() => {});
+  }
+
+  function toggleScenario(key: ScenarioKey) {
+    const next = scenario === key ? null : key;
+    setScenario(next);
+    if (!next) return;
+    // Jump to a format that fits (email for a refund...), if this voice uses one.
+    const fits = SCENARIOS[next].formats as readonly string[];
+    if (!fits.includes(platform) || writeForAll) {
+      const better = platformOptions.find((p) => fits.includes(p));
+      if (better) setPlatformChoice(better);
+    }
+  }
+
+  function handleKeyDown(e: ReactKeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) {
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       formRef.current?.requestSubmit();
@@ -203,11 +344,14 @@ export default function GenerationScreen({
       .filter(Boolean)
       .join(", ");
     return {
+      personaId: voice.id,
       mode: mode === "check" ? "write" : mode,
       platform,
       promptInput: idea.trim(),
       context: usesContext ? context.trim() : undefined,
-      situation: showSituations ? (situation ?? undefined) : undefined,
+      situation: showChips ? (situation ?? undefined) : undefined,
+      scenario: showChips ? (scenario ?? undefined) : undefined,
+      conversation: mode === "reply" && conversation ? true : undefined,
       toneOverride: toneOverride || undefined,
       contactId: contactId || undefined,
       language: language || undefined,
@@ -240,6 +384,59 @@ export default function GenerationScreen({
     setStatus("idle");
   }
 
+  /** "All": one streamed version per platform, all at once, each in its own card. */
+  async function runForAll(request: GenerateBody, controller: AbortController) {
+    const run = ++tempCount.current;
+    const entries: CardOutput[] = platformOptions.map((p) => ({
+      key: `all-${run}-${p}`,
+      generationId: "",
+      text: "",
+      platform: p,
+      liveText: "",
+    }));
+    lastRequest.current = request;
+    setStreaming(null);
+    setOutputs(entries);
+
+    const failures: string[] = [];
+    await Promise.all(
+      entries.map(async (entry) => {
+        const result = await streamGenerate(
+          { ...request, platform: entry.platform, variationCount: 1 },
+          {
+            onPartial: (v) => patchOutput(entry.key, { liveText: v[0] ?? "" }),
+            signal: controller.signal,
+          }
+        );
+        if (!result.ok) {
+          if (!result.aborted) failures.push(`${platformRules[entry.platform].label}: ${result.error}`);
+          setOutputs((prev) => prev.filter((o) => o.key !== entry.key));
+          return;
+        }
+        setOutputs((prev) =>
+          prev.map((o) =>
+            o.key === entry.key
+              ? {
+                  key: `${result.generationId}-0`,
+                  generationId: result.generationId,
+                  text: result.outputs[0],
+                  platform: entry.platform,
+                }
+              : o
+          )
+        );
+      })
+    );
+
+    if (controller.signal.aborted) return; // a newer submit owns the screen now
+    if (failures.length > 0) {
+      setStatus("error");
+      setErrorMessage(failures.join(" "));
+    } else {
+      setStatus("idle");
+    }
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (usesContext ? !context.trim() : !idea.trim()) return;
@@ -251,6 +448,7 @@ export default function GenerationScreen({
 
     setStatus("loading");
     setErrorMessage("");
+    setActiveKey(null);
 
     if (mode === "check") {
       await runCheck(controller);
@@ -258,6 +456,11 @@ export default function GenerationScreen({
     }
 
     const request = buildRequest();
+    if (writeForAll) {
+      await runForAll(request, controller);
+      return;
+    }
+
     setStreaming([]);
     const result = await streamGenerate(
       { ...request, variationCount: request.structure ? 2 : VARIATION_COUNT },
@@ -280,6 +483,8 @@ export default function GenerationScreen({
         generationId: result.generationId,
         text,
         platform,
+        // Rewrites can show what changed from the pasted draft.
+        compareTo: request.mode === "rewrite" ? request.context : undefined,
       }))
     );
     setStatus("idle");
@@ -318,10 +523,12 @@ export default function GenerationScreen({
     return { generationId: result.generationId, text: result.outputs[0] };
   }
 
-  /** Replaces a card's text with a streamed version (regenerate or tweak). */
+  /** Replaces a card's text with a streamed version (regenerate or tweak), with undo. */
   async function replaceCard(
     output: CardOutput,
-    overrides: Partial<GenerateBody>
+    overrides: Partial<GenerateBody>,
+    label: string,
+    compareTo?: string
   ): Promise<string | null> {
     patchOutput(output.key, { liveText: "" });
     const result = await streamOne({ platform: output.platform, ...overrides }, (text) =>
@@ -333,28 +540,36 @@ export default function GenerationScreen({
     }
     // New key remounts the card, so saved/feedback state from the old
     // generation doesn't carry over onto the new text.
+    const newKey = `${result.generationId}-new`;
     setOutputs((prev) =>
       prev.map((o) =>
         o.key === output.key
-          ? { ...o, ...result, liveText: undefined, key: `${result.generationId}-new` }
+          ? { ...o, ...result, liveText: undefined, key: newKey, compareTo: compareTo ?? o.compareTo }
           : o
       )
     );
+    setActiveKey(newKey);
+    const previous = { ...output, liveText: undefined };
+    toast.show(label, {
+      onUndo: () => {
+        setOutputs((prev) => prev.map((o) => (o.key === newKey ? previous : o)));
+        setActiveKey(previous.key);
+      },
+    });
     return null;
   }
 
   function handleTweak(output: CardOutput, text: string, tweak: Tweak) {
-    return replaceCard(output, {
-      mode: "tweak",
-      context: text,
-      tweak,
-      structure: undefined,
-      templateId: undefined,
-    });
+    return replaceCard(
+      output,
+      { mode: "tweak", context: text, tweak, structure: undefined, templateId: undefined },
+      `Made it ${tweak}`,
+      text
+    );
   }
 
   async function handleRemix(platformFor: Platform): Promise<string | null> {
-    const tempKey = `remix-${++remixCount.current}`;
+    const tempKey = `remix-${++tempCount.current}`;
     setOutputs((prev) => [
       ...prev,
       { key: tempKey, generationId: "", text: "", platform: platformFor, liveText: "" },
@@ -387,6 +602,19 @@ export default function GenerationScreen({
   }
 
   const canSubmit = usesContext ? !!context.trim() : !!idea.trim();
+  const mainPlaceholder = !usesContext
+    ? IDEA_PLACEHOLDERS[placeholderIndex]
+    : mode === "reply" && conversation
+      ? CONVERSATION_PLACEHOLDER
+      : CONTEXT_PLACEHOLDERS[mode as Exclude<Mode, "write">];
+  const submitLabel =
+    status === "loading"
+      ? LOADING_LABELS[mode]
+      : writeForAll
+        ? `Write for all ${platformOptions.length}`
+        : mode === "write" && platformRules[platform].kind === "message"
+          ? "Write drafts"
+          : SUBMIT_LABELS[mode];
 
   return (
     <div className="w-full max-w-xl">
@@ -395,6 +623,28 @@ export default function GenerationScreen({
       </h1>
 
       <div className="rounded-lg border border-hairline bg-card p-5 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)] sm:p-6">
+        {voices.length > 1 && (
+          <label className="relative mb-3 inline-flex">
+            <span className="sr-only">Voice</span>
+            <select
+              value={voice.id}
+              onChange={(e) => switchVoice(e.target.value)}
+              className="cursor-pointer appearance-none rounded-full bg-accent-soft py-1.5 pl-4 pr-9 text-sm font-medium text-accent outline-none focus:ring-2 focus:ring-accent"
+            >
+              {voices.map((v) => (
+                <option key={v.id} value={v.id}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={14}
+              strokeWidth={2.5}
+              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-accent"
+            />
+          </label>
+        )}
+
         <div className="flex gap-1 rounded-full border border-hairline p-1" role="group" aria-label="Mode">
           {MODES.map((m) => (
             <button
@@ -414,7 +664,13 @@ export default function GenerationScreen({
         </div>
 
         <div className="mt-4">
-          <PlatformPicker value={platform} onChange={setPlatformInput} options={platformOptions} />
+          <PlatformPicker
+            value={platform}
+            onChange={setPlatformChoice}
+            options={platformOptions}
+            allSelected={writeForAll}
+            onSelectAll={mode === "write" ? () => setPlatformChoice("all") : undefined}
+          />
         </div>
 
         <form ref={formRef} onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
@@ -426,8 +682,8 @@ export default function GenerationScreen({
                 usesContext ? setContextInput(e.target.value) : setIdeaInput(e.target.value)
               }
               onKeyDown={handleKeyDown}
-              placeholder={usesContext ? CONTEXT_PLACEHOLDERS[mode as Exclude<Mode, "write">] : IDEA_PLACEHOLDERS[placeholderIndex]}
-              rows={usesContext ? 4 : 3}
+              placeholder={mainPlaceholder}
+              rows={usesContext ? (conversation && mode === "reply" ? 6 : 4) : 3}
               aria-label={usesContext ? CONTEXT_PLACEHOLDERS[mode as Exclude<Mode, "write">] : "Your idea"}
               className={`w-full resize-none pr-11 ${FIELD}`}
             />
@@ -443,29 +699,55 @@ export default function GenerationScreen({
           </div>
 
           {mode === "reply" && (
-            <input
-              value={idea}
-              onChange={(e) => setIdeaInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="What do you want to say? (optional)"
-              aria-label="What you want to say"
-              className={`text-sm ${FIELD}`}
-            />
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => setConversation((v) => !v)}
+                aria-pressed={conversation}
+                className={`self-start ${conversation ? PILL_ON : PILL_OFF}`}
+              >
+                {conversation ? "whole conversation ✓" : "it's a whole conversation"}
+              </button>
+              <input
+                value={idea}
+                onChange={(e) => setIdeaInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="What do you want to say? (optional)"
+                aria-label="What you want to say"
+                className={`text-sm ${FIELD}`}
+              />
+            </div>
           )}
 
-          {showSituations && (
-            <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6" role="group" aria-label="Situation">
-              {SITUATIONS.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => toggle(s, situation, setSituation)}
-                  aria-pressed={situation === s}
-                  className={situation === s ? PILL_ON : PILL_OFF}
-                >
-                  {s}
-                </button>
-              ))}
+          {showChips && (
+            <div className="-mx-5 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6">
+              <div className="flex gap-2" role="group" aria-label="Situation">
+                {SITUATIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => toggle(s, situation, setSituation)}
+                    aria-pressed={situation === s}
+                    className={situation === s ? PILL_ON : PILL_OFF}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <span aria-hidden className="h-5 w-px shrink-0 bg-hairline" />
+              <div className="flex gap-2" role="group" aria-label="Who it's for">
+                {SCENARIO_KEYS.map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleScenario(key)}
+                    aria-pressed={scenario === key}
+                    className={scenario === key ? PILL_ON : PILL_OFF}
+                  >
+                    {SCENARIOS[key].label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -495,9 +777,30 @@ export default function GenerationScreen({
                   {ideaSaved === "saved" ? "saved for later" : "save idea"}
                 </button>
               )}
-              <span className={`hidden whitespace-nowrap sm:pointer-fine:inline ${META}`}>ctrl / ⌘ + enter</span>
+              <button
+                type="button"
+                onClick={() => setHelpOpen((v) => !v)}
+                aria-expanded={helpOpen}
+                className={`hidden whitespace-nowrap py-1 sm:pointer-fine:inline ${META}`}
+              >
+                shortcuts ?
+              </button>
             </div>
           </div>
+
+          {helpOpen && (
+            <div className="rounded-md border border-dashed border-hairline p-3" aria-label="Keyboard shortcuts">
+              <p className={META}>Keyboard shortcuts</p>
+              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+                {SHORTCUTS.map(([keys, what]) => (
+                  <div key={keys} className="contents">
+                    <dt className="font-mono text-xs text-ink">{keys}</dt>
+                    <dd className="text-ink-soft">{what}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
 
           {overridesOpen && mode !== "check" && (
             <div className="flex flex-col gap-3 rounded-md border border-dashed border-hairline p-3">
@@ -564,11 +867,7 @@ export default function GenerationScreen({
           )}
 
           <PrimaryButton type="submit" disabled={status === "loading" || !canSubmit}>
-            {status === "loading"
-              ? LOADING_LABELS[mode]
-              : mode === "write" && platformRules[platform].kind === "message"
-                ? "Write drafts"
-                : SUBMIT_LABELS[mode]}
+            {submitLabel}
           </PrimaryButton>
 
           {status === "error" && <p className="text-sm text-danger">{errorMessage}</p>}
@@ -603,9 +902,16 @@ export default function GenerationScreen({
               output.generationId ? (
                 <GenerateCard
                   key={output.key}
+                  ref={(handle) => {
+                    if (handle) cardHandles.current.set(output.key, handle);
+                    else cardHandles.current.delete(output.key);
+                  }}
                   output={output}
+                  active={readyCards.length > 1 && activeCard?.key === output.key}
+                  shortcutNumber={readyCards.findIndex((o) => o.key === output.key) + 1 || undefined}
+                  onActivate={() => setActiveKey(output.key)}
                   remixOptions={platformOptions}
-                  onRegenerate={() => replaceCard(output, {})}
+                  onRegenerate={() => replaceCard(output, {}, "Regenerated")}
                   onTweak={(text, tweak) => handleTweak(output, text, tweak)}
                   onRemix={handleRemix}
                 />
@@ -618,6 +924,8 @@ export default function GenerationScreen({
           </div>
         )
       )}
+
+      {toast.element}
     </div>
   );
 }

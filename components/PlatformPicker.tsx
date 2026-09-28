@@ -3,6 +3,7 @@ import {
   Briefcase,
   Camera,
   Hash,
+  Layers,
   Mail,
   MessageCircle,
   MessagesSquare,
@@ -57,12 +58,17 @@ interface PlatformPickerProps {
   onChange: (platform: Platform) => void;
   /** Platforms to show; defaults to all of them. */
   options?: readonly Platform[];
+  /** Adds an "All" pill (write one version for every platform) when given. */
+  allSelected?: boolean;
+  onSelectAll?: () => void;
 }
 
 export default function PlatformPicker({
   value,
   onChange,
   options = PLATFORMS,
+  allSelected = false,
+  onSelectAll,
 }: PlatformPickerProps) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -70,10 +76,21 @@ export default function PlatformPicker({
         <PlatformPill
           key={platform}
           platform={platform}
-          active={platform === value}
+          active={!allSelected && platform === value}
           onClick={() => onChange(platform)}
         />
       ))}
+      {onSelectAll && options.length > 1 && (
+        <button
+          type="button"
+          onClick={onSelectAll}
+          aria-pressed={allSelected}
+          className={allSelected ? ACTIVE_PILL : INACTIVE_PILL}
+        >
+          <Layers size={14} strokeWidth={2} />
+          All {options.length}
+        </button>
+      )}
     </div>
   );
 }

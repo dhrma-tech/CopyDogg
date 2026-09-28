@@ -4,11 +4,15 @@ import { splitPartialVariations } from "./variations";
 
 /** Everything /api/generate accepts. Only platform and mode are always needed. */
 export interface GenerateBody {
+  /** The voice to write as; the server falls back to the active one. */
+  personaId?: string;
   mode: GenerateMode;
   platform: Platform;
   promptInput: string;
   context?: string;
   situation?: string;
+  scenario?: string;
+  conversation?: boolean;
   toneOverride?: string;
   contactId?: string;
   language?: string;

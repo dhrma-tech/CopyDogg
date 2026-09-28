@@ -212,12 +212,21 @@ Added on request, after v1: CopyDogg covers daily messages, not just social post
 - **Library:** Saved / Recent / Ideas tabs, search, platform filter, newest/oldest sort, unsave, delete, copy. Ideas are saved from `/app` and "Write it now" puts one back in the box.
 - **Profile:** people you write to, templates, and "Retune my voice", which proposes an updated voice from 3+ liked or edited posts and saves it only if you keep it.
 - **Voice input:** opt-in mic (Settings), using browser speech recognition, with the privacy trade-off stated plainly.
+- **Multiple voices** ("Work me", "Friends me"...): each with its own description, sliders, platforms and rules. A new voice starts as a copy of the current one. Picker on `/app` (only shown with 2+ voices) and a switcher on Profile. Generations remember their voice, so liked examples and retune stay per voice.
+- **All platforms at once:** an "All N" pill writes one version per platform of the current voice, streamed in parallel.
+- **Whole-conversation replies:** in Reply, "it's a whole conversation" replies to the latest message using the earlier ones as context.
+- **Who it's for:** everyday scenario chips (landlord, doctor's office, school, job application, refund request, cancel a subscription) add guidance and jump to a fitting format.
+- **Keyboard shortcuts:** 1–9 copy, e edit, s save, o open, r regenerate, t then s/w/d/f tweak, / focus, ? help, Ctrl/⌘+Z undo.
+- **Undo instead of "are you sure":** tweaks, regenerates, library deletes, idea deletes and unsaves show a 5-second Undo toast; deletes only happen when it expires.
+- **Show changes:** Rewrite and tweak results can show a word-level before/after.
+- **Backups:** a copy of the data file before the first write of each day (last 14 kept) in `data/backups/`, with restore in Settings (the current data is backed up first).
+- **Dark mode:** approved dark tokens (design-system.md); follows the system, with a System/Light/Dark switch in Settings stored per browser, applied before first paint.
 - **Deferred:** installable app / share-to target (needs HTTPS).
 
 ## 8. What to Explicitly Cut from v1
 
 To protect the "no complexity" goal, defer these to v2 even if tempting:
-- Multi-persona switching (ship with one default persona only)
+- ~~Multi-persona switching (ship with one default persona only)~~ (added 2026-09-28 on request; see 4b)
 - Browser extension
 - Song/mood suggestions
 - Long-form repurposing (blog → thread)

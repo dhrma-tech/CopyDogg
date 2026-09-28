@@ -8,6 +8,7 @@ import { MODE_LABELS, type GenerateMode } from "@/lib/writingOptions";
 import { patchGeneration } from "@/lib/generateClient";
 import { prefillIdea } from "@/lib/draft";
 import { removeIdea } from "@/app/actions";
+import { useUndoToast } from "@/components/UndoToast";
 
 export interface LibraryGeneration {
   id: string;
@@ -71,6 +72,7 @@ export default function LibraryList({
   const [platformFilter, setPlatformFilter] = useState<Platform | "all">("all");
   const [newestFirst, setNewestFirst] = useState(true);
   const [error, setError] = useState("");
+  const toast = useUndoToast();
 
   const saved = generations.filter((g) => g.saved);
   const presentPlatforms = [...new Set(generations.map((g) => g.platform))];
@@ -103,16 +105,34 @@ export default function LibraryList({
     if (!ok) {
       update(g.id, previous);
       setError("Couldn't update that. Try again.");
+      return;
+    }
+    if (!saving) {
+      toast.show("Unsaved", {
+        onUndo: () => void handleSaveToggle({ ...g, saved: false }, previous.chosenOutput ?? g.outputs[0]),
+      });
     }
   }
 
-  async function handleDelete(g: LibraryGeneration) {
+  function restore(g: LibraryGeneration) {
+    setGenerations((prev) =>
+      [...prev.filter((x) => x.id !== g.id), g].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    );
+  }
+
+  /** Hidden at once; only deleted for real when the undo toast goes away. */
+  function handleDelete(g: LibraryGeneration) {
     setError("");
     setGenerations((prev) => prev.filter((x) => x.id !== g.id));
-    if (!(await deleteGenerationRequest(g.id))) {
-      setGenerations((prev) => [...prev, g].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
-      setError("Couldn't delete that. Try again.");
-    }
+    toast.show("Deleted", {
+      onUndo: () => restore(g),
+      onCommit: async () => {
+        if (!(await deleteGenerationRequest(g.id))) {
+          restore(g);
+          setError("Couldn't delete that. Try again.");
+        }
+      },
+    });
   }
 
   function writeFromIdea(idea: Idea) {
@@ -120,14 +140,25 @@ export default function LibraryList({
     router.push("/app");
   }
 
-  async function deleteIdeaById(idea: Idea) {
+  function restoreIdea(idea: Idea) {
+    setIdeas((prev) =>
+      [...prev.filter((i) => i.id !== idea.id), idea].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    );
+  }
+
+  function deleteIdeaById(idea: Idea) {
     setError("");
     setIdeas((prev) => prev.filter((i) => i.id !== idea.id));
-    const result = await removeIdea(idea.id).catch(() => ({ ok: false as const }));
-    if (!result.ok) {
-      setIdeas((prev) => [idea, ...prev]);
-      setError("Couldn't delete that idea. Try again.");
-    }
+    toast.show("Idea deleted", {
+      onUndo: () => restoreIdea(idea),
+      onCommit: async () => {
+        const result = await removeIdea(idea.id).catch(() => ({ ok: false as const }));
+        if (!result.ok) {
+          restoreIdea(idea);
+          setError("Couldn't delete that idea. Try again.");
+        }
+      },
+    });
   }
 
   const tabs: { id: Tab; label: string; count: number }[] = [
@@ -248,6 +279,8 @@ export default function LibraryList({
           )}
         </>
       )}
+
+      {toast.element}
     </div>
   );
 }
@@ -294,7 +327,6 @@ function SavedCard({
   onUnsave: () => void;
   onDelete: () => void;
 }) {
-  const [confirming, setConfirming] = useState(false);
   const text = g.chosenOutput ?? g.outputs[0];
   const link = sendLink(g.platform, text);
 
@@ -313,21 +345,9 @@ function SavedCard({
         <button type="button" onClick={onUnsave} className={TEXT_BUTTON}>
           Unsave
         </button>
-        {confirming ? (
-          <span className="flex items-center gap-3 text-sm">
-            <span className="text-ink">Delete for good?</span>
-            <button type="button" onClick={onDelete} className="font-bold text-danger">
-              Delete
-            </button>
-            <button type="button" onClick={() => setConfirming(false)} className={TEXT_BUTTON}>
-              Keep
-            </button>
-          </span>
-        ) : (
-          <button type="button" onClick={() => setConfirming(true)} className={TEXT_BUTTON}>
-            Delete
-          </button>
-        )}
+        <button type="button" onClick={onDelete} className={TEXT_BUTTON}>
+          Delete
+        </button>
       </div>
     </div>
   );

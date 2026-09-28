@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useImperativeHandle, useMemo, useState, type Ref } from "react";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { PLATFORMS, platformRules, sendLink, type Platform } from "@/lib/platformRules";
 import { TWEAKS, type Tweak } from "@/lib/writingOptions";
 import { patchGeneration } from "@/lib/generateClient";
+import { wordDiff } from "@/lib/diff";
 
 export interface CardOutput {
   key: string;
@@ -14,6 +15,18 @@ export interface CardOutput {
   platform: Platform;
   /** Replacement text streaming in (regenerate / tweak / remix); undefined when idle. */
   liveText?: string;
+  /** The text this was rewritten from (Rewrite mode, tweaks), for "show changes". */
+  compareTo?: string;
+}
+
+/** What keyboard shortcuts on /app can do to a card. */
+export interface CardHandle {
+  copy: () => void;
+  edit: () => void;
+  save: () => void;
+  open: () => void;
+  regenerate: () => void;
+  tweak: (tweak: Tweak) => void;
 }
 
 const CARD = "rounded-md border border-hairline bg-card p-4";
@@ -82,6 +95,12 @@ export function SkeletonCard() {
 
 interface GenerateCardProps {
   output: CardOutput;
+  ref?: Ref<CardHandle>;
+  /** Target of keyboard shortcuts; shown with an accent border. */
+  active?: boolean;
+  /** 1-based position, shown as the shortcut number on desktop. */
+  shortcutNumber?: number;
+  onActivate?: () => void;
   /** Platforms offered under "Remix for..." (the current one is left out). */
   remixOptions: readonly Platform[];
   /** Streams a replacement; resolves to an error message, or null. */
@@ -94,6 +113,10 @@ interface GenerateCardProps {
 
 export default function GenerateCard({
   output,
+  ref,
+  active = false,
+  shortcutNumber,
+  onActivate,
   remixOptions,
   onRegenerate,
   onTweak,
@@ -118,6 +141,29 @@ export default function GenerateCard({
   const [remixPlatform, setRemixPlatform] = useState<Platform>(remixChoices[0]);
 
   const link = sendLink(platform, text);
+  const [showChanges, setShowChanges] = useState(false);
+  const diff = useMemo(
+    () => (showChanges && output.compareTo ? wordDiff(output.compareTo, text) : null),
+    [showChanges, output.compareTo, text]
+  );
+
+  useImperativeHandle(ref, () => ({
+    copy: () => void handleCopy(),
+    edit: () => {
+      setEditDraft(text);
+      setEditing(true);
+    },
+    save: () => {
+      if (!saved && !saving) void handleSave();
+    },
+    open: () => {
+      if (!link) return;
+      void copyText();
+      window.open(link, "_blank", "noopener,noreferrer");
+    },
+    regenerate: () => void run(onRegenerate),
+    tweak: (tweak) => void run(() => onTweak(text, tweak)),
+  }));
 
   async function copyText(): Promise<boolean> {
     try {
@@ -201,8 +247,19 @@ export default function GenerateCard({
   }
 
   return (
-    <div className={CARD}>
-      <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
+    <div
+      className={active ? "rounded-md border border-accent bg-card p-4" : CARD}
+      onFocusCapture={onActivate}
+      onPointerDown={onActivate}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
+        {shortcutNumber !== undefined && shortcutNumber <= 9 && (
+          <kbd className="hidden rounded-sm border border-hairline px-1.5 font-mono text-xs text-ink-soft pointer-fine:inline">
+            {shortcutNumber}
+          </kbd>
+        )}
+      </div>
 
       {editing ? (
         <div className="mt-2 flex flex-col gap-2">
@@ -227,6 +284,29 @@ export default function GenerateCard({
             </button>
           </div>
         </div>
+      ) : showChanges ? (
+        diff ? (
+          <p className="mt-2 whitespace-pre-wrap text-sm text-ink" aria-label="Changes from your draft">
+            {diff.map((part, i) =>
+              part.type === "same" ? (
+                <span key={i}>{part.text}</span>
+              ) : part.type === "add" ? (
+                <span key={i}>
+                  <ins className="rounded-sm bg-accent-soft text-accent no-underline">{part.text}</ins>
+                  {diff[i + 1]?.type === "del" && !/\s$/.test(part.text) && !/^\s/.test(diff[i + 1].text) && " "}
+                </span>
+              ) : (
+                <span key={i}>
+                  <del className="text-ink-soft decoration-danger">{part.text}</del>
+                  {/* Keep a removed word and the word replacing it visibly apart. */}
+                  {diff[i + 1]?.type === "add" && !/\s$/.test(part.text) && !/^\s/.test(diff[i + 1].text) && " "}
+                </span>
+              )
+            )}
+          </p>
+        ) : (
+          <p className="mt-2 text-sm text-ink-soft">Too long to compare word by word.</p>
+        )
       ) : (
         <p className="mt-2 whitespace-pre-wrap text-sm text-ink">{text}</p>
       )}
@@ -283,6 +363,20 @@ export default function GenerateCard({
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
+        {output.compareTo && (
+          <button
+            type="button"
+            onClick={() => setShowChanges((v) => !v)}
+            aria-pressed={showChanges}
+            className={
+              showChanges
+                ? "rounded-full bg-accent-soft px-2.5 py-1 text-xs font-medium text-accent"
+                : SMALL_PILL
+            }
+          >
+            {showChanges ? "hide changes" : "show changes"}
+          </button>
+        )}
         {TWEAKS.map((tweak) => (
           <button
             key={tweak}

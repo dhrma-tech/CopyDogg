@@ -10,10 +10,14 @@ import {
   cleanPlatforms,
   cleanStrings,
   cleanTone,
+  createFirstPersona,
+  createPersonaFrom,
   deleteIdea,
-  getPersona,
+  deletePersona,
+  readStore,
   resetStore,
-  savePersona,
+  restoreBackup,
+  setActivePersona,
   setContacts,
   setTemplates,
   setTopics,
@@ -63,7 +67,7 @@ export async function completeOnboarding(
   }
 
   try {
-    await savePersona({
+    await createFirstPersona({
       ...profile,
       hashtagTolerance: cleanTone(input.hashtagTolerance, 20),
       rules: [],
@@ -76,13 +80,16 @@ export async function completeOnboarding(
   redirect("/app");
 }
 
-/** Profile page save: voice, sliders, platforms, rules and topics. */
+/** Profile page save: one voice's name, description, sliders, platforms and rules, plus topics. */
 export async function saveProfile(
-  input: VoiceProfileInput & { rules: string[]; topics: string[] }
+  input: VoiceProfileInput & { personaId: string; name: string; rules: string[]; topics: string[] }
 ): Promise<ActionResult> {
-  if (!(await getPersona())) {
-    return { ok: false, error: "No voice profile yet. Set one up first." };
+  const { personas } = await readStore();
+  if (!personas.some((p) => p.id === input.personaId)) {
+    return { ok: false, error: "That voice no longer exists. Reload the page." };
   }
+  const name = String(input.name ?? "").trim().slice(0, 40);
+  if (!name) return { ok: false, error: "Give this voice a name." };
 
   const profile = cleanVoiceProfile(input);
   if (profile.platforms.length === 0) {
@@ -90,8 +97,9 @@ export async function saveProfile(
   }
 
   try {
-    await updatePersona({
+    await updatePersona(input.personaId, {
       ...profile,
+      name,
       rules: cleanStrings(input.rules, 50, 300),
     });
     await setTopics(cleanStrings(input.topics, 50, 100));
@@ -99,6 +107,58 @@ export async function saveProfile(
     return { ok: false, error: "Couldn't save your profile. Try again." };
   }
 
+  return { ok: true };
+}
+
+// ---- Voices ---------------------------------------------------------------
+
+/** New voice as a copy of an existing one; the profile page then opens it for editing. */
+export async function createVoice(
+  sourceId: string,
+  name: string
+): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const clean = String(name ?? "").trim().slice(0, 40);
+  if (!clean) return { ok: false, error: "Give the new voice a name." };
+  try {
+    const persona = await createPersonaFrom(String(sourceId), clean);
+    if (!persona) return { ok: false, error: "The voice to copy no longer exists. Reload the page." };
+    return { ok: true, id: persona.id };
+  } catch {
+    return { ok: false, error: "Couldn't create that voice. Try again." };
+  }
+}
+
+export async function deleteVoice(id: string): Promise<ActionResult> {
+  try {
+    if (!(await deletePersona(String(id)))) {
+      return { ok: false, error: "You need at least one voice, so the last one can't be deleted." };
+    }
+  } catch {
+    return { ok: false, error: "Couldn't delete that voice. Try again." };
+  }
+  return { ok: true };
+}
+
+/** Remembers the voice last used, so /app and Profile open with it. */
+export async function selectVoice(id: string): Promise<ActionResult> {
+  try {
+    if (!(await setActivePersona(String(id)))) {
+      return { ok: false, error: "That voice no longer exists. Reload the page." };
+    }
+  } catch {
+    return { ok: false, error: "Couldn't switch voices. Try again." };
+  }
+  return { ok: true };
+}
+
+// ---- Backups --------------------------------------------------------------
+
+export async function restoreFromBackup(name: string): Promise<ActionResult> {
+  try {
+    await restoreBackup(String(name));
+  } catch {
+    return { ok: false, error: "Couldn't restore that backup — the file may be damaged. Your current data is unchanged." };
+  }
   return { ok: true };
 }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { extractVoiceProfile, type PlatformSamples } from "@/lib/claude";
 import { isDemoMode, demoExtractedVoice } from "@/lib/demoMode";
-import { readStore } from "@/lib/store";
+import { activePersona, generationBelongsTo, readStore } from "@/lib/store";
 import type { Platform } from "@/lib/platformRules";
 import { MIN_LEARNABLE_POSTS as MIN_LEARNABLE } from "@/lib/writingOptions";
 
@@ -12,13 +12,19 @@ const MAX_PER_PLATFORM = 5;
  * hand, starting from their current profile. Nothing is saved here — the
  * profile page shows the proposal and saves it if they keep it.
  */
-export async function POST() {
-  const { persona, generations } = await readStore();
+export async function POST(request: Request) {
+  const body = (await request.json().catch(() => ({}))) as { personaId?: unknown };
+  const data = await readStore();
+  const persona = data.personas.find((p) => p.id === body.personaId) ?? activePersona(data);
   if (!persona) {
     return NextResponse.json({ error: "Set up your voice first." }, { status: 409 });
   }
 
-  const learnable = generations.filter((g) => (g.feedback === 1 || g.edited) && g.chosenOutput);
+  // Only this voice's liked or edited posts.
+  const learnable = data.generations.filter(
+    (g) =>
+      (g.feedback === 1 || g.edited) && g.chosenOutput && generationBelongsTo(g, persona.id, data)
+  );
   if (learnable.length < MIN_LEARNABLE) {
     return NextResponse.json(
       {

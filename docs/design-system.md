@@ -15,6 +15,21 @@ Reference `copydogg-design-system.html` for a live rendered preview of these tok
 | `--hairline` | `#E6DFCC` | Borders, dividers, input outlines |
 | `--danger` | `#8B3A4A` | Errors, destructive actions only |
 
+### Dark mode tokens (*added 2026-09-28, approved*)
+
+Same token names, dark values. Paper and ink are the light palette's ink and paper swapped; the rest are lighter/darker versions of the same colors so contrast holds. Applied via `prefers-color-scheme`, or `data-theme="light" | "dark"` on `<html>` when the user picks one in Settings.
+
+| Token | Dark hex |
+|---|---|
+| `--paper` | `#171614` |
+| `--card` | `#211F1C` |
+| `--ink` | `#F7F2E3` |
+| `--ink-soft` | `#A8A298` |
+| `--accent` | `#7FBFA8` |
+| `--accent-soft` | `#1F3A32` |
+| `--hairline` | `#37332D` |
+| `--danger` | `#D98A99` |
+
 Do not add additional accent colors. This is a two-neutral + one-accent system — the discipline is the point. Third-party icons (Gmail red, Slack colors, etc. if ever shown) are the only exception, since those are borrowed brand colors, not part of this palette.
 
 ## Typography

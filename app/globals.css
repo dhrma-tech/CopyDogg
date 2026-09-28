@@ -9,6 +9,35 @@
   --accent-soft: #dce9e3;
   --hairline: #e6dfcc;
   --danger: #8b3a4a;
+  color-scheme: light;
+}
+
+/* Dark tokens (docs/design-system.md). Follows the system setting unless the
+   user picked Light or Dark in Settings, which sets data-theme on <html>. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #171614;
+    --card: #211f1c;
+    --ink: #f7f2e3;
+    --ink-soft: #a8a298;
+    --accent: #7fbfa8;
+    --accent-soft: #1f3a32;
+    --hairline: #37332d;
+    --danger: #d98a99;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #171614;
+  --card: #211f1c;
+  --ink: #f7f2e3;
+  --ink-soft: #a8a298;
+  --accent: #7fbfa8;
+  --accent-soft: #1f3a32;
+  --hairline: #37332d;
+  --danger: #d98a99;
+  color-scheme: dark;
 }
 
 @theme inline {

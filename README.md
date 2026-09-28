@@ -43,9 +43,16 @@ npm start
 - **Library**: saved posts, everything you've written recently, and ideas saved for later.
 - **People, templates, languages, threads and carousels**, under "more options".
 - **Retune**: refresh your voice profile from the posts you've liked and edited.
+- **More than one voice**: "Work me", "Friends me", each with its own tone and platforms.
+- **All platforms at once**: one idea, one version for every platform you use.
+- **Whole conversations**: paste a chat thread and reply to the latest message with context.
+- **Who it's for**: landlord, doctor's office, school, job application, refund request, cancelling a subscription.
+- **Show changes**: see exactly what a rewrite changed.
+- **Undo**: tweaks and deletes can be undone for a few seconds, so there are no "are you sure?" pop-ups.
+- **Dark mode**: follows your system, or pick Light or Dark in Settings.
 - **Voice input** (optional): speak your idea. Off by default, because your browser sends the audio to its speech service (Google, Microsoft or Apple) to transcribe it.
 
-Keyboard: **Ctrl/⌘ + Enter** writes, and your half-typed idea survives a refresh.
+Keyboard: **Ctrl/⌘ + Enter** writes. On results, **1–9** copies a version, **e** edits, **s** saves, **t** then **s/w/d/f** tweaks, and **?** lists the rest. Your half-typed idea survives a refresh.
 
 ## Settings (`.env.local`)
 
@@ -60,6 +67,8 @@ Restart the app after changing any of these.
 ## Your data
 
 Everything (voice profile, rules, topics, generated and saved posts) is stored in `data/copydogg.json`. It's plain JSON, so you can read it, back it up by copying it, or move it to another machine. The `data/` folder is git-ignored, so it never ends up in a commit.
+
+CopyDogg also keeps a daily backup (the last 14) in `data/backups/`. Restore one from Settings; your current data is backed up first.
 
 Settings → **Export my data** downloads a copy, and **Reset everything** empties the file.
 
