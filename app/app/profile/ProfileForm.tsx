@@ -7,7 +7,9 @@ import type { Persona } from "@/lib/store";
 import type { Sliders } from "@/lib/voicePreview";
 import ToneSliders from "@/components/ToneSliders";
 import ChipEditor from "@/components/ChipEditor";
-import PrimaryButton from "@/components/PrimaryButton";
+import Button from "@/components/ui/Button";
+import Card from "@/components/ui/Card";
+import { FIELD } from "@/components/ui/Field";
 import { PlatformMultiPicker } from "@/components/PlatformPicker";
 import { platformRules, type Platform } from "@/lib/platformRules";
 import { MIN_LEARNABLE_POSTS } from "@/lib/writingOptions";
@@ -157,92 +159,83 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
   }
 
   return (
-    <div className="w-full max-w-lg">
-      <h1 className="font-display text-2xl font-semibold text-ink">
+    <div className="w-full max-w-xl">
+      <h1 className="font-display text-title text-ink">
         {name.trim() || "Your voice"}
       </h1>
-      <p className="mt-1 text-sm text-ink-soft">
+      <p className="mt-2 text-body text-ink-soft">
         This is what CopyDogg uses every time it writes as this voice.
       </p>
 
-      <div className="mt-6 flex flex-col gap-6 rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
-        <div className="rounded-md border border-dashed border-hairline p-4">
-          <p className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-            Learn from your posts
-          </p>
+      {/* Its own card, not a box nested inside the form. */}
+      <Card variant="flat" className="mt-5">
+          <p className="label">Learn from your posts</p>
           {retune.state === "proposed" ? (
             <div className="mt-3 flex flex-col gap-3">
-              <p className="text-sm text-ink-soft">Here&rsquo;s your voice, updated from what you liked and edited:</p>
-              <p className="rounded-md bg-paper px-3 py-2 text-sm text-ink">
+              <p className="text-body text-ink-soft">Here&rsquo;s your voice, updated from what you liked and edited:</p>
+              <p className="rounded-md bg-paper px-4 py-3 text-body text-ink">
                 {retune.proposal.voiceDescription}
               </p>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => keepRetune(retune.proposal)}
-                  className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-card"
-                >
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => keepRetune(retune.proposal)}>
                   Keep this
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRetune({ state: "idle" })}
-                  className="rounded-full border border-hairline px-4 py-2 text-sm font-bold text-ink-soft"
-                >
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setRetune({ state: "idle" })}>
                   Keep my current one
-                </button>
+                </Button>
               </div>
             </div>
           ) : (
             <div className="mt-2 flex flex-col gap-3">
-              <p className="text-sm text-ink-soft">
+              <p className="text-body text-ink-soft">
                 {learnableCount >= MIN_LEARNABLE_POSTS
                   ? `You've liked or edited ${learnableCount} posts. CopyDogg can refresh your voice from them.`
                   : `Like or edit ${MIN_LEARNABLE_POSTS - learnableCount} more post${MIN_LEARNABLE_POSTS - learnableCount === 1 ? "" : "s"} and CopyDogg can refresh your voice from them.`}
               </p>
-              <button
-                type="button"
+              <Button
+                size="sm"
+                variant="secondary"
                 onClick={handleRetune}
                 disabled={retune.state === "loading" || learnableCount < MIN_LEARNABLE_POSTS}
-                className="self-start rounded-full border border-hairline px-4 py-2 text-sm font-bold text-ink disabled:opacity-60"
+                className="self-start"
               >
                 {retune.state === "loading" ? "re-reading your voice..." : "Retune my voice"}
-              </button>
-              {retune.state === "error" && <p className="text-sm text-danger">{retune.error}</p>}
+              </Button>
+              {retune.state === "error" && <p role="alert" className="text-small text-danger">{retune.error}</p>}
             </div>
           )}
-        </div>
+      </Card>
+
+      <Card variant="main" className="mt-4 flex flex-col gap-6">
 
         <label className="flex flex-col gap-2">
-          <span className="text-sm text-ink">Voice name</span>
+          <span className="text-small font-medium text-ink">Voice name</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={40}
             placeholder="e.g. Work me"
-            className="w-full rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+            className={FIELD}
           />
         </label>
 
         <div>
-          <p className="text-sm text-ink">Voice description</p>
+          <p className="text-small font-medium text-ink">Voice description</p>
           <textarea
             value={voiceDescription}
             onChange={(e) => setVoiceDescription(e.target.value)}
             rows={4}
             placeholder="You write in short punchy lines..."
-            className="mt-2 w-full resize-none rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+            className={`${FIELD} mt-2 resize-none`}
           />
         </div>
 
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-ink">Platforms you post on</p>
+          <p className="text-small font-medium text-ink">Platforms you post on</p>
           <PlatformMultiPicker value={platforms} onChange={setPlatforms} />
           {platforms.map((p) => (
             <label key={p} className="flex flex-col gap-2">
-              <span className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-                On {platformRules[p].label}
-              </span>
+              <span className="label">On {platformRules[p].label}</span>
               <textarea
                 value={platformVoices[p] ?? ""}
                 onChange={(e) =>
@@ -250,7 +243,7 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
                 }
                 rows={2}
                 placeholder={`Anything different about how you sound on ${platformRules[p].label}?`}
-                className="w-full resize-none rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+                className={`${FIELD} resize-none`}
               />
             </label>
           ))}
@@ -277,33 +270,33 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
           placeholder="indie hacking, fitness, parenting..."
         />
 
-        {status === "error" && <p className="text-sm text-danger">{errorMessage}</p>}
+        {status === "error" && <p role="alert" className="text-small text-danger">{errorMessage}</p>}
 
         <div className="flex items-center gap-3">
-          <PrimaryButton onClick={() => handleSave()} disabled={status === "saving"}>
+          <Button onClick={() => handleSave()} disabled={status === "saving"}>
             {status === "saving" ? "saving..." : "Save changes"}
-          </PrimaryButton>
+          </Button>
           {status === "saved" && !dirty && (
-            <span className="text-sm text-accent">
+            <span role="status" className="text-small font-medium text-success">
               Saved.
             </span>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Keeps Save in reach while editing anywhere on this long page. */}
       {dirty && (
         <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4 sm:bottom-6">
           <div
             role="status"
-            className="flex items-center gap-4 rounded-full border border-hairline bg-card py-2 pl-5 pr-2 text-sm text-ink shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]"
+            className="flex items-center gap-4 rounded-full bg-ink py-1.5 pl-5 pr-1.5 text-small text-paper motion-safe:animate-[toast-in_200ms_ease-out]"
           >
             <span>Unsaved changes</span>
             <button
               type="button"
               onClick={() => handleSave()}
               disabled={status === "saving"}
-              className="rounded-full bg-ink px-4 py-1.5 text-sm font-bold text-card disabled:opacity-60"
+              className="min-h-9 rounded-full bg-highlight px-4 text-small font-semibold text-on-highlight transition-colors hover:bg-highlight-hover disabled:cursor-wait"
             >
               {status === "saving" ? "saving..." : "Save"}
             </button>

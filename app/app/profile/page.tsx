@@ -21,7 +21,7 @@ export default async function ProfilePage() {
 
   return (
     <main className="flex flex-1 flex-col items-center gap-6 px-6 pb-12">
-      <div className="flex w-full max-w-lg flex-col gap-4">
+      <div className="flex w-full max-w-xl flex-col gap-4">
         <VoiceSwitcher
           voices={data.personas.map(({ id, name }) => ({ id, name }))}
           activeId={persona.id}
@@ -34,7 +34,7 @@ export default async function ProfilePage() {
         initialTopics={data.topics.map((t) => t.label)}
         learnableCount={learnableCount}
       />
-      <div className="flex w-full max-w-lg flex-col gap-6">
+      <div className="flex w-full max-w-xl flex-col gap-4">
         <PeopleEditor initial={data.contacts} />
         <TemplatesEditor initial={data.templates} />
       </div>

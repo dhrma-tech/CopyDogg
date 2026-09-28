@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { saveContacts } from "@/app/actions";
+import { buttonClasses } from "@/components/ui/Button";
+import { FIELD } from "@/components/ui/Field";
 import { RELATIONSHIPS } from "@/lib/writingOptions";
 
 interface Person {
@@ -14,8 +16,7 @@ interface Person {
   note: string;
 }
 
-const INPUT =
-  "min-w-0 rounded-md border border-hairline bg-card px-3 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none";
+const INPUT = `${FIELD} min-w-0`;
 
 let nextKey = 0;
 
@@ -50,20 +51,20 @@ export default function PeopleEditor({
   }
 
   return (
-    <section id="people" className="flex flex-col gap-4 rounded-lg border border-hairline bg-card p-6">
+    <section id="people" className="flex scroll-mt-6 flex-col gap-4 rounded-md border border-hairline bg-card p-5 sm:p-6">
       <div>
-        <h2 className="font-display text-xl font-medium text-ink">People you write to</h2>
-        <p className="mt-1 text-sm text-ink-soft">
+        <h2 className="font-display text-heading text-ink">People you write to</h2>
+        <p className="mt-1 text-body text-ink-soft">
           Pick one under &ldquo;more options&rdquo; and CopyDogg matches how you&rsquo;d talk to them.
         </p>
       </div>
 
       {people.length === 0 && (
-        <p className="text-sm text-ink-soft">No one yet — add your boss, a client, a friend.</p>
+        <p className="text-body text-ink-soft">No one yet — add your boss, a client, a friend.</p>
       )}
 
       {people.map((p) => (
-        <div key={p.key} className="flex flex-col gap-2 border-t border-dashed border-hairline pt-4 first:border-0 first:pt-0">
+        <div key={p.key} className="flex flex-col gap-2 border-t border-dashed border-control pt-4 first:border-0 first:pt-0">
           <div className="flex gap-2">
             <input
               value={p.name}
@@ -91,7 +92,7 @@ export default function PeopleEditor({
                 setStatus("idle");
               }}
               aria-label={`Remove ${p.name || "this person"}`}
-              className="rounded-sm p-2 text-ink-soft hover:text-danger"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-sm text-ink-soft transition-colors hover:bg-highlight-soft hover:text-danger"
             >
               <X size={16} />
             </button>
@@ -112,7 +113,7 @@ export default function PeopleEditor({
           onClick={() =>
             setPeople((prev) => [...prev, { key: `new-${++nextKey}`, name: "", relationship: "friend", note: "" }])
           }
-          className="rounded-full border border-hairline px-4 py-2 text-sm font-bold text-ink"
+          className={buttonClasses({ variant: "secondary", size: "sm" })}
         >
           Add person
         </button>
@@ -120,13 +121,13 @@ export default function PeopleEditor({
           type="button"
           onClick={handleSave}
           disabled={status === "saving"}
-          className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-card disabled:opacity-60"
+          className={buttonClasses({ size: "sm" })}
         >
           {status === "saving" ? "saving..." : "Save people"}
         </button>
-        {status === "saved" && <span className="text-sm text-accent">Saved.</span>}
+        {status === "saved" && <span role="status" className="text-small font-medium text-success">Saved.</span>}
       </div>
-      {status === "error" && <p className="text-sm text-danger">{error}</p>}
+      {status === "error" && <p role="alert" className="text-small text-danger">{error}</p>}
     </section>
   );
 }

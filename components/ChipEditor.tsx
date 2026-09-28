@@ -52,6 +52,7 @@ export default function ChipEditor({
               disabled={items.includes(suggestion)}
               aria-pressed={undefined}
               aria-label={items.includes(suggestion) ? `${suggestion} (added)` : `Add: ${suggestion}`}
+              className="max-w-full py-1 text-left"
             >
               + {suggestion}
             </Chip>
@@ -76,7 +77,7 @@ export default function ChipEditor({
       {items.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {items.map((item) => (
-            <span key={item} className={`${chipClasses(true, "sm")} pr-1`}>
+            <span key={item} className={`${chipClasses(true, "sm")} max-w-full py-1 pr-1 text-left`}>
               {item}
               <button
                 type="button"

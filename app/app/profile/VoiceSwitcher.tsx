@@ -3,9 +3,12 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createVoice, deleteVoice, selectVoice } from "@/app/actions";
+import { buttonClasses } from "@/components/ui/Button";
+import { chipClasses } from "@/components/ui/Chip";
+import { FIELD } from "@/components/ui/Field";
 
-const PILL_ON = "rounded-full bg-accent-soft px-4 py-2 text-sm font-medium text-accent";
-const PILL_OFF = "rounded-full border border-hairline px-4 py-2 text-sm font-medium text-ink-soft hover:text-ink";
+const PILL_ON = chipClasses(true);
+const PILL_OFF = chipClasses(false);
 
 /**
  * Pick which voice the form below edits, add a new one (a copy of the current
@@ -61,7 +64,7 @@ export default function VoiceSwitcher({
               setAdding(true);
               setConfirmingDelete(false);
             }}
-            className="rounded-full border border-dashed border-hairline px-4 py-2 text-sm font-medium text-ink-soft hover:text-ink"
+            className={`${chipClasses(false)} border-dashed border-control`}
           >
             + New voice
           </button>
@@ -80,9 +83,9 @@ export default function VoiceSwitcher({
               }
             );
           }}
-          className="flex flex-col gap-2 rounded-md border border-dashed border-hairline bg-card p-3"
+          className="flex flex-col gap-3 rounded-md border border-dashed border-control bg-card p-4"
         >
-          <p className="text-sm text-ink-soft">
+          <p className="text-body text-ink-soft">
             Starts as a copy of <span className="font-medium text-ink">{active?.name}</span>, then
             adjust it below.
           </p>
@@ -93,19 +96,19 @@ export default function VoiceSwitcher({
               placeholder="e.g. Work me, Friends me"
               aria-label="New voice name"
               autoFocus
-              className="min-w-0 flex-1 rounded-md border border-hairline bg-card px-3 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+              className={`${FIELD} min-w-0 flex-1`}
             />
             <button
               type="submit"
               disabled={pending || !newName.trim()}
-              className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-card disabled:opacity-60"
+              className={buttonClasses()}
             >
               {pending ? "copying..." : "Create"}
             </button>
             <button
               type="button"
               onClick={() => setAdding(false)}
-              className="rounded-full px-2 text-sm text-ink-soft"
+              className={buttonClasses({ variant: "quiet" })}
             >
               Cancel
             </button>
@@ -114,7 +117,7 @@ export default function VoiceSwitcher({
       )}
 
       {voices.length > 1 && !adding && (
-        <div className="text-sm">
+        <div className="text-small">
           {confirmingDelete ? (
             <span className="flex flex-wrap items-center gap-3">
               <span className="text-ink">
@@ -124,7 +127,7 @@ export default function VoiceSwitcher({
                 type="button"
                 onClick={() => run(() => deleteVoice(activeId), () => setConfirmingDelete(false))}
                 disabled={pending}
-                className="font-bold text-danger"
+                className={`${buttonClasses({ variant: "danger", size: "sm" })} -ml-3.5`}
               >
                 Delete voice
               </button>
@@ -136,7 +139,7 @@ export default function VoiceSwitcher({
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
-              className="text-ink-soft underline hover:text-danger"
+              className="text-ink-soft underline decoration-control underline-offset-2 hover:text-danger"
             >
               Delete this voice
             </button>
@@ -144,7 +147,7 @@ export default function VoiceSwitcher({
         </div>
       )}
 
-      {error && <p className="text-sm text-danger">{error}</p>}
+      {error && <p role="alert" className="text-small text-danger">{error}</p>}
     </section>
   );
 }

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { saveTemplates } from "@/app/actions";
+import { buttonClasses } from "@/components/ui/Button";
+import { FIELD } from "@/components/ui/Field";
 
 interface TemplateRow {
   id?: string;
@@ -11,8 +13,7 @@ interface TemplateRow {
   body: string;
 }
 
-const INPUT =
-  "min-w-0 rounded-md border border-hairline bg-card px-3 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none";
+const INPUT = `${FIELD} min-w-0`;
 
 let nextKey = 0;
 
@@ -47,20 +48,20 @@ export default function TemplatesEditor({
   }
 
   return (
-    <section id="templates" className="flex flex-col gap-4 rounded-lg border border-hairline bg-card p-6">
+    <section id="templates" className="flex scroll-mt-6 flex-col gap-4 rounded-md border border-hairline bg-card p-5 sm:p-6">
       <div>
-        <h2 className="font-display text-xl font-medium text-ink">Templates</h2>
-        <p className="mt-1 text-sm text-ink-soft">
+        <h2 className="font-display text-heading text-ink">Templates</h2>
+        <p className="mt-1 text-body text-ink-soft">
           A structure you reuse. Pick it under &ldquo;more options&rdquo; and your idea fills it in.
         </p>
       </div>
 
       {templates.length === 0 && (
-        <p className="text-sm text-ink-soft">No templates yet — a weekly update or launch post is a good first one.</p>
+        <p className="text-body text-ink-soft">No templates yet — a weekly update or launch post is a good first one.</p>
       )}
 
       {templates.map((t) => (
-        <div key={t.key} className="flex flex-col gap-2 border-t border-dashed border-hairline pt-4 first:border-0 first:pt-0">
+        <div key={t.key} className="flex flex-col gap-2 border-t border-dashed border-control pt-4 first:border-0 first:pt-0">
           <div className="flex gap-2">
             <input
               value={t.name}
@@ -76,7 +77,7 @@ export default function TemplatesEditor({
                 setStatus("idle");
               }}
               aria-label={`Remove ${t.name || "this template"}`}
-              className="rounded-sm p-2 text-ink-soft hover:text-danger"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-sm text-ink-soft transition-colors hover:bg-highlight-soft hover:text-danger"
             >
               <X size={16} />
             </button>
@@ -96,7 +97,7 @@ export default function TemplatesEditor({
         <button
           type="button"
           onClick={() => setTemplates((prev) => [...prev, { key: `new-${++nextKey}`, name: "", body: "" }])}
-          className="rounded-full border border-hairline px-4 py-2 text-sm font-bold text-ink"
+          className={buttonClasses({ variant: "secondary", size: "sm" })}
         >
           Add template
         </button>
@@ -104,13 +105,13 @@ export default function TemplatesEditor({
           type="button"
           onClick={handleSave}
           disabled={status === "saving"}
-          className="rounded-full bg-ink px-4 py-2 text-sm font-bold text-card disabled:opacity-60"
+          className={buttonClasses({ size: "sm" })}
         >
           {status === "saving" ? "saving..." : "Save templates"}
         </button>
-        {status === "saved" && <span className="text-sm text-accent">Saved.</span>}
+        {status === "saved" && <span role="status" className="text-small font-medium text-success">Saved.</span>}
       </div>
-      {status === "error" && <p className="text-sm text-danger">{error}</p>}
+      {status === "error" && <p role="alert" className="text-small text-danger">{error}</p>}
     </section>
   );
 }
