@@ -45,6 +45,9 @@ const DEMO_BY_MODE: Record<GenerateMode, string[]> = {
     "Placeholder rewrite #2, a different angle. Demo mode.",
     "Placeholder rewrite #3. Demo mode.",
   ],
+  notes: [
+    "Summary: demo mode placeholder. With an API key, this turns your notes into a short summary.\n\nDecisions:\n- Placeholder decision\n\nNext steps:\n- Placeholder next step",
+  ],
   tweak: ["Placeholder tweak — the same post, adjusted as asked. Demo mode."],
 };
 

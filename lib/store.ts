@@ -75,6 +75,16 @@ export interface Idea {
 export interface Settings {
   /** Opt-in: browser speech recognition sends audio to the browser vendor. */
   voiceInput: boolean;
+  /** BCP-47 tag for dictation, or "" for the browser's language. */
+  dictationLanguage: string;
+}
+
+/** Saved text that goes in word for word when its shortcut is said or typed. */
+export interface Snippet {
+  id: string;
+  /** What you say or type, e.g. "my bio". */
+  trigger: string;
+  text: string;
 }
 
 export interface StoreData {
@@ -87,6 +97,9 @@ export interface StoreData {
   contacts: Contact[];
   templates: Template[];
   ideas: Idea[];
+  /** Names, jargon and acronyms to spell exactly (fixes misheard dictation). */
+  words: string[];
+  snippets: Snippet[];
   settings: Settings;
 }
 
@@ -98,7 +111,7 @@ export const DATA_DIR = path.resolve(
 export const DATA_FILE = path.join(DATA_DIR, "copydogg.json");
 export const BACKUP_DIR = path.join(DATA_DIR, "backups");
 
-const DEFAULT_SETTINGS: Settings = { voiceInput: false };
+const DEFAULT_SETTINGS: Settings = { voiceInput: false, dictationLanguage: "" };
 const BACKUPS_KEPT = 14;
 const BACKUP_NAME = /^copydogg-\d{4}-\d{2}-\d{2}(-before-restore-\d+)?\.json$/;
 
@@ -112,6 +125,8 @@ function emptyStore(): StoreData {
     contacts: [],
     templates: [],
     ideas: [],
+    words: [],
+    snippets: [],
     settings: { ...DEFAULT_SETTINGS },
   };
 }
@@ -132,6 +147,8 @@ function normalize(parsed: Partial<StoreData> & { persona?: Persona | null }): S
     contacts: parsed.contacts ?? [],
     templates: parsed.templates ?? [],
     ideas: parsed.ideas ?? [],
+    words: parsed.words ?? [],
+    snippets: parsed.snippets ?? [],
     settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
   };
 }
@@ -481,4 +498,40 @@ export function cleanStrings(value: unknown, maxItems: number, maxLength: number
     .map((v) => v.trim().slice(0, maxLength))
     .filter(Boolean)
     .slice(0, maxItems);
+}
+
+// ---- Your words and snippets ----------------------------------------------
+
+/** Replaces the words list; trimmed, de-duplicated (case-insensitive), capped. */
+export function setWords(words: string[]): Promise<string[]> {
+  return mutate((data) => {
+    const seen = new Set<string>();
+    data.words = words
+      .map((w) => w.trim().slice(0, 60))
+      .filter((w) => w && !seen.has(w.toLowerCase()) && seen.add(w.toLowerCase()))
+      .slice(0, 300);
+    return data.words;
+  });
+}
+
+/** Adds words that aren't there yet; returns the full list. */
+export function addWords(words: string[]): Promise<string[]> {
+  return mutate((data) => {
+    const have = new Set(data.words.map((w) => w.toLowerCase()));
+    for (const raw of words) {
+      const w = raw.trim().slice(0, 60);
+      if (w && !have.has(w.toLowerCase()) && data.words.length < 300) {
+        data.words.push(w);
+        have.add(w.toLowerCase());
+      }
+    }
+    return data.words;
+  });
+}
+
+export function setSnippets(snippets: { id?: string; trigger: string; text: string }[]): Promise<Snippet[]> {
+  return mutate((data) => {
+    data.snippets = snippets.map((s) => ({ ...s, id: s.id || randomUUID() }));
+    return data.snippets;
+  });
 }

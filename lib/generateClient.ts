@@ -19,6 +19,10 @@ export interface GenerateBody {
   structure?: Structure;
   templateId?: string;
   tweak?: string;
+  /** Text came from dictation: ask Claude to clean up fillers and corrections. */
+  dictated?: boolean;
+  /** Rewrite mode: tidy and format only. */
+  keepWords?: boolean;
   variationCount?: number;
 }
 

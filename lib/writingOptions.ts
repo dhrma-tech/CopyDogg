@@ -3,7 +3,7 @@
  * so both validate against the same lists. No server-only imports.
  */
 
-export const MODES = ["write", "reply", "rewrite", "check"] as const;
+export const MODES = ["write", "reply", "rewrite", "notes", "check"] as const;
 export type Mode = (typeof MODES)[number];
 
 /** Modes that produce text (everything but "check"), plus the per-card tweak. */
@@ -13,6 +13,7 @@ export const MODE_LABELS: Record<Mode, string> = {
   write: "Write",
   reply: "Reply",
   rewrite: "Rewrite",
+  notes: "Notes",
   check: "Check",
 };
 
@@ -109,3 +110,49 @@ export const SCENARIOS = {
 
 export type ScenarioKey = keyof typeof SCENARIOS;
 export const SCENARIO_KEYS = Object.keys(SCENARIOS) as ScenarioKey[];
+
+/**
+ * Languages offered for dictation (browser speech recognition needs one,
+ * as a BCP-47 tag). "" means the browser's own language.
+ */
+export const DICTATION_LANGUAGES: { tag: string; label: string }[] = [
+  { tag: "", label: "Same as your browser" },
+  { tag: "en-US", label: "English (US)" },
+  { tag: "en-GB", label: "English (UK)" },
+  { tag: "en-IN", label: "English (India)" },
+  { tag: "en-AU", label: "English (Australia)" },
+  { tag: "hi-IN", label: "Hindi" },
+  { tag: "mr-IN", label: "Marathi" },
+  { tag: "bn-IN", label: "Bengali" },
+  { tag: "ta-IN", label: "Tamil" },
+  { tag: "te-IN", label: "Telugu" },
+  { tag: "gu-IN", label: "Gujarati" },
+  { tag: "kn-IN", label: "Kannada" },
+  { tag: "ml-IN", label: "Malayalam" },
+  { tag: "pa-IN", label: "Punjabi" },
+  { tag: "ur-PK", label: "Urdu" },
+  { tag: "es-ES", label: "Spanish (Spain)" },
+  { tag: "es-MX", label: "Spanish (Mexico)" },
+  { tag: "fr-FR", label: "French" },
+  { tag: "de-DE", label: "German" },
+  { tag: "it-IT", label: "Italian" },
+  { tag: "pt-BR", label: "Portuguese (Brazil)" },
+  { tag: "pt-PT", label: "Portuguese (Portugal)" },
+  { tag: "nl-NL", label: "Dutch" },
+  { tag: "sv-SE", label: "Swedish" },
+  { tag: "pl-PL", label: "Polish" },
+  { tag: "tr-TR", label: "Turkish" },
+  { tag: "ru-RU", label: "Russian" },
+  { tag: "uk-UA", label: "Ukrainian" },
+  { tag: "ar-SA", label: "Arabic" },
+  { tag: "he-IL", label: "Hebrew" },
+  { tag: "ja-JP", label: "Japanese" },
+  { tag: "ko-KR", label: "Korean" },
+  { tag: "zh-CN", label: "Chinese (Mandarin, simplified)" },
+  { tag: "zh-TW", label: "Chinese (Mandarin, traditional)" },
+  { tag: "id-ID", label: "Indonesian" },
+  { tag: "vi-VN", label: "Vietnamese" },
+  { tag: "th-TH", label: "Thai" },
+];
+
+export const DICTATION_TAGS = DICTATION_LANGUAGES.map((l) => l.tag);

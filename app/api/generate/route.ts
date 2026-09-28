@@ -14,7 +14,7 @@ import {
 } from "@/lib/writingOptions";
 import { activePersona, addGeneration, getRecentLikedOutputs, readStore } from "@/lib/store";
 
-const GENERATE_MODES: readonly GenerateMode[] = ["write", "reply", "rewrite", "tweak"];
+const GENERATE_MODES: readonly GenerateMode[] = ["write", "reply", "rewrite", "notes", "tweak"];
 
 function text(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -40,6 +40,8 @@ export async function POST(request: Request) {
   const conversation = mode === "reply" && body.conversation === true;
   const language = isOneOf(LANGUAGES, body.language) ? body.language : null;
   const tweak = isOneOf(TWEAKS, body.tweak) ? body.tweak : null;
+  const dictated = body.dictated === true;
+  const keepWords = mode === "rewrite" && body.keepWords === true;
 
   if (!isPlatform(platform)) {
     return NextResponse.json({ error: "Unknown platform." }, { status: 400 });
@@ -53,12 +55,15 @@ export async function POST(request: Request) {
   if (mode === "rewrite" && !context) {
     return NextResponse.json({ error: "Paste the draft you want rewritten." }, { status: 400 });
   }
+  if (mode === "notes" && !context) {
+    return NextResponse.json({ error: "Paste or dictate your notes first." }, { status: 400 });
+  }
   if (mode === "tweak" && (!context || !tweak)) {
     return NextResponse.json({ error: "Nothing to tweak." }, { status: 400 });
   }
 
   const data = await readStore();
-  const { contacts, templates } = data;
+  const { contacts, templates, words, snippets } = data;
   // The voice picked on /app; falls back to the active one.
   const persona = data.personas.find((p) => p.id === body.personaId) ?? activePersona(data);
   if (!persona) {
@@ -81,7 +86,8 @@ export async function POST(request: Request) {
       : structure
         ? 2 // threads and carousels are long; two options is plenty
         : 3;
-  const count = mode === "tweak" ? 1 : requested;
+  // Tidy-only and notes have one right answer; variations would just differ in noise.
+  const count = mode === "tweak" || mode === "notes" || keepWords ? 1 : requested;
 
   const recentLikedExamples = isDemoMode ? [] : await getRecentLikedOutputs(persona.id, 3);
   const encoder = new TextEncoder();
@@ -120,6 +126,10 @@ export async function POST(request: Request) {
                 structure,
                 template,
                 tweak,
+                dictated,
+                keepWords,
+                words,
+                snippets: snippets.map(({ trigger, text }) => ({ trigger, text })),
                 recentLikedExamples,
                 variationCount: count,
               },

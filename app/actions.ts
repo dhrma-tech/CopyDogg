@@ -3,7 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { GATE_COOKIE, gatePassword, isCorrectPassword, tokenFor } from "@/lib/passwordGate";
-import { RELATIONSHIPS, isOneOf } from "@/lib/writingOptions";
+import { DICTATION_TAGS, RELATIONSHIPS, isOneOf } from "@/lib/writingOptions";
 import {
   addIdea,
   cleanPlatformVoices,
@@ -19,11 +19,15 @@ import {
   restoreBackup,
   setActivePersona,
   setContacts,
+  addWords,
+  setSnippets,
   setTemplates,
+  setWords,
   setTopics,
   updatePersona,
   updateSettings,
   type Contact,
+  type Snippet,
   type Template,
 } from "@/lib/store";
 
@@ -265,6 +269,58 @@ export async function saveTemplates(
 export async function setVoiceInput(enabled: boolean): Promise<ActionResult> {
   try {
     await updateSettings({ voiceInput: enabled === true });
+  } catch {
+    return { ok: false, error: "Couldn't save that setting. Try again." };
+  }
+  return { ok: true };
+}
+
+// ---- Voice: your words, snippets, dictation language ----------------------
+
+export async function saveWords(
+  words: string[]
+): Promise<{ ok: true; items: string[] } | { ok: false; error: string }> {
+  try {
+    return { ok: true, items: await setWords(cleanStrings(words, 300, 60)) };
+  } catch {
+    return { ok: false, error: "Couldn't save your words. Try again." };
+  }
+}
+
+/** Adds suggested words (e.g. names spotted in an edit) without touching the rest. */
+export async function learnWords(
+  words: string[]
+): Promise<{ ok: true; items: string[] } | { ok: false; error: string }> {
+  try {
+    return { ok: true, items: await addWords(cleanStrings(words, 20, 60)) };
+  } catch {
+    return { ok: false, error: "Couldn't add that. Try again." };
+  }
+}
+
+export async function saveSnippets(
+  input: { id?: string; trigger: string; text: string }[]
+): Promise<{ ok: true; items: Snippet[] } | { ok: false; error: string }> {
+  const seen = new Set<string>();
+  const snippets = (Array.isArray(input) ? input : [])
+    .map((s) => ({
+      id: typeof s.id === "string" ? s.id : undefined,
+      trigger: String(s.trigger ?? "").trim().slice(0, 40),
+      text: String(s.text ?? "").trim().slice(0, 3000),
+    }))
+    .filter((s) => s.trigger && s.text && !seen.has(s.trigger.toLowerCase()) && seen.add(s.trigger.toLowerCase()))
+    .slice(0, 50);
+  try {
+    return { ok: true, items: await setSnippets(snippets) };
+  } catch {
+    return { ok: false, error: "Couldn't save your snippets. Try again." };
+  }
+}
+
+export async function setDictationLanguage(tag: string): Promise<ActionResult> {
+  if (!isOneOf(DICTATION_TAGS, tag)) return { ok: false, error: "Pick a language from the list." };
+  try {
+    await updateSettings({ dictationLanguage: tag });
   } catch {
     return { ok: false, error: "Couldn't save that setting. Try again." };
   }

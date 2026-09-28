@@ -58,6 +58,7 @@ const IDEA_PLACEHOLDERS = [
 const CONTEXT_PLACEHOLDERS: Record<Exclude<Mode, "write">, string> = {
   reply: "Paste the message, comment or email you got",
   rewrite: "Paste your draft — messy is fine",
+  notes: "Paste or dictate your meeting notes — rough is fine",
   check: "Paste something before you send it",
 };
 const CONVERSATION_PLACEHOLDER =
@@ -67,6 +68,7 @@ const SUBMIT_LABELS: Record<Mode, string> = {
   write: "Generate posts",
   reply: "Write replies",
   rewrite: "Rewrite it",
+  notes: "Sum it up",
   check: "Check the tone",
 };
 
@@ -74,6 +76,7 @@ const LOADING_LABELS: Record<Mode, string> = {
   write: "sniffing out your tone...",
   reply: "reading the room...",
   rewrite: "tidying it up...",
+  notes: "pulling out the good bits...",
   check: "reading between the lines...",
 };
 
