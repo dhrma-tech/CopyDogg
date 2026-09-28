@@ -1,66 +1,73 @@
-# CopyDogg — Design Tokens
+# CopyDogg — Design System: Highlighter
 
-Reference `copydogg-design-system.html` for a live rendered preview of these tokens in use (buttons, sliders, cards, full screen mock). This file is the precise source of truth for values — use these exact hex codes, not approximations.
+*Adopted 2026-09-28 (direction C from the design lab), replacing the cream/teal "editorial" system.*
+
+**Personality:** paper, ink and a highlighter pen. Grotesque headlines, crisp ink borders, and one bright yellow mark for what matters: what's selected, what's primary, what you're looking at right now. Calm everywhere else.
+
+This file is the source of truth. Every color, font, size, radius, shadow and duration used in components comes from here, via the tokens in `app/globals.css`. Don't add values ad hoc. If something is missing, add it here first.
 
 ## Color tokens
 
-| Token | Hex | Usage |
-|---|---|---|
-| `--paper` | `#F7F2E3` | Base page background, everywhere |
-| `--card` | `#FFFEFB` | Cards, inputs, raised surfaces |
-| `--ink` | `#171614` | Primary text — near-black, never pure `#000` |
-| `--ink-soft` | `#6E6A62` | Secondary/muted text, placeholders, meta labels |
-| `--accent` | `#1E5C4B` | The one confident color — active states, primary buttons, selected pills, links |
-| `--accent-soft` | `#DCE9E3` | Accent tint for backgrounds (e.g. selected pill background) |
-| `--hairline` | `#E6DFCC` | Borders, dividers, input outlines |
-| `--danger` | `#8B3A4A` | Errors, destructive actions only |
+| Token (Tailwind) | Light | Dark | Usage |
+|---|---|---|---|
+| `paper` | `#F5F5F1` | `#121211` | Page background |
+| `card` | `#FFFFFF` | `#1C1C1A` | Cards, inputs, raised surfaces |
+| `ink` | `#141413` | `#F2F2EC` | Primary text, main-card borders, offset shadows |
+| `ink-soft` | `#5E5E58` | `#A3A39B` | Secondary text, placeholders, meta labels |
+| `hairline` | `#E2E2DC` | `#2E2E2B` | Dividers and flat-card borders (decorative only) |
+| `control` | `#8E8E86` | `#6B6B64` | Edges of inputs, secondary buttons and unselected chips; 3:1 against paper and card |
+| `highlight` | `#F2D64B` | `#F2D64B` | The one bright color. **Background only, never text.** Selected chips, the active mode, text marks, the dark-mode primary button |
+| `highlight-hover` | `#E8C623` | `#F7E27A` | Hover on highlight backgrounds |
+| `on-highlight` | `#141413` | `#141413` | Text and icons on `highlight` (always dark, in both modes) |
+| `highlight-soft` | `#FBF1BF` | `#3A3418` | Quiet tint: inserted words in diffs, liked state, hover on quiet buttons; text on it is `ink` |
+| `primary` / `on-primary` | `#141413` / `#FFFFFF` | `#F2D64B` / `#141413` | Primary button fill and its text |
+| `primary-hover` | `#33332F` | `#F7E27A` | Primary button hover |
+| `success` | `#1F6B45` | `#7FCB9E` | Confirmations ("Saved.") |
+| `danger` | `#B42318` | `#F08F84` | Errors and destructive actions only |
+| `focus` | `#141413` | `#F2D64B` | Keyboard focus outline (2px, 2px offset) |
 
-### Dark mode tokens (*added 2026-09-28, approved*)
+Contrast (checked): all text pairs ≥ 4.5:1 in both modes. `control` is ≥ 3:1 on `paper` and `card`, as WCAG 1.4.11 requires for input edges. `hairline` is intentionally faint and is never the only edge of something you can type into or press.
 
-Same token names, dark values. Paper and ink are the light palette's ink and paper swapped; the rest are lighter/darker versions of the same colors so contrast holds. Applied via `prefers-color-scheme`, or `data-theme="light" | "dark"` on `<html>` when the user picks one in Settings.
-
-| Token | Dark hex |
-|---|---|
-| `--paper` | `#171614` |
-| `--card` | `#211F1C` |
-| `--ink` | `#F7F2E3` |
-| `--ink-soft` | `#A8A298` |
-| `--accent` | `#7FBFA8` |
-| `--accent-soft` | `#1F3A32` |
-| `--hairline` | `#37332D` |
-| `--danger` | `#D98A99` |
-
-Do not add additional accent colors. This is a two-neutral + one-accent system — the discipline is the point. Third-party icons (Gmail red, Slack colors, etc. if ever shown) are the only exception, since those are borrowed brand colors, not part of this palette.
+One bright color, and only as a background. No second accent, no gradients. Links are `ink` with a `highlight` underline, not a colored text link.
 
 ## Typography
 
-| Role | Font | Weight(s) | Usage |
+| Role | Font | Weights | Usage |
 |---|---|---|---|
-| Display | Fraunces | 500, 600 (+ italic 500) | Headlines only. Never body text. |
-| Body | Karla | 400, 500, 700 | All UI text, buttons, inputs, paragraphs |
-| Utility | JetBrains Mono | 400, 500 | Small meta labels only (platform tags, timestamps, tone %) — never full sentences |
+| Display | Bricolage Grotesque (variable, `opsz`) | 600–700 | Headlines only |
+| Body | Geist | 400, 500, 600 | All UI text, buttons, inputs, paragraphs |
+| Mono | Geist Mono | 400, 500 | Small meta labels only (platform, date, counts, shortcuts). Never buttons, never sentences |
 
-Load via Google Fonts:
-```
-https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=Karla:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap
-```
+Loaded with `next/font/google` in `app/layout.tsx` (self-hosted at build time; no request to Google at runtime).
 
-Type scale:
-- Hero headline: 38–58px (clamp), Fraunces 600
-- Section heading: 28–30px, Fraunces 500
-- Body: 15–17px, Karla 400
-- Small/meta: 11–13px, JetBrains Mono, uppercase, letter-spacing 0.1em
+Type scale (Tailwind utilities in brackets):
 
-## Shape & spacing
+| Step | Size / line-height | Weight | Notes |
+|---|---|---|---|
+| Display (`text-display`) | clamp(42px, 8vw, 70px) / 0.98 | 700 | tracking −0.035em; landing hero only |
+| Title (`text-title`) | clamp(26px, 5vw, 30px) / 1.1 | 650 | Page titles; tracking −0.02em |
+| Heading (`text-heading`) | 21px / 1.2 | 600 | Section and card headings |
+| Body (`text-body`) | 16px / 1.55 | 400 | Default for reading text **and every input** (16px stops iOS zooming on focus) |
+| Small (`text-small`) | 14px / 1.45 | 400–500 | Supporting text, buttons in dense rows, chips |
+| Label (`label` utility) | 12px / 1.3 | 500 | Geist Mono, tracking 0.02em, **not uppercase** |
+
+Nothing smaller than 12px, and 12px is only for mono labels. Interactive text is at least 14px.
+
+## Shape, elevation, spacing, motion
 
 | Token | Value | Usage |
 |---|---|---|
-| `--radius-sm` | 8px | Small controls (icon buttons) |
-| `--radius-md` | 14px | Inputs, output cards, pills' inner corners where not fully round |
-| `--radius-lg` | 20px | Main container cards, the screen shell |
-| Pills | fully round (999px) | Persona/platform/tone selectors — always pill-shaped, never rectangular |
+| `rounded-sm` | 6px | Icon buttons, small marks |
+| `rounded-md` | 10px | Buttons, inputs, flat cards |
+| `rounded-lg` | 14px | Main cards, sheets |
+| `rounded-chip` | 8px | Chips, pills, segmented controls (not fully round) |
+| `shadow-card` | `4px 4px 0 ink` | Main card only (with a 1.5px `ink` border) |
+| `shadow-raise` | `2px 2px 0 ink` | Primary buttons in light mode; the selected segment |
+| Spacing | 4px base: 4, 8, 12, 16, 20, 24, 32, 40 | Stick to these steps |
+| Content widths | App pages `max-w-2xl` (672px); forms `max-w-xl` (576px); landing `max-w-3xl` | Header aligns to the same width |
+| Motion | 160ms `ease-out` for color/border/shadow; 200ms for enter/exit | Buttons press 1px down; respects reduced motion |
 
-Card elevation: subtle only. `box-shadow: 0 12px 32px -18px rgba(23, 22, 20, 0.25)` on the main generation card. No shadow on flat pills or inline elements.
+No soft blurry shadows. Elevation is either an ink border with an offset shadow (the main card) or a flat hairline border (everything else).
 
 ## Copy voice rules (applies to all UI text)
 
@@ -71,9 +78,20 @@ Card elevation: subtle only. `box-shadow: 0 12px 32px -18px rgba(23, 22, 20, 0.2
 - Empty states are an invitation to act, not an apology: e.g. "nothing saved yet — go write something worth keeping"
 - Errors state what happened and how to fix it, never "oops" without a next step
 
-## Component notes
 
-- **Pills** (persona, platform, tone chips): inactive = transparent bg + `--hairline` border + `--ink-soft` text. Active = `--accent-soft` bg + `--accent` text, no border.
-- **Primary button**: `--ink` background, `--card` text, fully round, bold Karla 700.
-- **Sliders**: track in `--hairline`, fill in `--accent`, thumb is a white circle with `--accent` border — not a filled accent circle (keeps it light-touch, not heavy).
-- **Output cards**: `--card` background, `--hairline` 1px border, `--radius-md`, dashed `--hairline` divider above the action row (copy/regenerate/save).
+## Components
+
+All in `components/ui/`. Pages use these instead of re-writing class strings.
+
+- **Button** (`Button`): variants `primary` (primary fill, `shadow-raise` in light), `secondary` (transparent, `control` border, hover `highlight-soft`), `quiet` (text only, `ink-soft` → `ink` + `highlight-soft` on hover), `danger` (quiet, `danger` text). Sizes `md` (44px tall) and `sm` (36px). **Disabled:** `hairline` fill, `ink-soft` text, no shadow. Never an opacity fade.
+- **Field** (`Input`, `Textarea`): `card` fill, 1px `control` border, `rounded-md`, 16px text. Hover: `ink` border. Focus: `ink` border plus a 3px `highlight` ring. Invalid: `danger` border.
+- **Card** (`Card`): `main` has a 1.5px `ink` border, `shadow-card`, `rounded-lg`, padding 20/24. `flat` has a `hairline` border, `rounded-md`, padding 16, and `control` border on hover. Never nest a bordered box inside a card; use spacing or a dashed `hairline` divider.
+- **Chip** (`Chip`): `rounded-chip`. Off: transparent with a `hairline` border and `ink-soft` text, hover `control` border and `ink` text. On: `highlight` fill, `on-highlight` text, 1px `ink` border (in dark mode the border is `highlight`). Sizes `md` (36px) and `sm` (32px).
+- **Segmented control** (mode switch, tabs): a `paper` track with a `hairline` border; the selected segment is `highlight` + `on-highlight`.
+- **Slider**: 4px `hairline` track with an `ink` fill; the thumb is a `card` circle with a 2px `ink` border (`highlight` border in dark mode).
+- **Label**: the `label` utility (mono 12px, `ink-soft`) for platform tags, dates, counts and shortcuts.
+- **Link**: `ink` text, 2px `highlight` underline, offset 3px.
+- **Toast**: an `ink` pill with `paper` text; the action is a `highlight` button.
+- **Empty state**: a dashed `control` border, centered heading and one action. An invitation, not an apology.
+- **Loading**: the button says what's happening ("sniffing out your tone..."); cards show a blinking `ink` caret while text streams in, or pulsing `hairline` bars before the first word.
+- **Focus**: every interactive element shows a 2px `focus` outline with a 2px offset on keyboard focus; fields use the highlight ring instead.
