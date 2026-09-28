@@ -25,6 +25,11 @@
   --shadow-ink: #141413;
   /* Primary buttons get an offset shadow in light mode only. */
   --button-shadow: 2px 2px 0 #141413;
+  /* Highlighter mark: a low band behind ink text in light mode; in dark mode
+     yellow words on a thin yellow underline (a full block would overlap the
+     tight display line-height). */
+  --mark-top: 58%;
+  --mark-text: var(--ink);
   color-scheme: light;
 }
 
@@ -50,6 +55,8 @@
     --focus: #f2d64b;
     --shadow-ink: #f2f2ec;
     --button-shadow: none;
+    --mark-top: 88%;
+    --mark-text: var(--highlight);
     color-scheme: dark;
   }
 }
@@ -73,6 +80,8 @@
   --focus: #f2d64b;
   --shadow-ink: #f2f2ec;
   --button-shadow: none;
+  --mark-top: 88%;
+  --mark-text: var(--highlight);
   color-scheme: dark;
 }
 
@@ -142,6 +151,15 @@
   font-weight: 500;
   letter-spacing: 0.02em;
   color: var(--ink-soft);
+}
+
+/* Highlighter pen over a few words. */
+@utility marker {
+  color: var(--mark-text);
+  background: linear-gradient(transparent var(--mark-top), var(--highlight) var(--mark-top), var(--highlight) 92%, transparent 92%);
+  padding: 0 0.08em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
 /* Ink link with a highlighter underline. */

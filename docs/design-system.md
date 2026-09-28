@@ -16,7 +16,7 @@ This file is the source of truth. Every color, font, size, radius, shadow and du
 | `ink-soft` | `#5E5E58` | `#A3A39B` | Secondary text, placeholders, meta labels |
 | `hairline` | `#E2E2DC` | `#2E2E2B` | Dividers and flat-card borders (decorative only) |
 | `control` | `#8E8E86` | `#6B6B64` | Edges of inputs, secondary buttons and unselected chips; 3:1 against paper and card |
-| `highlight` | `#F2D64B` | `#F2D64B` | The one bright color. **Background only, never text.** Selected chips, the active mode, text marks, the dark-mode primary button |
+| `highlight` | `#F2D64B` | `#F2D64B` | The one bright color. **Background only, never text** — one exception: the `marker` on dark backgrounds (12:1). Selected chips, the active mode, text marks, the dark-mode primary button |
 | `highlight-hover` | `#E8C623` | `#F7E27A` | Hover on highlight backgrounds |
 | `on-highlight` | `#141413` | `#141413` | Text and icons on `highlight` (always dark, in both modes) |
 | `highlight-soft` | `#FBF1BF` | `#3A3418` | Quiet tint: inserted words in diffs, liked state, hover on quiet buttons; text on it is `ink` |
