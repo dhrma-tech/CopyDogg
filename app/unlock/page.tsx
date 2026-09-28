@@ -10,7 +10,7 @@ export default async function UnlockPage({ searchParams }: PageProps<"/unlock">)
   if (!gatePassword()) redirect("/");
 
   return (
-    <main className="flex flex-1 items-center justify-center px-6 py-24">
+    <main className="flex flex-1 items-center justify-center px-4 py-24 sm:px-6">
       <UnlockForm next={nextPath} />
     </main>
   );

@@ -15,7 +15,7 @@ export default async function SettingsPage() {
   const [{ generations, settings }, backups] = await Promise.all([readStore(), listBackups()]);
 
   return (
-    <main className="flex flex-1 justify-center px-6 pb-12">
+    <main className="flex flex-1 justify-center px-4 pb-12 sm:px-6">
       <SettingsPanel
         generationCount={generations.length}
         savedCount={generations.filter((g) => g.saved).length}

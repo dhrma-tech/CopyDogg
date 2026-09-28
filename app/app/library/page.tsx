@@ -42,7 +42,7 @@ export default async function LibraryPage() {
     }));
 
   return (
-    <main className="flex flex-1 justify-center px-6 pb-12">
+    <main className="flex flex-1 justify-center px-4 pb-12 sm:px-6">
       <LibraryList
         generations={[...items, ...olderSaved]}
         ideas={[...ideas].reverse()}

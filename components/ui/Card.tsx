@@ -4,7 +4,7 @@ export type CardVariant = "main" | "flat";
 
 const VARIANTS: Record<CardVariant, string> = {
   // The one elevated surface per screen: ink border + ink offset shadow.
-  main: "rounded-lg border-[1.5px] border-ink bg-card p-5 shadow-card sm:p-6",
+  main: "rounded-lg border-[1.5px] border-ink bg-card p-4 shadow-card sm:p-6",
   // Everything else: a quiet hairline box.
   flat: "rounded-md border border-hairline bg-card p-4 transition-colors",
 };

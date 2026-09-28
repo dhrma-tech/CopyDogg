@@ -6,10 +6,10 @@
 export default function Loading() {
   const bar = "rounded-full bg-hairline motion-safe:animate-pulse";
   return (
-    <main className="flex flex-1 justify-center px-6 pb-12" aria-busy="true" aria-label="Loading">
+    <main className="flex flex-1 justify-center px-4 pb-12 sm:px-6" aria-busy="true" aria-label="Loading">
       <div className="w-full max-w-2xl">
         <div className={`mb-5 h-8 w-2/3 ${bar}`} />
-        <div className="flex flex-col gap-4 rounded-lg border-[1.5px] border-ink bg-card p-5 shadow-card sm:p-6">
+        <div className="flex flex-col gap-4 rounded-lg border-[1.5px] border-ink bg-card p-4 shadow-card sm:p-6">
           <div className={`h-9 w-full ${bar}`} />
           <div className="flex gap-2">
             <div className={`h-9 w-20 ${bar}`} />

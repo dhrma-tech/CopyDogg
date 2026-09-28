@@ -20,7 +20,7 @@ export default async function ProfilePage() {
   ).length;
 
   return (
-    <main className="flex flex-1 flex-col items-center gap-6 px-6 pb-12">
+    <main className="flex flex-1 flex-col items-center gap-6 px-4 pb-12 sm:px-6">
       <div className="flex w-full max-w-2xl flex-col gap-4">
         <VoiceSwitcher
           voices={data.personas.map(({ id, name }) => ({ id, name }))}

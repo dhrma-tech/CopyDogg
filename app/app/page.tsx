@@ -13,13 +13,14 @@ export default async function AppScreen() {
   }
 
   return (
-    <main className="flex flex-1 justify-center px-6 pb-12">
+    <main className="flex flex-1 justify-center px-4 pb-12 sm:px-6">
       <GenerationScreen
         voices={data.personas.map(({ id, name, platforms }) => ({ id, name, platforms }))}
         initialVoiceId={active.id}
         contacts={data.contacts.map(({ id, name, relationship }) => ({ id, name, relationship }))}
         templates={data.templates.map(({ id, name }) => ({ id, name }))}
         voiceInput={data.settings.voiceInput}
+        dictationLanguage={data.settings.dictationLanguage}
       />
     </main>
   );

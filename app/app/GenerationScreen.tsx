@@ -16,7 +16,8 @@ import Card from "@/components/ui/Card";
 import { chipClasses } from "@/components/ui/Chip";
 import { FIELD, SELECT } from "@/components/ui/Field";
 import { SEGMENT_TRACK, segmentClasses } from "@/components/ui/Segmented";
-import MicButton from "@/components/MicButton";
+import { DictationStatus, MicButton } from "@/components/MicButton";
+import { useDictation } from "@/lib/useDictation";
 import CheckResultCard, { type CheckResult } from "@/components/CheckResult";
 import GenerateCard, {
   SkeletonCard,
@@ -102,6 +103,8 @@ const SHORTCUTS: [string, string][] = [
   ["/", "jump to the text box"],
   ["ctrl / ⌘ + enter", "write"],
   ["ctrl / ⌘ + z", "undo a tweak"],
+  ["m", "start or stop dictating"],
+  ["esc", "stop dictating"],
   ["?", "show or hide this list"],
 ];
 
@@ -124,6 +127,8 @@ interface GenerationScreenProps {
   contacts: { id: string; name: string; relationship: string }[];
   templates: { id: string; name: string }[];
   voiceInput: boolean;
+  /** BCP-47 tag for dictation; "" = the browser's language. */
+  dictationLanguage: string;
 }
 
 type Status = "idle" | "loading" | "error";
@@ -134,6 +139,7 @@ export default function GenerationScreen({
   contacts,
   templates,
   voiceInput,
+  dictationLanguage,
 }: GenerationScreenProps) {
   const [voiceId, setVoiceId] = useState(initialVoiceId);
   const voice = voices.find((v) => v.id === voiceId) ?? voices[0];
@@ -173,6 +179,10 @@ export default function GenerationScreen({
   const [errorMessage, setErrorMessage] = useState("");
   const [ideaSaved, setIdeaSaved] = useState<"idle" | "saving" | "saved">("idle");
   const [helpOpen, setHelpOpen] = useState(false);
+  // Any of the current text came from dictation: Claude cleans up fillers and do-overs.
+  const [dictated, setDictated] = useState(false);
+  // Which field dictation types into: the main box, or Reply's "what you want to say".
+  const [micTarget, setMicTarget] = useState<"main" | "note">("main");
 
   const [outputs, setOutputs] = useState<CardOutput[]>([]);
   // Variations written so far for the in-flight request; null when not streaming.
@@ -197,6 +207,26 @@ export default function GenerationScreen({
   const showChips = mode === "write" || mode === "reply";
   const readyCards = outputs.filter((o) => o.generationId && o.liveText === undefined);
   const activeCard = readyCards.find((o) => o.key === activeKey) ?? readyCards[0];
+
+  const dictation = useDictation({
+    lang: dictationLanguage,
+    onFinal: (heard) => {
+      setDictated(true);
+      if (micTarget === "main" && usesContext) setContextInput((prev) => joinSpoken(prev ?? draft.context, heard));
+      else setIdeaInput((prev) => joinSpoken(prev ?? draft.idea, heard));
+    },
+  });
+  const micOn = voiceInput && dictation.supported;
+
+  /** Points dictation at a field and starts it, or stops it if it's already on there. */
+  function pressMic(target: "main" | "note") {
+    if (dictation.listening && micTarget === target) {
+      dictation.stop();
+      return;
+    }
+    setMicTarget(target);
+    dictation.start();
+  }
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -249,6 +279,12 @@ export default function GenerationScreen({
     if (e.key === "Escape") {
       setHelpOpen(false);
       tweakKeyPending.current = false;
+      if (dictation.listening) dictation.stop();
+      return;
+    }
+    if (e.key.toLowerCase() === "m" && micOn) {
+      e.preventDefault();
+      pressMic("main");
       return;
     }
     if (e.key === "?") {
@@ -337,6 +373,11 @@ export default function GenerationScreen({
   }
 
   function handleKeyDown(e: ReactKeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) {
+    if (e.key === "Escape" && dictation.listening) {
+      e.preventDefault();
+      dictation.stop();
+      return;
+    }
     if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
       formRef.current?.requestSubmit();
@@ -361,6 +402,7 @@ export default function GenerationScreen({
       language: language || undefined,
       structure: asStructure && structure ? structure : undefined,
       templateId: templateId || undefined,
+      dictated: dictated || undefined,
     };
   }
 
@@ -444,6 +486,8 @@ export default function GenerationScreen({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (usesContext ? !context.trim() : !idea.trim()) return;
+    // Don't leave the mic open behind the results.
+    if (dictation.listening) dictation.stop();
 
     // A newer submit replaces the one in flight.
     generateAbort.current?.abort();
@@ -678,22 +722,23 @@ export default function GenerationScreen({
             <textarea
               ref={mainFieldRef}
               value={usesContext ? context : idea}
-              onChange={(e) =>
-                usesContext ? setContextInput(e.target.value) : setIdeaInput(e.target.value)
-              }
+              onChange={(e) => {
+                if (usesContext) setContextInput(e.target.value);
+                else setIdeaInput(e.target.value);
+                if (!e.target.value.trim()) setDictated(false);
+              }}
               onKeyDown={handleKeyDown}
               placeholder={mainPlaceholder}
               rows={usesContext ? (conversation && mode === "reply" ? 6 : 4) : 3}
               aria-label={usesContext ? CONTEXT_PLACEHOLDERS[mode as Exclude<Mode, "write">] : "Your idea"}
               className={`${FIELD} resize-none pr-11`}
             />
-            {voiceInput && (
+            {micOn && (
               <MicButton
-                onText={(heard) =>
-                  usesContext
-                    ? setContextInput(`${context}${context && !context.endsWith(" ") ? " " : ""}${heard}`)
-                    : setIdeaInput(`${idea}${idea && !idea.endsWith(" ") ? " " : ""}${heard}`)
-                }
+                dictation={dictation}
+                active={micTarget === "main"}
+                onPress={() => pressMic("main")}
+                className="absolute right-2 top-2"
               />
             )}
           </div>
@@ -708,16 +753,28 @@ export default function GenerationScreen({
               >
                 {conversation ? "whole conversation ✓" : "it's a whole conversation"}
               </button>
-              <input
-                value={idea}
-                onChange={(e) => setIdeaInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="What do you want to say? (optional)"
-                aria-label="What you want to say"
-                className={FIELD}
-              />
+              <div className="relative">
+                <input
+                  value={idea}
+                  onChange={(e) => setIdeaInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="What do you want to say? (optional)"
+                  aria-label="What you want to say"
+                  className={`${FIELD} ${micOn ? "pr-12" : ""}`}
+                />
+                {micOn && (
+                  <MicButton
+                    dictation={dictation}
+                    active={micTarget === "note"}
+                    onPress={() => pressMic("note")}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2"
+                  />
+                )}
+              </div>
             </div>
           )}
+
+          {micOn && <DictationStatus dictation={dictation} />}
 
           {showChips && (
             <div className="scroll-fade-x -mx-5 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6">
@@ -795,7 +852,7 @@ export default function GenerationScreen({
             <div className="border-t border-dashed border-control pt-3" aria-label="Keyboard shortcuts">
               <p className={META}>Keyboard shortcuts</p>
               <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-small">
-                {SHORTCUTS.map(([keys, what]) => (
+                {SHORTCUTS.filter(([keys]) => micOn || (keys !== "m" && keys !== "esc")).map(([keys, what]) => (
                   <div key={keys} className="contents">
                     <dt className="label text-ink">{keys}</dt>
                     <dd className="text-ink-soft">{what}</dd>
@@ -958,4 +1015,10 @@ function ChipRow({
       ))}
     </div>
   );
+}
+
+/** Appends a dictated phrase with a single space, keeping what was typed. */
+function joinSpoken(current: string, heard: string): string {
+  if (!current) return heard;
+  return /\s$/.test(current) ? current + heard : `${current} ${heard}`;
 }

@@ -24,7 +24,7 @@ export default function AppHeader() {
   return (
     <>
       {/* Same width as app content (max-w-2xl), so the logo lines up with the page. */}
-      <header className="w-full px-6 py-5">
+      <header className="w-full px-4 py-5 sm:px-6">
         <div className="mx-auto flex max-w-2xl items-center justify-between">
         <Link href="/app" aria-label="CopyDogg, writing screen">
           <Logo />
