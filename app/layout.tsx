@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Karla, JetBrains_Mono } from "next/font/google";
-import { isDevMode } from "@/lib/devMode";
+import { connection } from "next/server";
+import { isDemoMode } from "@/lib/demoMode";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -27,17 +28,18 @@ export const metadata: Metadata = {
   description: "Teach it your voice once. Then just say what you want.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  await connection(); // demo-mode banner depends on the runtime env, not the build
   return (
     <html
       lang="en"
       className={`${fraunces.variable} ${karla.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        {isDevMode && (
+        {isDemoMode && (
           <div className="bg-accent px-4 py-1.5 text-center font-mono text-xs uppercase tracking-[0.1em] text-card">
-            Test mode — no Supabase or Claude connected. Add real keys to
-            .env.local to go live.
+            Demo mode — no Claude API key found. Add ANTHROPIC_API_KEY to
+            .env.local and restart to get real posts.
           </div>
         )}
         {children}

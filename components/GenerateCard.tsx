@@ -1,45 +1,88 @@
 "use client";
 
 import { useState } from "react";
+import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { PLATFORMS, platformRules, type Platform } from "@/lib/platformRules";
+import { patchGeneration } from "@/lib/generateClient";
 
 export interface CardOutput {
   key: string;
+  /** Empty while a remixed card is still being written. */
   generationId: string;
   text: string;
   platform: Platform;
+  /** Replacement text streaming in (regenerate / remix); undefined when idle. */
+  liveText?: string;
+}
+
+const CARD = "rounded-md border border-hairline bg-card p-4";
+const PLATFORM_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
+const ACTION_ROW = "mt-4 border-t border-dashed border-hairline pt-3";
+
+function WritingRow() {
+  return (
+    <div className={ACTION_ROW}>
+      <p className={PLATFORM_LABEL}>writing...</p>
+    </div>
+  );
+}
+
+function StreamingText({ text }: { text: string }) {
+  return (
+    <p className="mt-2 whitespace-pre-wrap text-sm text-ink">
+      {text}
+      <span
+        aria-hidden
+        className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-accent motion-safe:animate-pulse"
+      />
+    </p>
+  );
+}
+
+/** A variation that's still being written: text grows, no actions yet. */
+export function StreamingCard({ text, platform }: { text: string; platform: Platform }) {
+  return (
+    <div className={CARD}>
+      <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
+      <StreamingText text={text} />
+      <WritingRow />
+    </div>
+  );
+}
+
+/** Placeholder shown before the first words arrive. */
+export function SkeletonCard() {
+  return (
+    <div className={CARD} aria-hidden>
+      <div className="h-3 w-12 rounded-full bg-hairline motion-safe:animate-pulse" />
+      <div className="mt-4 flex flex-col gap-2">
+        <div className="h-3 w-[92%] rounded-full bg-hairline motion-safe:animate-pulse" />
+        <div className="h-3 w-[78%] rounded-full bg-hairline motion-safe:animate-pulse" />
+        <div className="h-3 w-[55%] rounded-full bg-hairline motion-safe:animate-pulse" />
+      </div>
+      <div className={ACTION_ROW}>
+        <div className="h-3 w-40 rounded-full bg-hairline motion-safe:animate-pulse" />
+      </div>
+    </div>
+  );
 }
 
 interface GenerateCardProps {
   output: CardOutput;
-  personaId: string;
-  promptInput: string;
-  onReplace: (key: string, next: { generationId: string; text: string }) => void;
-  onRemixed: (next: { generationId: string; text: string; platform: Platform }) => void;
+  /** Streams a replacement; resolves to an error message, or null. */
+  onRegenerate: () => Promise<string | null>;
+  /** Streams a version for another platform as a new card; resolves to an error message, or null. */
+  onRemix: (platform: Platform) => Promise<string | null>;
 }
 
-async function patchGeneration(id: string, body: object) {
-  return fetch(`/api/generations/${id}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-}
-
-export default function GenerateCard({
-  output,
-  personaId,
-  promptInput,
-  onReplace,
-  onRemixed,
-}: GenerateCardProps) {
-  const { key, generationId, text, platform } = output;
+export default function GenerateCard({ output, onRegenerate, onRemix }: GenerateCardProps) {
+  const { generationId, text, platform, liveText } = output;
+  const regenerating = liveText !== undefined;
 
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<-1 | 0 | 1>(0);
-  const [regenerating, setRegenerating] = useState(false);
   const [actionError, setActionError] = useState("");
   const [remixOpen, setRemixOpen] = useState(false);
   const [remixPlatform, setRemixPlatform] = useState<Platform>(
@@ -48,94 +91,82 @@ export default function GenerateCard({
   const [remixing, setRemixing] = useState(false);
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(text);
+    setActionError("");
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      setActionError("Couldn't copy. Select the text and copy it by hand.");
+      return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
 
   async function handleSave() {
     setSaving(true);
-    const res = await patchGeneration(generationId, {
+    setActionError("");
+    const ok = await patchGeneration(generationId, {
       saved: true,
       chosen_output: text,
     });
     setSaving(false);
-    if (res.ok) setSaved(true);
+    if (ok) setSaved(true);
+    else setActionError("Couldn't save that. Try again.");
   }
 
   async function handleFeedback(value: 1 | -1) {
+    const previous = feedback;
     const next = feedback === value ? 0 : value;
     setFeedback(next);
-    await patchGeneration(generationId, { feedback: next });
+    setActionError("");
+    // A thumbs-up records which variation was liked, so the next generation's
+    // "recent liked examples" uses this text rather than the row's first output.
+    const ok = await patchGeneration(
+      generationId,
+      next === 1 ? { feedback: next, chosen_output: text } : { feedback: next }
+    );
+    if (!ok) {
+      setFeedback(previous);
+      setActionError("Couldn't record that. Try again.");
+    }
   }
 
   async function handleRegenerate() {
-    setRegenerating(true);
     setActionError("");
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        personaId,
-        platform,
-        promptInput,
-        variationCount: 1,
-      }),
-    });
-    const data = await res.json();
-    setRegenerating(false);
-    if (!res.ok) {
-      setActionError(data.error ?? "Couldn't regenerate. Try again.");
-      return;
-    }
-    onReplace(key, { generationId: data.generationId, text: data.outputs[0] });
+    const error = await onRegenerate();
+    if (error) setActionError(error);
   }
 
   async function handleRemix() {
     setRemixing(true);
     setActionError("");
-    const res = await fetch("/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        personaId,
-        platform: remixPlatform,
-        promptInput,
-        variationCount: 1,
-      }),
-    });
-    const data = await res.json();
+    setRemixOpen(false); // the new card streams in below
+    const error = await onRemix(remixPlatform);
     setRemixing(false);
-    if (!res.ok) {
-      setActionError(data.error ?? "Couldn't remix. Try again.");
-      return;
-    }
-    onRemixed({
-      generationId: data.generationId,
-      text: data.outputs[0],
-      platform: remixPlatform,
-    });
-    setRemixOpen(false);
+    if (error) setActionError(error);
+  }
+
+  if (regenerating) {
+    return (
+      <div className={CARD}>
+        <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
+        <StreamingText text={liveText} />
+        <WritingRow />
+      </div>
+    );
   }
 
   return (
-    <div className="rounded-md border border-hairline bg-card p-4">
-      <p className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-        {platformRules[platform].label}
-      </p>
+    <div className={CARD}>
+      <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
       <p className="mt-2 whitespace-pre-wrap text-sm text-ink">{text}</p>
 
-      <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-dashed border-hairline pt-3 text-sm">
+      <div className={`${ACTION_ROW} flex flex-wrap items-center gap-4 text-sm`}>
         <button type="button" onClick={handleCopy} className="text-ink-soft">
           {copied ? "copied" : "Copy"}
         </button>
-        <button
-          type="button"
-          onClick={handleRegenerate}
-          disabled={regenerating}
-          className="text-ink-soft disabled:opacity-60"
-        >
-          {regenerating ? "regenerating..." : "Regenerate"}
+        <button type="button" onClick={handleRegenerate} className="text-ink-soft">
+          Regenerate
         </button>
         <button
           type="button"
@@ -152,22 +183,24 @@ export default function GenerateCard({
         >
           Remix for...
         </button>
-        <span className="ml-auto flex gap-2">
+        <span className="ml-auto flex gap-3">
           <button
             type="button"
             onClick={() => handleFeedback(1)}
             aria-label="Good post"
+            aria-pressed={feedback === 1}
             className={feedback === 1 ? "text-accent" : "text-ink-soft"}
           >
-            👍
+            <ThumbsUp size={16} strokeWidth={2} fill={feedback === 1 ? "currentColor" : "none"} />
           </button>
           <button
             type="button"
             onClick={() => handleFeedback(-1)}
             aria-label="Not this"
+            aria-pressed={feedback === -1}
             className={feedback === -1 ? "text-danger" : "text-ink-soft"}
           >
-            👎
+            <ThumbsDown size={16} strokeWidth={2} fill={feedback === -1 ? "currentColor" : "none"} />
           </button>
         </span>
       </div>

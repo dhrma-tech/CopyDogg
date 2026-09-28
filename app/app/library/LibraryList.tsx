@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { PLATFORMS, platformRules, type Platform } from "@/lib/platformRules";
 
 interface SavedGeneration {
@@ -69,7 +70,10 @@ export default function LibraryList({ generations }: LibraryListProps) {
 
       {generations.length === 0 ? (
         <p className="mt-8 rounded-md border border-hairline bg-card px-4 py-6 text-center text-sm text-ink-soft">
-          nothing saved yet — go write something worth keeping
+          nothing saved yet —{" "}
+          <Link href="/app" className="font-medium text-accent underline">
+            go write something worth keeping
+          </Link>
         </p>
       ) : filtered.length === 0 ? (
         <p className="mt-8 rounded-md border border-hairline bg-card px-4 py-6 text-center text-sm text-ink-soft">

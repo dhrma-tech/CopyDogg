@@ -1,61 +1,58 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { NextResponse } from "next/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { isDevMode, MOCK_VOICE_DESCRIPTION } from "@/lib/devMode";
+import { extractVoiceProfile, type PlatformSamples } from "@/lib/claude";
+import { isPlatform } from "@/lib/platformRules";
+import { isDemoMode, demoExtractedVoice } from "@/lib/demoMode";
 
-// Falls back to a placeholder key so the client can construct in test mode,
-// where it's never actually called.
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || "dev-mode-placeholder",
-});
+const MAX_CHARS_PER_ENTRY = 4000;
+
+/** Keeps only known platforms and non-empty, length-capped text. */
+function cleanInput(raw: unknown): PlatformSamples[] {
+  if (!Array.isArray(raw)) return [];
+  const clip = (v: unknown) =>
+    typeof v === "string" ? v.trim().slice(0, MAX_CHARS_PER_ENTRY) : "";
+
+  return raw.flatMap((entry) => {
+    if (!entry || !isPlatform(entry.platform)) return [];
+    const samples = Array.isArray(entry.samples)
+      ? entry.samples.map(clip).filter(Boolean).slice(0, 3)
+      : [];
+    const rewrite = clip(entry.rewrite);
+    if (samples.length === 0 && !rewrite) return [];
+    return [{ platform: entry.platform, samples, rewrite }];
+  });
+}
 
 export async function POST(request: Request) {
-  const { samples } = (await request.json()) as { samples?: string };
+  const body = (await request.json().catch(() => ({}))) as { platforms?: unknown };
+  const input = cleanInput(body.platforms);
 
-  if (!samples?.trim()) {
+  if (input.length === 0) {
     return NextResponse.json(
-      { error: "Paste something first." },
+      { error: "Write or paste something for at least one platform first." },
       { status: 400 }
     );
   }
 
-  if (isDevMode) {
-    return NextResponse.json({ voiceDescription: MOCK_VOICE_DESCRIPTION });
+  if (isDemoMode) {
+    return NextResponse.json(demoExtractedVoice(input.map((i) => i.platform)));
   }
 
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Not signed in." }, { status: 401 });
-  }
-
-  let voiceDescription: string;
+  let result;
   try {
-    const response = await client.messages.create({
-      model: "claude-opus-5",
-      max_tokens: 512,
-      system:
-        "You analyze a person's writing and draft a short, specific description of their voice for a ghostwriting tool. Read the samples and write one tight paragraph (3-5 sentences) capturing tone, sentence rhythm, quirks, and what they avoid. Address the person directly (\"You write in short punchy lines...\"). Return ONLY the paragraph — no preamble, no headers, no quotes around it.",
-      messages: [{ role: "user", content: samples }],
-    });
-    const textBlock = response.content.find((block) => block.type === "text");
-    voiceDescription = textBlock && "text" in textBlock ? textBlock.text.trim() : "";
+    result = await extractVoiceProfile(input);
   } catch {
     return NextResponse.json(
-      { error: "Couldn't reach Claude to read that. Try again." },
+      { error: "Couldn't reach Claude. Check your API key and connection, then try again." },
       { status: 502 }
     );
   }
 
-  if (!voiceDescription) {
+  if (!result || !result.voiceDescription) {
     return NextResponse.json(
-      { error: "That came back empty. Try again." },
+      { error: "Couldn't make sense of that. Try again, or continue with defaults." },
       { status: 502 }
     );
   }
 
-  return NextResponse.json({ voiceDescription });
+  return NextResponse.json(result);
 }

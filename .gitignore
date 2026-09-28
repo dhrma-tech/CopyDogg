@@ -43,3 +43,6 @@ next-env.d.ts
 /PLAN.md
 /IMPROVEMENT-PLAN.md
 /checkpoints/
+
+# CopyDogg user data (voice profile + posts) — personal, never commit
+/data/

@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { isDevMode } from "@/lib/devMode";
+import { saveProfile } from "@/app/actions";
+import type { Persona } from "@/lib/store";
 import type { Sliders } from "@/lib/voicePreview";
 import ToneSliders from "@/components/ToneSliders";
 import ChipEditor from "@/components/ChipEditor";
 import PrimaryButton from "@/components/PrimaryButton";
+import { PlatformMultiPicker } from "@/components/PlatformPicker";
+import { platformRules, type Platform } from "@/lib/platformRules";
 
 const RULE_SUGGESTIONS = [
   `never use "in today's world"`,
@@ -17,25 +19,9 @@ const RULE_SUGGESTIONS = [
   `never open with "I'm excited to announce"`,
 ];
 
-interface PersonaData {
-  id: string;
-  voiceDescription: string | null;
-  toneFormality: number;
-  toneHumor: number;
-  toneBluntness: number;
-  toneWarmth: number;
-  emojiDensity: number;
-  rules: string[];
-}
-
-interface Topic {
-  id: string;
-  label: string;
-}
-
 interface ProfileFormProps {
-  persona: PersonaData;
-  initialTopics: Topic[];
+  persona: Persona;
+  initialTopics: string[];
 }
 
 type Status = "idle" | "saving" | "saved" | "error";
@@ -52,9 +38,9 @@ export default function ProfileForm({ persona, initialTopics }: ProfileFormProps
     emojiDensity: persona.emojiDensity,
   });
   const [rules, setRules] = useState<string[]>(persona.rules);
-  const [topics, setTopics] = useState<string[]>(
-    initialTopics.map((t) => t.label)
-  );
+  const [platforms, setPlatforms] = useState<Platform[]>(persona.platforms);
+  const [platformVoices, setPlatformVoices] = useState(persona.platformVoices);
+  const [topics, setTopics] = useState<string[]>(initialTopics);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -66,52 +52,30 @@ export default function ProfileForm({ persona, initialTopics }: ProfileFormProps
     setStatus("saving");
     setErrorMessage("");
 
-    if (isDevMode) {
-      setTimeout(() => setStatus("saved"), 400);
-      return;
-    }
-
-    const supabase = createBrowserSupabaseClient();
-
-    const { error: personaError } = await supabase
-      .from("personas")
-      .update({
-        voice_description: voiceDescription || null,
-        tone_formality: sliders.formality,
-        tone_humor: sliders.humor,
-        tone_bluntness: sliders.bluntness,
-        tone_warmth: sliders.warmth,
-        emoji_density: sliders.emojiDensity,
+    let result: Awaited<ReturnType<typeof saveProfile>>;
+    try {
+      result = await saveProfile({
+        voiceDescription,
+        toneFormality: sliders.formality,
+        toneHumor: sliders.humor,
+        toneBluntness: sliders.bluntness,
+        toneWarmth: sliders.warmth,
+        emojiDensity: sliders.emojiDensity,
+        platforms,
+        // Notes for deselected platforms are kept, so re-adding one restores it.
+        platformVoices,
         rules,
-      })
-      .eq("id", persona.id);
+        topics,
+      });
+    } catch {
+      result = { ok: false, error: "Couldn't reach CopyDogg. Check that it's still running, then try again." };
+    }
 
-    if (personaError) {
+    if (!result.ok) {
       setStatus("error");
-      setErrorMessage("Couldn't save your profile. Try again.");
+      setErrorMessage(result.error);
       return;
     }
-
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const initialLabels = new Set(initialTopics.map((t) => t.label));
-    const currentLabels = new Set(topics);
-    const toAdd = topics.filter((label) => !initialLabels.has(label));
-    const toRemoveIds = initialTopics
-      .filter((t) => !currentLabels.has(t.label))
-      .map((t) => t.id);
-
-    if (user && toAdd.length > 0) {
-      await supabase
-        .from("topics")
-        .insert(toAdd.map((label) => ({ user_id: user.id, label })));
-    }
-    if (toRemoveIds.length > 0) {
-      await supabase.from("topics").delete().in("id", toRemoveIds);
-    }
-
     setStatus("saved");
   }
 
@@ -134,6 +98,27 @@ export default function ProfileForm({ persona, initialTopics }: ProfileFormProps
             placeholder="You write in short punchy lines..."
             className="mt-2 w-full resize-none rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
           />
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-ink">Platforms you post on</p>
+          <PlatformMultiPicker value={platforms} onChange={setPlatforms} />
+          {platforms.map((p) => (
+            <label key={p} className="flex flex-col gap-2">
+              <span className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
+                On {platformRules[p].label}
+              </span>
+              <textarea
+                value={platformVoices[p] ?? ""}
+                onChange={(e) =>
+                  setPlatformVoices((v) => ({ ...v, [p]: e.target.value }))
+                }
+                rows={2}
+                placeholder={`Anything different about how you sound on ${platformRules[p].label}?`}
+                className="w-full resize-none rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+              />
+            </label>
+          ))}
         </div>
 
         <ToneSliders sliders={sliders} onChange={setSlider} />
@@ -165,7 +150,7 @@ export default function ProfileForm({ persona, initialTopics }: ProfileFormProps
           </PrimaryButton>
           {status === "saved" && (
             <span className="text-sm text-accent">
-              Saved{isDevMode ? " (test mode)" : ""}.
+              Saved.
             </span>
           )}
         </div>

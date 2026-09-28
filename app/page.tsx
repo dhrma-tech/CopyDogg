@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { connection } from "next/server";
+import { getPersona } from "@/lib/store";
 
 const DEMO_OUTPUTS = [
   {
@@ -7,46 +9,57 @@ const DEMO_OUTPUTS = [
   },
   {
     platform: "LinkedIn",
-    text: "I shipped a side project this weekend.\n\nNo funding, no team, no roadmap — just an idea I finally sat down and built.\n\nIt's small. It's rough in places. I'm proud of it anyway.",
-  },
-  {
-    platform: "Instagram",
-    text: "built a whole thing this weekend 🛠️\nnobody asked me to. i just wanted to see it exist.\nsmall win, but it's mine.",
+    text: "I shipped a side project this weekend.\n\nNo team, no roadmap — just an idea I finally sat down and built. It's rough in places. I'm proud of it anyway.",
   },
 ];
 
-const FEATURES = [
+const STEPS = [
   {
-    title: "Your voice, saved once",
-    body: "Set your tone, your rules, a few samples. It remembers, so you never re-explain yourself again.",
+    title: "Pick where you post",
+    body: "X, LinkedIn, Instagram, wherever you actually show up.",
   },
   {
-    title: "One idea, every platform",
-    body: "Remix the same idea for X, LinkedIn, or Instagram — same voice, right format, one click.",
+    title: "Show it how you write",
+    body: "Paste a few old posts and rewrite one boring one. About five minutes.",
   },
   {
-    title: "A library that's actually yours",
-    body: "Every post you save lives in one searchable place, not scattered across your notes app.",
+    title: "Say what you want",
+    body: "“hot take on remote work” is plenty. You get posts that sound like you.",
   },
 ];
 
-export default function Home() {
+const CTA_CLASSES = "rounded-full bg-ink px-6 py-3 text-sm font-bold text-card";
+
+export default async function Home() {
+  await connection(); // CTA depends on whether a voice profile exists
+  const cta = (await getPersona()) ? "Open CopyDogg" : "Get started";
+
   return (
     <main className="flex flex-1 flex-col items-center px-6">
-      <section className="flex w-full max-w-2xl flex-col items-center pt-20 pb-16 text-center">
-        <h1 className="font-display text-4xl font-semibold leading-tight text-ink sm:text-5xl">
-          Teach it once. Sound like you <em className="italic">every time</em>.
-        </h1>
-        <p className="mt-4 max-w-md text-base text-ink-soft">
-          CopyDogg remembers how you sound, so you don&rsquo;t have to
-          re-teach it every time you post.
-        </p>
-        <Link
-          href="/login"
-          className="mt-8 rounded-full bg-ink px-6 py-3 text-sm font-bold text-card"
-        >
-          Try it free
+      <header className="flex w-full max-w-3xl items-center justify-between py-5">
+        <span className="font-display text-xl font-semibold text-ink">
+          Copy<span className="text-accent">Dogg</span>
+        </span>
+        <Link href="/app" className="text-sm font-medium text-ink-soft hover:text-ink">
+          Open app
         </Link>
+      </header>
+
+      <section className="flex w-full max-w-2xl flex-col items-center pt-14 pb-14 text-center">
+        <h1 className="font-display text-[clamp(38px,8vw,58px)] font-semibold leading-tight text-ink">
+          Posts that sound like you.{" "}
+          <em className="font-medium italic">Not like a press release.</em>
+        </h1>
+        <p className="mt-5 max-w-md text-base text-ink-soft">
+          Show CopyDogg how you write once. After that, type an idea in a few
+          words and get posts in your own voice.
+        </p>
+        <Link href="/app" className={`mt-8 ${CTA_CLASSES}`}>
+          {cta}
+        </Link>
+        <p className="mt-3 text-sm text-ink-soft">
+          Free and open source. Runs on your own Claude API key.
+        </p>
       </section>
 
       <section className="w-full max-w-3xl rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
@@ -82,35 +95,31 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="grid w-full max-w-3xl gap-6 py-20 sm:grid-cols-3">
-        {FEATURES.map((feature) => (
-          <div key={feature.title}>
-            <h2 className="font-display text-lg font-semibold text-ink">
-              {feature.title}
-            </h2>
-            <p className="mt-2 text-sm text-ink-soft">{feature.body}</p>
-          </div>
-        ))}
+      <section className="w-full max-w-3xl py-16">
+        <h2 className="text-center font-display text-[28px] font-medium text-ink">
+          How it works
+        </h2>
+        <ol className="mt-8 grid gap-6 sm:grid-cols-3">
+          {STEPS.map((step, i) => (
+            <li key={step.title}>
+              <p className="font-mono text-xs uppercase tracking-[0.1em] text-accent">
+                {String(i + 1).padStart(2, "0")}
+              </p>
+              <h3 className="mt-2 text-base font-bold text-ink">{step.title}</h3>
+              <p className="mt-1 text-sm text-ink-soft">{step.body}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
-      <section className="w-full max-w-xl border-t border-hairline py-16 text-center">
-        <p className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-          Why I built this
+      <section className="flex w-full max-w-xl flex-col items-center gap-5 border-t border-hairline pt-14 pb-24 text-center">
+        <p className="text-base text-ink-soft">
+          It will never open with &ldquo;In today&rsquo;s fast-paced world.&rdquo;
+          <br />
+          Yes, the name is a dog pun. It fetches your tone.
         </p>
-        <p className="mt-3 text-base text-ink-soft">
-          I got tired of re-explaining my tone to a chat window every time I
-          wanted to post something. So I built a tool that learns it once and
-          writes like me from then on. This is that tool.
-        </p>
-      </section>
-
-      <section className="flex w-full max-w-xl flex-col items-center gap-4 pb-24 text-center">
-        <p className="text-sm text-ink-soft">Free while in beta.</p>
-        <Link
-          href="/login"
-          className="rounded-full bg-ink px-6 py-3 text-sm font-bold text-card"
-        >
-          Try it free
+        <Link href="/app" className={CTA_CLASSES}>
+          {cta}
         </Link>
       </section>
     </main>

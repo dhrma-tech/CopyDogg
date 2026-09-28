@@ -1,277 +1,413 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { isDevMode } from "@/lib/devMode";
+import { completeOnboarding } from "@/app/actions";
+import { onboardingPrompts, platformRules, type Platform } from "@/lib/platformRules";
 import type { Sliders } from "@/lib/voicePreview";
+import type { ExtractedVoice } from "@/lib/claude";
 import ToneSliders from "@/components/ToneSliders";
-import ChipEditor from "@/components/ChipEditor";
+import { PlatformMultiPicker } from "@/components/PlatformPicker";
 
-const RULE_SUGGESTIONS = [
-  `never use "in today's world"`,
-  `no corporate jargon ("leverage", "synergy")`,
-  "always end with a question or a CTA",
-  "no emoji unless it's 🔥",
-  "keep sentences short",
-  `never open with "I'm excited to announce"`,
-];
+interface PlatformAnswers {
+  samples: [string, string, string];
+  rewrite: string;
+}
 
+const EMPTY_ANSWERS: PlatformAnswers = { samples: ["", "", ""], rewrite: "" };
+
+const DEFAULT_SLIDERS: Sliders = {
+  formality: 50,
+  humor: 50,
+  bluntness: 50,
+  warmth: 50,
+  emojiDensity: 20,
+};
+
+const PRIMARY_BUTTON =
+  "flex-1 rounded-full bg-ink px-5 py-3 text-sm font-bold text-card disabled:opacity-60";
+const SECONDARY_BUTTON =
+  "rounded-full border border-hairline px-5 py-3 text-sm font-bold text-ink-soft disabled:opacity-60";
+const TEXTAREA =
+  "w-full resize-none rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none";
+const META_LABEL = "font-mono text-xs uppercase tracking-[0.1em] text-ink-soft";
+
+function hasContent(a: PlatformAnswers | undefined) {
+  return !!a && (a.rewrite.trim() !== "" || a.samples.some((s) => s.trim() !== ""));
+}
+
+/**
+ * Stages: pick platforms → one page per platform (3 samples + rewrite a bland
+ * post) → Claude reads it all → editable results → /app.
+ */
 export default function OnboardingFlow() {
-  const router = useRouter();
 
-  const [step, setStep] = useState(1);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
+  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  // 0 = platform picker, 1..n = one page per chosen platform, n + 1 = results
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<Partial<Record<Platform, PlatformAnswers>>>({});
 
-  const [samples, setSamples] = useState("");
+  const [reading, setReading] = useState(false);
+  const [readError, setReadError] = useState("");
+  const [usedDefaults, setUsedDefaults] = useState(false);
+
   const [voiceDescription, setVoiceDescription] = useState("");
-  const [extracting, setExtracting] = useState(false);
-  const [extractError, setExtractError] = useState("");
+  const [sliders, setSliders] = useState<Sliders>(DEFAULT_SLIDERS);
+  const [hashtagTolerance, setHashtagTolerance] = useState(20);
+  const [platformVoices, setPlatformVoices] = useState<Partial<Record<Platform, string>>>({});
 
-  const [sliders, setSliders] = useState<Sliders>({
-    formality: 50,
-    humor: 50,
-    bluntness: 50,
-    warmth: 50,
-    emojiDensity: 20,
-  });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
-  const [rules, setRules] = useState<string[]>([]);
-  const [topics, setTopics] = useState<string[]>([]);
+  const resultsStep = platforms.length + 1;
+  const currentPlatform = step >= 1 && step <= platforms.length ? platforms[step - 1] : null;
 
-  function setSlider(key: keyof Sliders, value: number) {
-    setSliders((s) => ({ ...s, [key]: value }));
+  function updateAnswers(platform: Platform, next: Partial<PlatformAnswers>) {
+    setAnswers((prev) => ({
+      ...prev,
+      [platform]: { ...(prev[platform] ?? EMPTY_ANSWERS), ...next },
+    }));
   }
 
-  function addRule(rule: string) {
-    if (!rules.includes(rule)) setRules((r) => [...r, rule]);
+  function goToDefaults() {
+    setUsedDefaults(true);
+    setReadError("");
+    setVoiceDescription("");
+    setSliders(DEFAULT_SLIDERS);
+    setPlatformVoices({});
+    setStep(resultsStep);
   }
 
-  function addTopic(topic: string) {
-    if (!topics.includes(topic)) setTopics((t) => [...t, topic]);
-  }
-
-  async function handleExtractVoice() {
-    if (!samples.trim()) {
-      setStep(2);
+  async function advanceFromPlatform(skipped?: Platform) {
+    if (step < platforms.length) {
+      setStep(step + 1);
       return;
     }
-    setExtracting(true);
-    setExtractError("");
-    const res = await fetch("/api/voice-extract", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ samples }),
-    });
-    const data = await res.json();
-    setExtracting(false);
-    if (!res.ok) {
-      setExtractError(data.error ?? "Something went wrong. Try again.");
+
+    const payload = platforms
+      .filter((p) => p !== skipped && hasContent(answers[p]))
+      .map((p) => ({
+        platform: p,
+        samples: answers[p]!.samples.filter((s) => s.trim()),
+        rewrite: answers[p]!.rewrite,
+      }));
+
+    if (payload.length === 0) {
+      goToDefaults();
       return;
     }
+
+    setReading(true);
+    setReadError("");
+    let data: Partial<ExtractedVoice> & { error?: string };
+    let ok = false;
+    try {
+      const res = await fetch("/api/voice-extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ platforms: payload }),
+      });
+      data = await res.json().catch(() => ({}));
+      ok = res.ok;
+    } catch {
+      data = { error: "Couldn't reach CopyDogg. Check your connection and try again." };
+    }
+    setReading(false);
+
+    if (!ok || !data.voiceDescription || !data.tone) {
+      setReadError(data.error ?? "Couldn't read your writing. Try again.");
+      return;
+    }
+
+    setUsedDefaults(false);
     setVoiceDescription(data.voiceDescription);
-    setStep(2);
+    setSliders({
+      formality: data.tone.formality,
+      humor: data.tone.humor,
+      bluntness: data.tone.bluntness,
+      warmth: data.tone.warmth,
+      emojiDensity: data.tone.emojiDensity,
+    });
+    setHashtagTolerance(data.tone.hashtagTolerance);
+    setPlatformVoices(data.platformVoices ?? {});
+    setStep(resultsStep);
   }
 
-  async function createPersona(defaultsOnly: boolean) {
-    setSubmitting(true);
-    setSubmitError("");
-
-    if (isDevMode) {
-      setTimeout(() => router.push("/app"), 400);
-      return;
-    }
-
-    const supabase = createBrowserSupabaseClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setSubmitError("You've been signed out — sign in again.");
-      setSubmitting(false);
-      return;
-    }
-
-    const { data: persona, error } = await supabase
-      .from("personas")
-      .insert(
-        defaultsOnly
-          ? { user_id: user.id, name: "Default", is_default: true }
-          : {
-              user_id: user.id,
-              name: "Default",
-              voice_description: voiceDescription || null,
-              tone_formality: sliders.formality,
-              tone_humor: sliders.humor,
-              tone_bluntness: sliders.bluntness,
-              tone_warmth: sliders.warmth,
-              emoji_density: sliders.emojiDensity,
-              rules,
-              sample_posts: samples.trim() ? [samples.trim()] : [],
-              is_default: true,
-            }
-      )
-      .select("id")
-      .single();
-
-    if (error || !persona) {
-      setSubmitError("Couldn't save your profile. Try again.");
-      setSubmitting(false);
-      return;
-    }
-
-    if (!defaultsOnly && topics.length > 0) {
-      await supabase
-        .from("topics")
-        .insert(topics.map((label) => ({ user_id: user.id, label })));
-    }
-
-    router.push("/app");
+  function skipPlatform(platform: Platform) {
+    setAnswers((prev) => {
+      const next = { ...prev };
+      delete next[platform];
+      return next;
+    });
+    // The cleared answers aren't visible until next render, so name the skip explicitly.
+    void advanceFromPlatform(platform);
   }
+
+  async function handleFinish() {
+    setSaving(true);
+    setSaveError("");
+
+    const samplePosts = platforms.flatMap((p) => {
+      const a = answers[p];
+      if (!a) return [];
+      return [...a.samples, a.rewrite].map((s) => s.trim()).filter(Boolean);
+    });
+
+    // On success the action redirects to /app, so only failures come back.
+    let result: Awaited<ReturnType<typeof completeOnboarding>> | undefined;
+    try {
+      result = await completeOnboarding({
+        voiceDescription,
+        toneFormality: sliders.formality,
+        toneHumor: sliders.humor,
+        toneBluntness: sliders.bluntness,
+        toneWarmth: sliders.warmth,
+        emojiDensity: sliders.emojiDensity,
+        hashtagTolerance,
+        platforms,
+        platformVoices: Object.fromEntries(platforms.map((p) => [p, platformVoices[p]])),
+        samplePosts,
+      });
+    } catch {
+      result = {
+        ok: false,
+        error: "Couldn't reach CopyDogg. Check that it's still running, then try again.",
+      };
+    }
+
+    if (result && !result.ok) {
+      setSaveError(result.error);
+      setSaving(false);
+    }
+  }
+
+  const totalSteps = platforms.length + 2;
 
   return (
     <div className="w-full max-w-lg">
-      <div className="flex items-center justify-between">
-        <p className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-          Step {step} of 3
+      <p className={META_LABEL}>
+        {step === 0 ? "Getting started" : `Step ${step + 1} of ${totalSteps}`}
+      </p>
+
+      <div className="mt-4 rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
+        {step === 0 && (
+          <div className="flex flex-col gap-4">
+            <h1 className="font-display text-2xl font-semibold text-ink">
+              Where do you post?
+            </h1>
+            <p className="text-sm text-ink-soft">
+              Pick every place you want CopyDogg to write for. You can change
+              this later.
+            </p>
+            <PlatformMultiPicker value={platforms} onChange={setPlatforms} />
+            <button
+              type="button"
+              onClick={() => setStep(1)}
+              disabled={platforms.length === 0}
+              className={`mt-2 ${PRIMARY_BUTTON}`}
+            >
+              Next
+            </button>
+          </div>
+        )}
+
+        {currentPlatform && (
+          <PlatformStep
+            key={currentPlatform}
+            platform={currentPlatform}
+            answers={answers[currentPlatform] ?? EMPTY_ANSWERS}
+            onChange={(next) => updateAnswers(currentPlatform, next)}
+            isLast={step === platforms.length}
+            reading={reading}
+            readError={readError}
+            onBack={() => setStep(step - 1)}
+            onNext={() => advanceFromPlatform()}
+            onSkip={() => skipPlatform(currentPlatform)}
+            onUseDefaults={goToDefaults}
+          />
+        )}
+
+        {step === resultsStep && step > 0 && (
+          <div className="flex flex-col gap-6">
+            <div>
+              <h1 className="font-display text-2xl font-semibold text-ink">
+                Here&rsquo;s how you sound
+              </h1>
+              <p className="mt-2 text-sm text-ink-soft">
+                {usedDefaults
+                  ? "You skipped the samples, so these are starting defaults. Adjust them now, or fine-tune later in Profile."
+                  : "This is what CopyDogg uses every time it writes for you. Change anything that's off."}
+              </p>
+            </div>
+
+            <label className="flex flex-col gap-2">
+              <span className={META_LABEL}>Your voice</span>
+              <textarea
+                value={voiceDescription}
+                onChange={(e) => setVoiceDescription(e.target.value)}
+                rows={5}
+                placeholder="e.g. You write in short, direct lines and rarely use emoji."
+                className={TEXTAREA}
+              />
+            </label>
+
+            <div className="flex flex-col gap-3">
+              <span className={META_LABEL}>Your tone</span>
+              <ToneSliders
+                sliders={sliders}
+                onChange={(key, value) => setSliders((s) => ({ ...s, [key]: value }))}
+              />
+            </div>
+
+            <div className="flex flex-col gap-4">
+              <span className={META_LABEL}>Per platform</span>
+              {platforms.map((p) => (
+                <label key={p} className="flex flex-col gap-2">
+                  <span className="text-sm text-ink">{platformRules[p].label}</span>
+                  <textarea
+                    value={platformVoices[p] ?? ""}
+                    onChange={(e) =>
+                      setPlatformVoices((v) => ({ ...v, [p]: e.target.value }))
+                    }
+                    rows={2}
+                    placeholder={`Anything different about how you sound on ${platformRules[p].label}?`}
+                    className={TEXTAREA}
+                  />
+                </label>
+              ))}
+            </div>
+
+            {saveError && <p className="text-sm text-danger">{saveError}</p>}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setStep(platforms.length)}
+                disabled={saving}
+                className={SECONDARY_BUTTON}
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={handleFinish}
+                disabled={saving}
+                className={PRIMARY_BUTTON}
+              >
+                {saving ? "setting things up..." : "Start writing"}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+interface PlatformStepProps {
+  platform: Platform;
+  answers: PlatformAnswers;
+  onChange: (next: Partial<PlatformAnswers>) => void;
+  isLast: boolean;
+  reading: boolean;
+  readError: string;
+  onBack: () => void;
+  onNext: () => void;
+  onSkip: () => void;
+  onUseDefaults: () => void;
+}
+
+function PlatformStep({
+  platform,
+  answers,
+  onChange,
+  isLast,
+  reading,
+  readError,
+  onBack,
+  onNext,
+  onSkip,
+  onUseDefaults,
+}: PlatformStepProps) {
+  const { label } = platformRules[platform];
+  const { sampleNoun, blandPost } = onboardingPrompts[platform];
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div>
+        <h1 className="font-display text-2xl font-semibold text-ink">
+          How you sound on {label}
+        </h1>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-ink">
+          Paste up to 3 {sampleNoun} you&rsquo;ve written. Real ones, typos and all.
         </p>
+        {answers.samples.map((sample, i) => (
+          <textarea
+            key={i}
+            value={sample}
+            onChange={(e) => {
+              const samples = [...answers.samples] as PlatformAnswers["samples"];
+              samples[i] = e.target.value;
+              onChange({ samples });
+            }}
+            rows={2}
+            placeholder={`Example ${i + 1}`}
+            className={TEXTAREA}
+          />
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-2 border-t border-dashed border-hairline pt-5">
+        <p className="text-sm text-ink">Now rewrite this the way you&rsquo;d actually say it:</p>
+        <p className="rounded-md border border-hairline bg-paper px-4 py-3 text-sm italic text-ink-soft">
+          {blandPost}
+        </p>
+        <textarea
+          value={answers.rewrite}
+          onChange={(e) => onChange({ rewrite: e.target.value })}
+          rows={3}
+          placeholder="Your version"
+          className={TEXTAREA}
+        />
+      </div>
+
+      {readError && (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-danger">{readError}</p>
+          <button
+            type="button"
+            onClick={onUseDefaults}
+            className="self-start text-sm font-medium text-accent underline"
+          >
+            Continue with defaults
+          </button>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <button type="button" onClick={onBack} disabled={reading} className={SECONDARY_BUTTON}>
+          Back
+        </button>
         <button
           type="button"
-          onClick={() => createPersona(true)}
-          disabled={submitting}
-          className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft underline disabled:opacity-60"
+          onClick={onNext}
+          disabled={reading || !hasContent(answers)}
+          className={PRIMARY_BUTTON}
         >
-          skip setup
+          {reading ? "sniffing out your tone..." : isLast ? "Read my voice" : "Next"}
         </button>
       </div>
 
-      <div className="mt-4 rounded-lg border border-hairline bg-card p-6 shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
-        {step === 1 && (
-          <div className="flex flex-col gap-3">
-            <h1 className="font-display text-2xl font-semibold text-ink">
-              Paste your voice
-            </h1>
-            <p className="text-sm text-ink-soft">
-              Paste a few things you&rsquo;ve written — tweets, captions, an
-              email, anything. Optional, but it makes everything after this
-              better.
-            </p>
-            <textarea
-              value={samples}
-              onChange={(e) => setSamples(e.target.value)}
-              rows={8}
-              placeholder="Paste your writing here..."
-              className="resize-none rounded-md border border-hairline bg-card px-4 py-3 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
-            />
-            {extractError && <p className="text-sm text-danger">{extractError}</p>}
-            <div className="mt-2 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="rounded-full border border-hairline px-5 py-3 text-sm font-bold text-ink-soft"
-              >
-                Skip this step
-              </button>
-              <button
-                type="button"
-                onClick={handleExtractVoice}
-                disabled={extracting}
-                className="flex-1 rounded-full bg-ink px-5 py-3 text-sm font-bold text-card disabled:opacity-60"
-              >
-                {extracting ? "sniffing out your tone..." : "Read my voice"}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="flex flex-col gap-5">
-            <h1 className="font-display text-2xl font-semibold text-ink">
-              Set your sliders
-            </h1>
-
-            {voiceDescription && (
-              <div className="rounded-md border border-hairline bg-paper p-3">
-                <p className="font-mono text-xs uppercase tracking-[0.1em] text-ink-soft">
-                  Draft voice description
-                </p>
-                <textarea
-                  value={voiceDescription}
-                  onChange={(e) => setVoiceDescription(e.target.value)}
-                  rows={3}
-                  className="mt-2 w-full resize-none bg-transparent text-sm text-ink focus:outline-none"
-                />
-              </div>
-            )}
-
-            <ToneSliders sliders={sliders} onChange={setSlider} />
-
-            <div className="mt-2 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="rounded-full border border-hairline px-5 py-3 text-sm font-bold text-ink-soft"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                className="flex-1 rounded-full bg-ink px-5 py-3 text-sm font-bold text-card"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="flex flex-col gap-5">
-            <h1 className="font-display text-2xl font-semibold text-ink">
-              Your rules &amp; topics
-            </h1>
-
-            <ChipEditor
-              label="Rules"
-              items={rules}
-              onAdd={addRule}
-              onRemove={(rule) => setRules((r) => r.filter((x) => x !== rule))}
-              placeholder="Add your own rule"
-              suggestions={RULE_SUGGESTIONS}
-            />
-
-            <ChipEditor
-              label="Topics you post about"
-              items={topics}
-              onAdd={addTopic}
-              onRemove={(topic) => setTopics((t) => t.filter((x) => x !== topic))}
-              placeholder="indie hacking, fitness, parenting..."
-            />
-
-            {submitError && <p className="text-sm text-danger">{submitError}</p>}
-
-            <div className="mt-2 flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="rounded-full border border-hairline px-5 py-3 text-sm font-bold text-ink-soft"
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={() => createPersona(false)}
-                disabled={submitting}
-                className="flex-1 rounded-full bg-ink px-5 py-3 text-sm font-bold text-card disabled:opacity-60"
-              >
-                {submitting ? "setting things up..." : "Start writing"}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      <button
+        type="button"
+        onClick={onSkip}
+        disabled={reading}
+        className="self-center text-sm text-ink-soft underline disabled:opacity-60"
+      >
+        Skip {label}
+      </button>
     </div>
   );
 }

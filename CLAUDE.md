@@ -8,24 +8,18 @@ Full context lives in `/docs`. Read these before writing any code:
 
 ## Non-negotiable constraints
 
-- **Stack:** Next.js (App Router) + TypeScript + Tailwind + Supabase (auth + Postgres) + Claude API. Deploy target: Vercel.
+- **Stack:** Next.js (App Router) + TypeScript + Tailwind + Claude API. No database service: all data lives in one JSON file via `lib/store.ts` (server-side only).
+- **Open source, self-hosted, single user.** Each person clones the repo, adds their own `ANTHROPIC_API_KEY`, and runs their own copy. No accounts, no sign-in, no multi-tenant code. The only gate is the optional `COPYDOGG_PASSWORD` (`proxy.ts`). Setup must stay "clone → `npm install` → add key → `npm run dev`"; don't add anything that needs another service or account. User data never leaves the machine except the prompt text sent to Claude. Target hosts: local machine or any host with a persistent disk — not serverless (Vercel/Netlify).
 - **One screen does the work.** The main generation screen (`/app`) must stay a single card — no multi-step wizard for the core loop. If a feature can't fit on one screen without scrolling past a phone viewport, cut it, don't paginate it.
 - **No complexity creep.** Do not add features beyond what's in `docs/product-plan.md` section 8 ("What to cut from v1") unless explicitly asked in this session.
 - **Voice, not vibe.** Copy (button labels, empty states, errors) must follow the tone rules in `docs/design-system.md` — plain verbs, sentence case, no corporate words ("leverage," "seamless," "unlock," "empower" are banned). Loading states get personality (e.g. "sniffing out your tone..."); everything else stays plain and direct.
 - **Design tokens are law.** Every color, font, radius value used in components must come from `docs/design-system.md`. Don't introduce new hex values or fonts ad hoc — if something's missing from the token list, stop and ask rather than improvising.
 
-## Build order (do not reorder without asking)
+## Build order
 
-1. Repo skeleton: Next.js + Tailwind init, push to GitHub, empty `/app` route
-2. Supabase project + schema from `docs/product-plan.md` section 2, RLS on from the start
-3. Auth (magic link)
-4. Core loop: generation screen UI (no AI yet) → `/api/generate` route → wire together
-5. Onboarding flow (writes to `personas` table)
-6. Library page + thumbs up/down feedback loop
-7. Landing page (tone brief in `docs/design-system.md` section 7)
-8. Polish pass + deploy
+The original v1 build order (skeleton → schema → auth → core loop → onboarding → library → landing → polish) is complete. On 2026-09-28 the app moved from Supabase + magic-link auth to self-hosted single-user with a local JSON file; Supabase, auth and `/login` were removed.
 
-Work through these in order. After finishing a step, stop and summarize what changed before moving to the next one — don't silently chain multiple steps together in one pass.
+Remaining: open-source release prep (license, repo publish). For any new work, stop and summarize what changed after each step — don't silently chain multiple steps together in one pass.
 
 ## Definition of done for any screen/component
 

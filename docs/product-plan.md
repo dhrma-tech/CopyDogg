@@ -2,7 +2,9 @@
 
 **One-liner:** Teach it your voice once. Then just say what you want.
 
-**Stack:** Next.js (App Router) + Tailwind + Supabase (auth/DB) + Claude API + Vercel. Built with Claude Code, edited in VS Code, pushed to GitHub.
+**Stack:** Next.js (App Router) + Tailwind + Claude API, data in one local JSON file. Open source and self-hosted: each person runs their own copy with their own API key. Built with Claude Code, edited in VS Code, pushed to GitHub.
+
+*2026-09-28: moved from Supabase + magic-link auth to single-user self-hosting — no accounts, no sign-in, no database service. See section 2.*
 
 ---
 
@@ -16,85 +18,75 @@ CopyDogg is not "AI writes your posts." It's a voice profile you build once — 
 
 ```
 /                      → Landing page (marketing, Littlebird/Wispr tone)
-/login                 → Magic link or Google auth (Supabase Auth)
+/unlock                → Password prompt, only when COPYDOGG_PASSWORD is set
 /onboarding            → 3-step voice profile setup (first-time only)
 /app                   → Main generation screen (the whole product lives here)
 /app/library           → Saved posts, searchable/filterable
 /app/profile           → Edit voice profile, personas, rules
-/app/settings          → Account, API usage, delete data
+/app/settings          → Usage, data file location, export, reset, lock
 ```
 
 Everything that matters happens on `/app`. Resist adding more pages — that's the "not any complexity" instinct paying off.
 
 ---
 
-## 2. Database Schema (Supabase / Postgres)
+## 2. Data (one local JSON file)
 
-```sql
--- users handled by Supabase Auth (auth.users)
+Single user, no accounts: everything lives in `data/copydogg.json` (or `$COPYDOGG_DATA_DIR/copydogg.json`), read and written only through `lib/store.ts`. Writes are serialized and atomic (temp file + rename), and an unreadable file is never overwritten.
 
-create table profiles (
-  id uuid primary key references auth.users(id),
-  display_name text,
-  created_at timestamptz default now()
-);
-
-create table personas (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade,
-  name text not null,                 -- "LinkedIn me", "Unhinged Twitter me"
-  voice_description text,             -- freeform paragraph, AI-assisted
-  tone_formality int default 50,      -- 0-100 sliders
-  tone_humor int default 50,
-  tone_bluntness int default 50,
-  tone_warmth int default 50,
-  emoji_density int default 20,
-  hashtag_tolerance int default 20,
-  rules text[],                       -- ["never use 'leverage'", "always end with a question"]
-  sample_posts text[],                -- pasted examples for voice extraction
-  is_default boolean default false,
-  created_at timestamptz default now()
-);
-
-create table topics (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade,
-  label text not null                 -- recurring theme, just tags really
-);
-
-create table generations (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade,
-  persona_id uuid references personas(id),
-  platform text not null,             -- "x", "linkedin", "instagram", "threads", "reddit"
-  prompt_input text not null,         -- what the user typed
-  tone_override text,                 -- optional one-tap override for this post only
-  outputs text[] not null,            -- the 2-3 variations returned
-  chosen_output text,                 -- which one they picked/saved
-  feedback smallint,                  -- -1, 0, 1 (thumbs down/none/up)
-  saved boolean default false,
-  created_at timestamptz default now()
-);
+```ts
+{
+  version: 1,
+  persona: {                      // null until onboarding finishes; v1 has exactly one
+    id, name,                     // name is "Default"
+    voiceDescription,             // freeform paragraph, AI-drafted, user-editable
+    toneFormality, toneHumor, toneBluntness, toneWarmth,   // 0-100 sliders
+    emojiDensity, hashtagTolerance,
+    rules: string[],              // ["never use leverage", "always end with a question"]
+    samplePosts: string[],        // onboarding samples + rewrites, for voice extraction
+    platforms: Platform[],        // picked in onboarding; /app only shows these
+    platformVoices: { [platform]: string },  // per-platform note on top of voiceDescription
+    createdAt
+  },
+  topics: [{ id, label }],        // recurring themes, just tags really
+  generations: [{
+    id, platform,                 // "x" | "linkedin" | "instagram" | "threads" | "reddit" | "newsletter"
+    promptInput,                  // what the user typed
+    toneOverride,                 // optional one-tap override for this post only
+    outputs: string[],            // the 2-3 variations returned
+    chosenOutput,                 // which one they saved or liked
+    feedback,                     // -1 | 0 | 1 (thumbs down / none / up)
+    saved, createdAt
+  }]
+}
 ```
 
-Row-level security: every table filtered by `user_id = auth.uid()`. Turn RLS on from day one — it's a five-minute Supabase setting and saves you from a very bad Monday.
+Access control: none by default (it's your machine). If `COPYDOGG_PASSWORD` is set, `proxy.ts` requires it once per device (the cookie holds a hash of the password) for every page and API route.
 
 ---
 
-## 3. The Onboarding Flow (3 steps, skippable)
+## 3. The Onboarding Flow (platforms → per-platform samples → results)
 
-This is the only "setup tax" the user pays, and it should take under 3 minutes.
+*Revised 2026-09-28 (replaces the original paste → sliders → rules flow).*
 
-**Step 1 — Paste your voice**
-Textarea: "Paste a few things you've written — tweets, captions, an email, anything." Optional but strongly nudged. Claude reads it and drafts a voice_description paragraph for the user to confirm/edit ("You write in short punchy lines, you like rhetorical questions, you almost never use emoji except 🔥 occasionally").
+This is the only "setup tax" the user pays. The first visit lands here automatically (`/app` redirects to `/onboarding` until a persona exists).
 
-**Step 2 — Set your sliders**
-5 sliders (formality, humor, bluntness, warmth, emoji density) with a live one-line preview sentence that re-renders as they drag — this is the "wow, it gets it" moment. Cheap to build, high perceived value.
+**Step 1 — Where do you post?**
+Multi-select platform pills. Only the picked platforms get a step below, and only they appear on `/app` afterwards.
 
-**Step 3 — Your rules & topics**
-Free-text chips: "Add a rule" (e.g. "never start with 'In today's world'") and "Add a topic you post about" (indie hacking, fitness, parenting, etc). Pre-seed 5-6 common example rules as tap-to-add chips so the blank page isn't intimidating.
+**Step 2..n — How you sound on {platform}** (one page per picked platform)
+- Up to 3 textareas: "Paste up to 3 {tweets / LinkedIn posts / captions…} you've written."
+- A fixed, deliberately bland post for that platform (`onboardingPrompts` in `lib/platformRules.ts`) with a textarea: "Now rewrite this the way you'd actually say it." Fixed rather than AI-generated so it's instant, free, and every user rewrites the same thing — the diff between bland and rewrite is the strongest voice signal.
+- Nudge, allow skip: "Next" needs at least one box filled; a quiet "Skip {platform}" link is always there.
 
-End state: one default persona created, ready to generate immediately.
+On the last platform, "Read my voice" sends everything to `/api/voice-extract` (one Claude call, structured output). Loading: "sniffing out your tone...". If every platform was skipped, or the call fails and the user picks "Continue with defaults", the results screen opens with default values instead.
+
+**Final step — Here's how you sound** (all editable)
+- Voice description paragraph (one core voice, addressed to the user)
+- The 5 tone sliders, pre-set by Claude, with the live preview sentence
+- One short note per picked platform on how they sound there specifically
+
+"Start writing" saves one default persona and opens `/app`. Rules and topics are not part of onboarding — they're edited on `/app/profile`, along with everything above.
 
 ---
 
@@ -135,6 +127,9 @@ HARD RULES (never break these):
 PLATFORM: {platform}
 {platform-specific formatting rules: char limits, line break conventions, hashtag norms}
 
+HOW THEY SOUND ON {PLATFORM} SPECIFICALLY:
+{persona.platform_voices[platform], only if set}
+
 RECENT LIKED EXAMPLES (match this energy, don't copy):
 {last 2-3 thumbs-up outputs, if any}
 
@@ -152,7 +147,7 @@ Keep platform format rules in a small static config object (`lib/platformRules.t
 
 **Saturday morning — skeleton**
 - `npx create-next-app`, Tailwind, push empty repo to GitHub
-- Supabase project, run schema, wire up magic-link auth
+- ~~Supabase project, run schema, wire up magic-link auth~~ (replaced by the local JSON file store)
 - Basic `/app` shell with persona/platform selectors (no AI yet, just UI)
 
 **Saturday afternoon — the core loop**
@@ -175,7 +170,7 @@ Keep platform format rules in a small static config object (`lib/platformRules.t
 - Landing page (see tone brief below)
 - Empty states, loading copy, error states — all with personality
 - Mobile responsive pass
-- Deploy to Vercel, connect domain
+- ~~Deploy to Vercel, connect domain~~ (self-hosted: the README covers running it locally or on a host with a disk)
 
 **Sunday evening — buffer**
 - Bug bash, cut anything half-broken rather than shipping it broken
@@ -195,12 +190,13 @@ What both sites do well, and how to translate it:
 - **Testimonial-shaped social proof is optional for v1** — skip it, you don't have users yet. Replace that section with a short "why I built this" note in your own voice. That's more authentic for a solo weekend launch anyway, and matches the "I had this problem, built the fix, sharing it" origin story you mentioned.
 - **Warm visual palette**, not the blue/purple SaaS gradient both reference sites still lean on somewhat — go further toward cream/terracotta/sage per your original brief, with a soft rounded sans headline font instead of a tech-grotesk.
 
-Landing page section order:
-1. Hero (headline + one sentence + single CTA "Try it free")
-2. Before/after demo panel
-3. Three feature call-outs, each with a one-sentence value prop (voice profile / one-click platform switch / library)
-4. Short personal "why I built this" note
-5. Final CTA, no pricing table for v1 (or a single simple "free while in beta" line)
+Landing page section order (*revised 2026-09-28: simpler, light humor that isn't forced*):
+1. Hero (headline + one sentence + single CTA "Get started" + "Free while in beta.")
+2. Before/after demo panel (one rough idea → two platform posts)
+3. "How it works" — three one-line steps matching onboarding: pick where you post / show it how you write / say what you want
+4. One dry closing joke + final CTA. No pricing table, no feature grid, no "why I built this" note.
+
+No sign-in page: the CTA opens the app directly (setup on first visit). Hero sub-line: "Free and open source. Runs on your own Claude API key."
 
 ---
 
@@ -224,7 +220,8 @@ If Saturday goes well and you have slack time Sunday, multi-persona is the highe
 copydogg/
   app/
     page.tsx                 # landing
-    login/page.tsx
+    unlock/page.tsx           # only used when COPYDOGG_PASSWORD is set
+    actions.ts                # server actions: onboarding, profile, reset, unlock
     onboarding/page.tsx
     app/page.tsx              # main generation screen
     app/library/page.tsx
@@ -232,7 +229,8 @@ copydogg/
     api/generate/route.ts
     api/voice-extract/route.ts
   lib/
-    supabase.ts
+    store.ts                  # the JSON file store (server-only)
+    passwordGate.ts
     claude.ts                 # API wrapper + system prompt builder
     platformRules.ts
   components/
@@ -240,8 +238,9 @@ copydogg/
     PlatformPicker.tsx
     GenerateCard.tsx
     ToneSliders.tsx
-  supabase/
-    schema.sql
+  data/                       # git-ignored; created on first save
+    copydogg.json
+  proxy.ts                    # optional password gate
 ```
 
 Keep `lib/claude.ts` as the single place the system prompt gets assembled — makes iterating on prompt quality fast without hunting through UI code.
