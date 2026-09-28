@@ -211,7 +211,12 @@ Added on request, after v1: CopyDogg covers daily messages, not just social post
 - **On each result:** Copy, Open in… (X/Threads intents, LinkedIn, Reddit, mailto:, sms:), Edit (the edit is saved and marked as a strong voice signal), Save, thumbs, one-tap tweaks (shorter / warmer / more direct / funnier), regenerate, remix.
 - **Library:** Saved / Recent / Ideas tabs, search, platform filter, newest/oldest sort, unsave, delete, copy. Ideas are saved from `/app` and "Write it now" puts one back in the box.
 - **Profile:** people you write to, templates, and "Retune my voice", which proposes an updated voice from 3+ liked or edited posts and saves it only if you keep it.
-- **Voice input:** opt-in mic (Settings), using browser speech recognition, with the privacy trade-off stated plainly.
+- **Voice** (*expanded 2026-09-29*): opt-in in Settings (browser speech recognition, privacy trade-off stated plainly; dictation language picker, since browsers can't auto-detect). Mic in the main box and in Reply's "what you want to say"; live words while speaking; keeps listening through long dictation (auto-restart); clear messages for a blocked or missing mic. Dictated text is cleaned by Claude (fillers, repeats, false starts, self-corrections). Esc stops, `m` toggles.
+- **Notes mode:** meeting notes or a transcript → summary, decisions, next steps (a recap message for Email / Text / Work chat). Never invents owners or dates.
+- **Keep my words** (Rewrite): tidy and format only, one version.
+- **Your words** (Profile, shared by all voices): names, jargon and acronyms spelled exactly; offered automatically from hand edits.
+- **Snippets** (Profile): shortcut → saved text inserted verbatim when mentioned.
+- **Ruled out for a self-hosted website:** typing into other apps, recording Zoom/Meet/Teams calls, speaker names, automatic language detection, cloud sync across devices.
 - **Multiple voices** ("Work me", "Friends me"...): each with its own description, sliders, platforms and rules. A new voice starts as a copy of the current one. Picker on `/app` (only shown with 2+ voices) and a switcher on Profile. Generations remember their voice, so liked examples and retune stay per voice.
 - **All platforms at once:** an "All N" pill writes one version per platform of the current voice, streamed in parallel.
 - **Whole-conversation replies:** in Reply, "it's a whole conversation" replies to the latest message using the earlier ones as context.

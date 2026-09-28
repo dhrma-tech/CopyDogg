@@ -50,7 +50,11 @@ npm start
 - **Show changes**: see exactly what a rewrite changed.
 - **Undo**: tweaks and deletes can be undone for a few seconds, so there are no "are you sure?" pop-ups.
 - **Dark mode**: follows your system, or pick Light or Dark in Settings.
-- **Voice input** (optional): speak your idea. Off by default, because your browser sends the audio to its speech service (Google, Microsoft or Apple) to transcribe it.
+- **Voice** (optional, Chrome/Edge/Safari): talk instead of typing, in any mode. Words appear as you speak, it keeps listening through long notes, and "um"s, repeats and do-overs ("5… actually 6pm") are cleaned up before CopyDogg writes. Off by default, because your browser sends the audio to its speech service (Google, Microsoft or Apple) to transcribe it. Pick your dictation language in Settings.
+- **Notes**: paste or dictate meeting notes and get a summary, decisions and next steps, or a recap email or work-chat update.
+- **Keep my words**: in Rewrite, just tidy punctuation, paragraphs and lists without changing your wording.
+- **Your words**: names, jargon and acronyms CopyDogg should spell exactly. It fixes misheard dictation and offers to learn new names from your edits.
+- **Snippets**: say or type a shortcut ("…and add my calendar link") and your saved text goes in word for word.
 
 Keyboard: **Ctrl/⌘ + Enter** writes. On results, **1–9** copies a version, **e** edits, **s** saves, **t** then **s/w/d/f** tweaks, and **?** lists the rest. Your half-typed idea survives a refresh.
 
