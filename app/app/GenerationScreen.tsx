@@ -180,12 +180,16 @@ export default function GenerationScreen({
   const [contactId, setContactId] = useState("");
   const [templateId, setTemplateId] = useState("");
   const [asStructure, setAsStructure] = useState(false);
+  // Rewrite mode: tidy and format only, keep the wording.
+  const [keepWords, setKeepWords] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [ideaSaved, setIdeaSaved] = useState<"idle" | "saving" | "saved">("idle");
   const [helpOpen, setHelpOpen] = useState(false);
-  // Any of the current text came from dictation: Claude cleans up fillers and do-overs.
-  const [dictated, setDictated] = useState(false);
+  // Phrases that came from dictation. A request counts as dictated (Claude cleans up
+  // fillers and do-overs) only while some of them are still in the text, so typing
+  // over dictated text turns it off by itself.
+  const dictatedPhrases = useRef<string[]>([]);
   // Which field dictation types into: the main box, or Reply's "what you want to say".
   const [micTarget, setMicTarget] = useState<"main" | "note">("main");
 
@@ -212,11 +216,16 @@ export default function GenerationScreen({
   const showChips = mode === "write" || mode === "reply";
   const readyCards = outputs.filter((o) => o.generationId && o.liveText === undefined);
   const activeCard = readyCards.find((o) => o.key === activeKey) ?? readyCards[0];
+  // Tidy-only and notes have one right answer; threads/carousels are long (2 options).
+  const tidyOnly = mode === "rewrite" && keepWords;
+  const threadable = mode === "write" || (mode === "rewrite" && !keepWords);
+  const expectedCount =
+    mode === "notes" || tidyOnly ? 1 : asStructure && structure && threadable ? 2 : VARIATION_COUNT;
 
   const dictation = useDictation({
     lang: dictationLanguage,
     onFinal: (heard) => {
-      setDictated(true);
+      dictatedPhrases.current = [...dictatedPhrases.current, heard].slice(-50);
       if (micTarget === "main" && usesContext) setContextInput((prev) => joinSpoken(prev ?? draft.context, heard));
       else setIdeaInput((prev) => joinSpoken(prev ?? draft.idea, heard));
     },
@@ -405,9 +414,10 @@ export default function GenerationScreen({
       toneOverride: toneOverride || undefined,
       contactId: contactId || undefined,
       language: language || undefined,
-      structure: asStructure && structure ? structure : undefined,
+      structure: asStructure && structure && threadable ? structure : undefined,
       templateId: templateId || undefined,
-      dictated: dictated || undefined,
+      dictated: dictatedPhrases.current.some((ph) => idea.includes(ph) || context.includes(ph)) || undefined,
+      keepWords: tidyOnly || undefined,
     };
   }
 
@@ -516,7 +526,7 @@ export default function GenerationScreen({
 
     setStreaming([]);
     const result = await streamGenerate(
-      { ...request, variationCount: request.structure ? 2 : VARIATION_COUNT },
+      { ...request, variationCount: expectedCount },
       { onPartial: setStreaming, signal: controller.signal }
     );
 
@@ -667,7 +677,9 @@ export default function GenerationScreen({
         ? `Write for all ${platformOptions.length}`
         : mode === "write" && platformRules[platform].kind === "message"
           ? "Write drafts"
-          : SUBMIT_LABELS[mode];
+          : tidyOnly
+            ? "Tidy it up"
+            : SUBMIT_LABELS[mode];
 
   return (
     <div className="w-full max-w-2xl">
@@ -730,7 +742,6 @@ export default function GenerationScreen({
               onChange={(e) => {
                 if (usesContext) setContextInput(e.target.value);
                 else setIdeaInput(e.target.value);
-                if (!e.target.value.trim()) setDictated(false);
               }}
               onKeyDown={handleKeyDown}
               placeholder={mainPlaceholder}
@@ -747,6 +758,32 @@ export default function GenerationScreen({
               />
             )}
           </div>
+
+          {mode === "rewrite" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setKeepWords((v) => !v)}
+                aria-pressed={keepWords}
+                className={keepWords ? PILL_ON : PILL_OFF}
+              >
+                {keepWords ? "keep my words ✓" : "keep my words"}
+              </button>
+              <span className="text-small text-ink-soft">
+                {keepWords
+                  ? "Just tidies punctuation, paragraphs and lists."
+                  : "Rewrites it to sound like you."}
+              </span>
+            </div>
+          )}
+
+          {mode === "notes" && (
+            <p className="text-small text-ink-soft">
+              {platformRules[platform].kind === "message"
+                ? `You'll get a recap ${platformRules[platform].label === "Work chat" ? "update" : platformRules[platform].label.toLowerCase()} with a summary, decisions and next steps.`
+                : "You'll get clean notes: summary, decisions and next steps. Pick Email or Work chat for a recap message."}
+            </p>
+          )}
 
           {mode === "reply" && (
             <div className="flex flex-col gap-2">
@@ -874,7 +911,7 @@ export default function GenerationScreen({
               {mode === "write" && (
                 <ChipRow options={HOOK_CHIPS} value={hook} onToggle={(v) => toggle(v, hook, setHook)} />
               )}
-              {structure && (
+              {structure && threadable && (
                 <ChipRow
                   options={[structure === "thread" ? "as a thread" : "as a carousel"]}
                   value={asStructure ? (structure === "thread" ? "as a thread" : "as a carousel") : null}
@@ -956,7 +993,7 @@ export default function GenerationScreen({
           {streaming.map((text, i) => (
             <StreamingCard key={i} text={text} platform={platform} />
           ))}
-          {Array.from({ length: Math.max(0, (asStructure && structure ? 2 : VARIATION_COUNT) - streaming.length) }, (_, i) => (
+          {Array.from({ length: Math.max(0, expectedCount - streaming.length) }, (_, i) => (
             <SkeletonCard key={`skeleton-${i}`} />
           ))}
         </div>
