@@ -188,7 +188,7 @@ What both sites do well, and how to translate it:
 - **No corporate words.** No "leverage," "seamless," "unlock," "empower." Read every sentence out loud — if it sounds like it belongs on a SaaS pricing page, cut it.
 - **Personality in the small copy.** Loading states, button labels, empty states — this is where "personal, warm, funny" actually shows up, more than in the hero section. e.g. loading: "sniffing out your tone..." / empty library: "nothing saved yet — go write something worth keeping."
 - **Testimonial-shaped social proof is optional for v1** — skip it, you don't have users yet. Replace that section with a short "why I built this" note in your own voice. That's more authentic for a solo weekend launch anyway, and matches the "I had this problem, built the fix, sharing it" origin story you mentioned.
-- **Warm visual palette**, not the blue/purple SaaS gradient both reference sites still lean on somewhat — go further toward cream/terracotta/sage per your original brief, with a soft rounded sans headline font instead of a tech-grotesk.
+- ~~**Warm visual palette** … cream/terracotta/sage … soft rounded sans headline~~ *Superseded 2026-09-28:* the look is now "Highlighter" (paper, ink and one yellow highlighter; Bricolage Grotesque headlines). `docs/design-system.md` is the source of truth. Still true: no blue/purple SaaS gradients.
 
 Landing page section order (*revised 2026-09-28: simpler, light humor that isn't forced*):
 1. Hero (headline + one sentence + single CTA "Get started" + "Free while in beta.")
