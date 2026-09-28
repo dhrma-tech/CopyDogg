@@ -62,7 +62,7 @@ Nothing smaller than 12px, and 12px is only for mono labels. Interactive text is
 | `rounded-lg` | 14px | Main cards, sheets |
 | `rounded-chip` | 8px | Chips, pills, segmented controls (not fully round) |
 | `shadow-card` | `4px 4px 0 ink` | Main card only (with a 1.5px `ink` border) |
-| `shadow-raise` | `2px 2px 0 ink` | Primary buttons in light mode; the selected segment |
+| `shadow-raise` | `2px 2px 0 ink` (light), none (dark) | Primary buttons |
 | Spacing | 4px base: 4, 8, 12, 16, 20, 24, 32, 40 | Stick to these steps |
 | Content widths | App pages `max-w-2xl` (672px); forms `max-w-xl` (576px); landing `max-w-3xl` | Header aligns to the same width |
 | Motion | 160ms `ease-out` for color/border/shadow; 200ms for enter/exit | Buttons press 1px down; respects reduced motion |
@@ -85,7 +85,7 @@ All in `components/ui/`. Pages use these instead of re-writing class strings.
 
 - **Button** (`Button`): variants `primary` (primary fill, `shadow-raise` in light), `secondary` (transparent, `control` border, hover `highlight-soft`), `quiet` (text only, `ink-soft` → `ink` + `highlight-soft` on hover), `danger` (quiet, `danger` text). Sizes `md` (44px tall) and `sm` (36px). **Disabled:** `hairline` fill, `ink-soft` text, no shadow. Never an opacity fade.
 - **Field** (`Input`, `Textarea`): `card` fill, 1px `control` border, `rounded-md`, 16px text. Hover: `ink` border. Focus: `ink` border plus a 3px `highlight` ring. Invalid: `danger` border.
-- **Card** (`Card`): `main` has a 1.5px `ink` border, `shadow-card`, `rounded-lg`, padding 20/24. `flat` has a `hairline` border, `rounded-md`, padding 16, and `control` border on hover. Never nest a bordered box inside a card; use spacing or a dashed `hairline` divider.
+- **Card** (`Card`): `main` has a 1.5px `ink` border, `shadow-card`, `rounded-lg`, padding 20/24. `flat` has a `hairline` border, `rounded-md` and padding 16 (a `control` border on hover only when the whole card is clickable). Never nest a bordered box inside a card; use spacing or a dashed `hairline` divider.
 - **Chip** (`Chip`): `rounded-chip`. Off: transparent with a `hairline` border and `ink-soft` text, hover `control` border and `ink` text. On: `highlight` fill, `on-highlight` text, 1px `ink` border (in dark mode the border is `highlight`). Sizes `md` (36px) and `sm` (32px).
 - **Segmented control** (mode switch, tabs): a `paper` track with a `hairline` border; the selected segment is `highlight` + `on-highlight`.
 - **Slider**: 4px `hairline` track with an `ink` fill; the thumb is a `card` circle with a 2px `ink` border (`highlight` border in dark mode).

@@ -23,6 +23,8 @@
   --focus: #141413;
   /* Color of the offset shadows (ink in light mode, light ink in dark). */
   --shadow-ink: #141413;
+  /* Primary buttons get an offset shadow in light mode only. */
+  --button-shadow: 2px 2px 0 #141413;
   color-scheme: light;
 }
 
@@ -47,6 +49,7 @@
     --danger: #f08f84;
     --focus: #f2d64b;
     --shadow-ink: #f2f2ec;
+    --button-shadow: none;
     color-scheme: dark;
   }
 }
@@ -69,6 +72,7 @@
   --danger: #f08f84;
   --focus: #f2d64b;
   --shadow-ink: #f2f2ec;
+  --button-shadow: none;
   color-scheme: dark;
 }
 
@@ -101,7 +105,7 @@
   --radius-chip: 8px;
 
   --shadow-card: 4px 4px 0 var(--shadow-ink);
-  --shadow-raise: 2px 2px 0 var(--shadow-ink);
+  --shadow-raise: var(--button-shadow);
 
   --font-sans: var(--font-geist);
   --font-mono: var(--font-geist-mono);
@@ -223,4 +227,11 @@ input[type="range"].slider::-moz-range-thumb {
   border-radius: 50%;
   background: var(--card);
   border: 2px solid var(--focus);
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
 }

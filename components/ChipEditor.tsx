@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, type KeyboardEvent } from "react";
+import { X } from "lucide-react";
+import Button from "@/components/ui/Button";
+import Chip, { chipClasses } from "@/components/ui/Chip";
+import { Input } from "@/components/ui/Field";
 
 interface ChipEditorProps {
   label: string;
@@ -36,55 +40,51 @@ export default function ChipEditor({
 
   return (
     <div>
-      <p className="text-sm text-ink">{label}</p>
+      <p className="text-small font-medium text-ink">{label}</p>
 
       {suggestions && (
         <div className="mt-2 flex flex-wrap gap-2">
           {suggestions.map((suggestion) => (
-            <button
+            <Chip
               key={suggestion}
-              type="button"
+              size="sm"
               onClick={() => onAdd(suggestion)}
               disabled={items.includes(suggestion)}
-              className="rounded-full border border-hairline px-3 py-1.5 text-xs font-medium text-ink-soft disabled:opacity-40"
+              aria-pressed={undefined}
+              aria-label={items.includes(suggestion) ? `${suggestion} (added)` : `Add: ${suggestion}`}
             >
               + {suggestion}
-            </button>
+            </Chip>
           ))}
         </div>
       )}
 
       <div className="mt-3 flex gap-2">
-        <input
+        <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
-          className="flex-1 rounded-md border border-hairline bg-card px-3 py-2 text-sm text-ink placeholder:text-ink-soft focus:border-accent focus:outline-none"
+          aria-label={placeholder}
+          className="min-w-0 flex-1"
         />
-        <button
-          type="button"
-          onClick={() => submit(input)}
-          className="rounded-full border border-hairline px-4 py-2 text-sm font-medium text-ink-soft"
-        >
+        <Button variant="secondary" onClick={() => submit(input)} disabled={!input.trim()}>
           Add
-        </button>
+        </Button>
       </div>
 
       {items.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
           {items.map((item) => (
-            <span
-              key={item}
-              className="flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1.5 text-xs font-medium text-accent"
-            >
+            <span key={item} className={`${chipClasses(true, "sm")} pr-1`}>
               {item}
               <button
                 type="button"
                 onClick={() => onRemove(item)}
                 aria-label={`Remove: ${item}`}
+                className="grid h-6 w-6 place-items-center rounded-sm hover:bg-highlight-hover"
               >
-                ×
+                <X size={14} strokeWidth={2.5} />
               </button>
             </span>
           ))}

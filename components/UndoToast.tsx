@@ -60,12 +60,12 @@ export function useUndoToast() {
       role="status"
       className="fixed inset-x-0 bottom-24 z-50 flex justify-center px-4 sm:bottom-5"
     >
-      <div className="flex items-center gap-4 rounded-full bg-ink py-2 pl-5 pr-2 text-sm text-card shadow-[0_12px_32px_-18px_rgba(23,22,20,0.25)]">
+      <div className="flex items-center gap-4 rounded-full bg-ink py-1.5 pl-5 pr-1.5 text-small text-paper motion-safe:animate-[toast-in_200ms_ease-out]">
         <span>{toast.message}</span>
         <button
           type="button"
           onClick={undo}
-          className="rounded-full bg-accent-soft px-3 py-1 text-sm font-bold text-accent"
+          className="min-h-9 rounded-full bg-highlight px-4 text-small font-semibold text-on-highlight transition-colors hover:bg-highlight-hover"
         >
           Undo
         </button>
