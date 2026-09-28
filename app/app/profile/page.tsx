@@ -4,6 +4,8 @@ import { activePersona, generationBelongsTo, readStore } from "@/lib/store";
 import ProfileForm from "./ProfileForm";
 import PeopleEditor from "./PeopleEditor";
 import TemplatesEditor from "./TemplatesEditor";
+import WordsEditor from "./WordsEditor";
+import SnippetsEditor from "./SnippetsEditor";
 import VoiceSwitcher from "./VoiceSwitcher";
 
 export default async function ProfilePage() {
@@ -37,6 +39,8 @@ export default async function ProfilePage() {
       <div className="flex w-full max-w-2xl flex-col gap-4">
         <PeopleEditor initial={data.contacts} />
         <TemplatesEditor initial={data.templates} />
+        <WordsEditor initial={data.words} />
+        <SnippetsEditor initial={data.snippets} />
       </div>
     </main>
   );

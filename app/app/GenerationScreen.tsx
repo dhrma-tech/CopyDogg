@@ -129,6 +129,8 @@ interface GenerationScreenProps {
   voiceInput: boolean;
   /** BCP-47 tag for dictation; "" = the browser's language. */
   dictationLanguage: string;
+  /** "Your words" from Profile. */
+  words: string[];
 }
 
 type Status = "idle" | "loading" | "error";
@@ -140,7 +142,10 @@ export default function GenerationScreen({
   templates,
   voiceInput,
   dictationLanguage,
+  words,
 }: GenerationScreenProps) {
+  // Grows when a card's "Add to your words?" is used, so later edits don't re-suggest.
+  const [knownWords, setKnownWords] = useState(words);
   const [voiceId, setVoiceId] = useState(initialVoiceId);
   const voice = voices.find((v) => v.id === voiceId) ?? voices[0];
   const platformOptions: readonly Platform[] =
@@ -975,6 +980,8 @@ export default function GenerationScreen({
                   onRegenerate={() => replaceCard(output, {}, "Regenerated")}
                   onTweak={(text, tweak) => handleTweak(output, text, tweak)}
                   onRemix={handleRemix}
+                  knownWords={knownWords}
+                  onWordsLearned={setKnownWords}
                 />
               ) : output.liveText ? (
                 <StreamingCard key={output.key} text={output.liveText} platform={output.platform} />

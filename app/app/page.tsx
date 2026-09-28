@@ -21,6 +21,7 @@ export default async function AppScreen() {
         templates={data.templates.map(({ id, name }) => ({ id, name }))}
         voiceInput={data.settings.voiceInput}
         dictationLanguage={data.settings.dictationLanguage}
+        words={data.words}
       />
     </main>
   );

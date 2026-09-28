@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { lock, resetAllData, setVoiceInput } from "@/app/actions";
 import BackupsSection from "./BackupsSection";
+import DictationSettings from "./DictationSettings";
 import Button, { buttonClasses } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import ThemeSwitch from "./ThemeSwitch";
@@ -14,6 +15,7 @@ interface SettingsPanelProps {
   demoMode: boolean;
   passwordEnabled: boolean;
   voiceInput: boolean;
+  dictationLanguage: string;
   backups: { name: string; date: string; bytes: number }[];
   backupFolder: string;
 }
@@ -28,6 +30,7 @@ export default function SettingsPanel({
   demoMode,
   passwordEnabled,
   voiceInput: initialVoiceInput,
+  dictationLanguage,
   backups,
   backupFolder,
 }: SettingsPanelProps) {
@@ -126,6 +129,7 @@ export default function SettingsPanel({
             </span>
           </label>
           {voiceError && <p role="alert" className="mt-2 text-small text-danger">{voiceError}</p>}
+          <DictationSettings enabled={voiceInput} initialLanguage={dictationLanguage} />
         </section>
 
         {passwordEnabled && (

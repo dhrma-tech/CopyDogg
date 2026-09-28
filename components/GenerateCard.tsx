@@ -6,6 +6,8 @@ import { PLATFORMS, SEND_LABELS, platformRules, sendLink, type Platform } from "
 import { TWEAKS, type Tweak } from "@/lib/writingOptions";
 import { patchGeneration } from "@/lib/generateClient";
 import { wordDiff } from "@/lib/diff";
+import { suggestWords } from "@/lib/wordSuggestions";
+import { learnWords } from "@/app/actions";
 import Button, { buttonClasses } from "@/components/ui/Button";
 import { chipClasses } from "@/components/ui/Chip";
 import { SELECT } from "@/components/ui/Field";
@@ -114,6 +116,10 @@ interface GenerateCardProps {
   onTweak: (text: string, tweak: Tweak) => Promise<string | null>;
   /** Streams a version for another platform as a new card; resolves to an error message, or null. */
   onRemix: (platform: Platform) => Promise<string | null>;
+  /** "Your words", so an edit only suggests names CopyDogg doesn't know yet. */
+  knownWords?: string[];
+  /** Called with the full list after words are added from a suggestion. */
+  onWordsLearned?: (words: string[]) => void;
 }
 
 export default function GenerateCard({
@@ -127,7 +133,11 @@ export default function GenerateCard({
   onRegenerate,
   onTweak,
   onRemix,
+  knownWords = [],
+  onWordsLearned,
 }: GenerateCardProps) {
+  // Names/acronyms spotted in the last hand edit, offered for "Your words".
+  const [wordTips, setWordTips] = useState<string[]>([]);
   const { generationId, platform, liveText } = output;
   const busy = liveText !== undefined;
 
@@ -229,7 +239,16 @@ export default function GenerateCard({
     if (!ok) {
       setText(previous);
       setActionError("Couldn't keep that edit. Try again.");
+      return;
     }
+    setWordTips(suggestWords(previous, edited, knownWords));
+  }
+
+  async function addWord(word: string) {
+    setWordTips((tips) => tips.filter((w) => w !== word));
+    const result = await learnWords([word]).catch(() => ({ ok: false as const, error: "" }));
+    if (result.ok) onWordsLearned?.(result.items);
+    else setActionError("Couldn't add that to your words. Try again.");
   }
 
   async function run(action: () => Promise<string | null>) {
@@ -437,6 +456,20 @@ export default function GenerateCard({
           <Button size="sm" onClick={handleRemix}>
             Remix
           </Button>
+        </div>
+      )}
+
+      {wordTips.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-hairline pt-3" role="group" aria-label="Add to your words">
+          <span className="text-small text-ink-soft">Add to your words?</span>
+          {wordTips.map((w) => (
+            <button key={w} type="button" onClick={() => void addWord(w)} className={SMALL_PILL}>
+              + {w}
+            </button>
+          ))}
+          <button type="button" onClick={() => setWordTips([])} className={TEXT_BUTTON}>
+            No thanks
+          </button>
         </div>
       )}
 

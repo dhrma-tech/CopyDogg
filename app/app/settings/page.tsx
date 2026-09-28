@@ -23,6 +23,7 @@ export default async function SettingsPage() {
         demoMode={isDemoMode}
         passwordEnabled={!!process.env.COPYDOGG_PASSWORD}
         voiceInput={settings.voiceInput}
+        dictationLanguage={settings.dictationLanguage}
         backups={backups}
         backupFolder={shortPath(BACKUP_DIR)}
       />
