@@ -1,19 +1,21 @@
 import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
 
 /**
- * Text fields: card fill, control edge (3:1), 16px text so iOS doesn't zoom,
- * ink edge on hover, ink edge + highlight ring on focus, danger edge when
- * aria-invalid.
+ * Text fields: surface fill, ink-50 edge (3.3:1), 16px text so iOS doesn't
+ * zoom, ink edge on hover, ink edge + soft ring on focus. Invalid gets a 2px
+ * ink edge (no red) — pair it with a message below the field.
  */
-export const FIELD =
-  "w-full rounded-md border border-control bg-card px-4 py-3 text-body text-ink placeholder:text-ink-soft transition-[border-color,box-shadow] hover:border-ink focus:border-ink focus:outline-none focus:ring-[3px] focus:ring-highlight aria-[invalid=true]:border-danger";
+const FIELD_BASE =
+  "w-full rounded-lg border border-ink-50 bg-surface text-body text-ink placeholder:text-ink-50 transition-[border-color,box-shadow] hover:border-ink focus:border-ink focus:shadow-ring focus:outline-none aria-[invalid=true]:border-2 aria-[invalid=true]:border-ink";
+
+export const FIELD = `${FIELD_BASE} px-4 py-3`;
 
 /** Compact dropdown used inline in option rows. */
 export const SELECT =
-  "min-h-9 max-w-full rounded-chip border border-control bg-card px-3 text-small font-medium text-ink transition-[border-color,box-shadow] hover:border-ink focus:border-ink focus:outline-none focus:ring-[3px] focus:ring-highlight";
+  "min-h-9 max-w-full rounded-pill border border-ink-50 bg-surface px-3.5 text-ui text-ink transition-[border-color,box-shadow] hover:border-ink focus:border-ink focus:shadow-ring focus:outline-none";
 
 export function Input({ className = "", ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input {...props} className={`${FIELD} ${className}`} />;
+  return <input {...props} className={`${FIELD_BASE} h-12 px-4 ${className}`} />;
 }
 
 export function Textarea({ className = "", ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
