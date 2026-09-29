@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { extractVoiceProfile, type PlatformSamples } from "@/lib/claude";
 import { isPlatform } from "@/lib/platformRules";
 import { isDemoMode, demoExtractedVoice } from "@/lib/demoMode";
+import { checkRateLimit, clientIpFromRequest } from "@/lib/rateLimit";
 
 const MAX_CHARS_PER_ENTRY = 4000;
 
@@ -23,6 +24,10 @@ function cleanInput(raw: unknown): PlatformSamples[] {
 }
 
 export async function POST(request: Request) {
+  if (!checkRateLimit(`voice-extract:${clientIpFromRequest(request)}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Slow down a bit — try again in a minute." }, { status: 429 });
+  }
+
   const body = (await request.json().catch(() => ({}))) as { platforms?: unknown };
   const input = cleanInput(body.platforms);
 

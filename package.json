@@ -2,7 +2,19 @@
   "name": "copydogg",
   "version": "0.1.0",
   "private": true,
+  "description": "Teach it your voice once. Then just say what you want. A self-hosted, single-user writing tool powered by the Claude API.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dhrma-tech/CopyDogg.git"
+  },
+  "homepage": "https://github.com/dhrma-tech/CopyDogg#readme",
+  "bugs": {
+    "url": "https://github.com/dhrma-tech/CopyDogg/issues"
+  },
+  "engines": {
+    "node": ">=20.9.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

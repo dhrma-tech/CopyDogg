@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { GATE_COOKIE, gatePassword, isCorrectPassword, tokenFor } from "@/lib/passwordGate";
+import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { DICTATION_TAGS, RELATIONSHIPS, isOneOf } from "@/lib/writingOptions";
 import {
   addIdea,
@@ -187,6 +188,10 @@ function safeNextPath(next: string): string {
 
 export async function unlock(password: string, next: string): Promise<ActionResult> {
   if (!gatePassword()) redirect(safeNextPath(next));
+
+  if (!checkRateLimit(`unlock:${await clientIp()}`, 5, 60_000)) {
+    return { ok: false, error: "Too many attempts. Wait a minute and try again." };
+  }
   if (!isCorrectPassword(password)) {
     return { ok: false, error: "That's not the password. Check COPYDOGG_PASSWORD in your .env.local." };
   }

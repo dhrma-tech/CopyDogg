@@ -46,3 +46,7 @@ next-env.d.ts
 
 # CopyDogg user data (voice profile + posts) — personal, never commit
 /data/
+
+# Local design references (mockup exports, third-party analysis pulled in by
+# the design tool) — internal working material, not for the public repo.
+/DESIGN/

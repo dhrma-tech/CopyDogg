@@ -4,6 +4,7 @@ import { isDemoMode, demoExtractedVoice } from "@/lib/demoMode";
 import { activePersona, generationBelongsTo, readStore } from "@/lib/store";
 import type { Platform } from "@/lib/platformRules";
 import { MIN_LEARNABLE_POSTS as MIN_LEARNABLE } from "@/lib/writingOptions";
+import { checkRateLimit, clientIpFromRequest } from "@/lib/rateLimit";
 
 const MAX_PER_PLATFORM = 5;
 
@@ -13,6 +14,10 @@ const MAX_PER_PLATFORM = 5;
  * profile page shows the proposal and saves it if they keep it.
  */
 export async function POST(request: Request) {
+  if (!checkRateLimit(`voice-retune:${clientIpFromRequest(request)}`, 10, 60_000)) {
+    return NextResponse.json({ error: "Slow down a bit — try again in a minute." }, { status: 429 });
+  }
+
   const body = (await request.json().catch(() => ({}))) as { personaId?: unknown };
   const data = await readStore();
   const persona = data.personas.find((p) => p.id === body.personaId) ?? activePersona(data);

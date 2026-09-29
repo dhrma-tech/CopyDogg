@@ -13,6 +13,7 @@ import {
   type GenerateMode,
 } from "@/lib/writingOptions";
 import { activePersona, addGeneration, getRecentLikedOutputs, readStore } from "@/lib/store";
+import { checkRateLimit, clientIpFromRequest } from "@/lib/rateLimit";
 
 const GENERATE_MODES: readonly GenerateMode[] = ["write", "reply", "rewrite", "notes", "tweak"];
 
@@ -28,6 +29,10 @@ function text(value: unknown, max: number): string {
  *   {"type":"error","error":"..."}                      failed mid-stream, nothing saved
  */
 export async function POST(request: Request) {
+  if (!checkRateLimit(`generate:${clientIpFromRequest(request)}`, 20, 60_000)) {
+    return NextResponse.json({ error: "Slow down a bit — try again in a minute." }, { status: 429 });
+  }
+
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
   const mode: GenerateMode = isOneOf(GENERATE_MODES, body.mode) ? body.mode : "write";

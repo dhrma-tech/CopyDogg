@@ -3,8 +3,13 @@ import { checkTone } from "@/lib/claude";
 import { isPlatform } from "@/lib/platformRules";
 import { isDemoMode, DEMO_TONE_CHECK } from "@/lib/demoMode";
 import { readStore } from "@/lib/store";
+import { checkRateLimit, clientIpFromRequest } from "@/lib/rateLimit";
 
 export async function POST(request: Request) {
+  if (!checkRateLimit(`tone-check:${clientIpFromRequest(request)}`, 20, 60_000)) {
+    return NextResponse.json({ error: "Slow down a bit — try again in a minute." }, { status: 429 });
+  }
+
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
   const text = typeof body.text === "string" ? body.text.trim().slice(0, 8000) : "";
 
