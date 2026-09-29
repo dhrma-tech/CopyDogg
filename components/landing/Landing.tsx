@@ -10,6 +10,7 @@ import {
   EXAMPLES,
   FAQS,
   FEATURES,
+  FOOTER_COLUMNS,
   NAV_LINKS,
   PLATFORMS,
   PRIVACY,
@@ -23,7 +24,7 @@ const ACCENT = "#00674F";
 const STAGE_W = 1100;
 const STAGE_H = 760;
 const STAGE_CENTER_X = STAGE_W / 2;
-const STAGE_CENTER_Y = STAGE_H / 2 - 60;
+const STAGE_CENTER_Y = 300; // where the cards fly out from (behind the heading)
 
 const serifFont = { fontFamily: "var(--font-newsreader), Georgia, serif" };
 const monoFont = { fontFamily: "var(--font-jbmono), ui-monospace, monospace" };
@@ -54,21 +55,17 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
   const [featIndex, setFeatIndex] = useState(0);
   const [featPaused, setFeatPaused] = useState(false);
 
-  const [faqOpen, setFaqOpen] = useState<number | null>(null);
+  const [faqOpen, setFaqOpen] = useState<number | null>(0);
   const [copied, setCopied] = useState(false);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const clipRef = useRef<HTMLDivElement>(null);
   const demoPausedRef = useRef(demoPaused);
-  const featPausedRef = useRef(featPaused);
 
   useEffect(() => {
     demoPausedRef.current = demoPaused;
   }, [demoPaused]);
-  useEffect(() => {
-    featPausedRef.current = featPaused;
-  }, [featPaused]);
 
   const burst = useMemo(
     () =>
@@ -116,6 +113,15 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         setNavDark(dark);
       }
 
+      // Reduced motion: the privacy card shows full width, no scroll reveal.
+      const clip = clipRef.current;
+      if (clip) {
+        const q = mq.matches ? 1 : Math.min(1, Math.max(0, (vh - clip.getBoundingClientRect().top) / (0.7 * vh)));
+        const k = 1 - q;
+        const extraRadius = window.innerWidth >= 1280 ? 24 * q : 0;
+        clip.style.clipPath = `inset(${10 * k}% ${14 * k}% round ${Math.round(40 * k + extraRadius)}px)`;
+      }
+
       if (mq.matches) return;
 
       const stage = stageRef.current;
@@ -129,14 +135,6 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
           card.style.transform = `translate(${b.dx * (1 - e)}px, ${b.dy * (1 - e)}px) scale(${0.45 + 0.55 * e})`;
           card.style.opacity = String(Math.min(1, t * 1.3));
         });
-      }
-
-      const clip = clipRef.current;
-      if (clip) {
-        const q = Math.min(1, Math.max(0, (vh - clip.getBoundingClientRect().top) / (0.7 * vh)));
-        const k = 1 - q;
-        const extraRadius = window.innerWidth >= 1280 ? 24 * q : 0;
-        clip.style.clipPath = `inset(${10 * k}% ${14 * k}% round ${Math.round(40 * k + extraRadius)}px)`;
       }
     };
 
@@ -188,14 +186,9 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
     return () => clearInterval(cycle);
   }, [reduced]);
 
-  // Features: auto-advance every 7s, paused on hover
-  useEffect(() => {
-    if (reduced) return;
-    const t = setInterval(() => {
-      if (!featPausedRef.current) setFeatIndex((i) => (i + 1) % FEATURES.length);
-    }, 7000);
-    return () => clearInterval(t);
-  }, [reduced]);
+  // Features auto-advance when the active item's 7s progress bar finishes
+  // (see onAnimationEnd below), so hover-pause and clicks keep bar and timer
+  // in sync. Reduced motion disables the animation, so nothing advances.
 
   const copyInstall = () => {
     try {
@@ -250,11 +243,17 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         <a href="#top" style={{ ...serifFont, fontSize: 24, lineHeight: "32px", letterSpacing: "-0.5px", color: navInk, transition: "color 200ms ease" }}>
           CopyDogg
         </a>
-        <nav aria-label="Sections" className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-5 px-6 py-4 lg:flex">
+        <nav aria-label="Sections" className="l-wide absolute left-1/2 -translate-x-1/2 items-center gap-5 px-6 py-4">
           {NAV_LINKS.map(([label, href], i) => (
             <span key={href} className="flex items-center gap-5">
               {i > 0 && <span aria-hidden style={{ width: 1, height: 12, background: navDivider, transition: "background-color 200ms ease" }} />}
-              <a href={href} className="text-[14px] leading-5 no-underline hover:opacity-80" style={{ color: navLink, transition: "color 200ms ease" }}>
+              <a
+                href={href}
+                className="text-[14px] leading-5 no-underline"
+                style={{ color: navLink, transition: "color 200ms ease" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = navInk)}
+                onMouseLeave={(e) => (e.currentTarget.style.color = navLink)}
+              >
                 {label}
               </a>
             </span>
@@ -273,7 +272,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
             aria-label="Menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
-            className="grid h-11 w-11 place-content-center gap-[5px] rounded-full border-0 bg-transparent lg:hidden"
+            className="l-narrow grid h-11 w-11 place-content-center gap-[5px] rounded-full border-0 bg-transparent"
           >
             <span
               className="block h-[2px] w-[22px] rounded-full"
@@ -290,7 +289,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
       {menuOpen && (
         <nav
           aria-label="Sections"
-          className="fixed left-3 right-3 top-[66px] z-[1001] flex flex-col rounded-[20px] p-2 lg:hidden"
+          className="l-narrow fixed left-3 right-3 top-[66px] z-[1001] flex flex-col rounded-[20px] p-2"
           style={{ background: "var(--surface-cream)", border: "1px solid var(--border-strong)", boxShadow: "var(--sh-float)" }}
         >
           {NAV_LINKS.map(([label, href]) => (
@@ -309,7 +308,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
 
       <main id="top">
         {/* Hero */}
-        <section className="relative flex flex-col items-center overflow-hidden px-4 pt-[104px] pb-10 text-center sm:px-6 md:pt-28 lg:pt-[150px]">
+        <section className="l-hero relative flex flex-col items-center overflow-hidden text-center">
           <div
             aria-hidden
             className="pointer-events-none absolute left-1/2 top-0 h-[1100px] w-[1400px] -translate-x-1/2"
@@ -317,12 +316,12 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
           />
           <div className="relative flex max-w-[770px] flex-col items-center">
             <h1
-              className="max-w-[796px] text-balance text-[50px] leading-[1.1] tracking-[-1px] sm:text-[54px] lg:text-[68px] lg:tracking-[-3px]"
+              className="l-display max-w-[796px] text-balance leading-[1.1]"
               style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: 0 }}
             >
               Posts that sound like you. Not like a press release.
             </h1>
-            <p className="mt-6 max-w-[510px] text-pretty text-[16px] leading-[22px] sm:text-[18px] sm:leading-[26px] lg:text-[20px] lg:leading-[30px]" style={{ color: "var(--ink-60)" }}>
+            <p className="l-lead mt-6 max-w-[510px] text-pretty" style={{ color: "var(--ink-60)" }}>
               Show CopyDogg how you write once. Then type an idea in a few words and get posts, replies and emails in your own voice.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-2">
@@ -335,7 +334,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
               </Link>
               <a
                 href="#learn"
-                className="inline-flex min-h-11 items-center gap-[10px] whitespace-nowrap rounded-full px-[19px] py-[9px] text-[16px] leading-6 font-semibold no-underline hover:bg-[var(--surface-hover)]"
+                className="inline-flex min-h-11 items-center gap-[10px] whitespace-nowrap rounded-full px-[19px] py-[9px] text-[16px] leading-6 font-semibold no-underline hover:border-[var(--border-strong)] hover:bg-[rgba(27,28,20,.04)]"
                 style={{ border: "1px solid var(--border)", color: "var(--ink)", transition: "border-color 150ms ease, background-color 150ms ease" }}
               >
                 See how it works
@@ -356,7 +355,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
           </div>
 
           <div
-            className="relative mt-10 flex w-full max-w-[1100px] flex-col items-center gap-5 lg:mt-[72px]"
+            className="l-hero-demo relative flex w-full max-w-[1100px] flex-col items-center gap-5"
             onMouseEnter={() => setDemoPaused(true)}
             onMouseLeave={() => setDemoPaused(false)}
           >
@@ -375,7 +374,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                     role="tab"
                     aria-selected={on}
                     onClick={() => setDemoIndex(i)}
-                    className="h-9 rounded-full border-0 px-3 text-[14px] leading-5 sm:px-[18px]"
+                    className="l-demo-tab h-9 whitespace-nowrap rounded-full border-0 text-[14px] leading-5"
                     style={{
                       background: on ? ACCENT : "transparent",
                       color: on ? CREAM : "var(--ink-65)",
@@ -390,7 +389,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
             </div>
 
             <div
-              className="grid w-full gap-6 rounded-[24px] p-4 text-left sm:p-7"
+              className="l-mock grid w-full gap-6 rounded-[24px] text-left"
               style={{ background: "var(--surface-cream)", border: "1px solid var(--border-strong)", boxShadow: "var(--sh-float)", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))" }}
             >
               <div className="flex flex-col gap-3">
@@ -447,10 +446,10 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         </section>
 
         {/* Learns your voice — burst */}
-        <section id="learn" className="overflow-hidden py-14 sm:py-16 lg:py-[120px]">
-          <div ref={stageRef} className="relative mx-auto h-[380px] w-full max-w-[1440px] sm:h-[494px] lg:h-[760px]">
+        <section id="learn" className="l-burst overflow-hidden">
+          <div ref={stageRef} className="l-burst-stage relative mx-auto w-full max-w-[1440px]">
             <div
-              className="absolute left-1/2 top-0 origin-top scale-50 sm:scale-[0.65] lg:scale-100"
+              className="l-burst-scale absolute left-1/2 top-0 origin-top"
               style={{ width: STAGE_W, height: STAGE_H, marginLeft: -STAGE_W / 2 }}
             >
               <div
@@ -471,7 +470,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                   ref={(el) => {
                     cardRefs.current[i] = el;
                   }}
-                  className="landing-burst-card absolute rounded-xl p-3"
+                  className="landing-burst-card absolute rounded-xl px-[14px] py-3"
                   style={{
                     left: b.x,
                     top: b.y,
@@ -493,7 +492,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                 </div>
               ))}
               <div
-                className="absolute left-1/2 hidden w-[620px] -translate-x-1/2 text-center sm:block"
+                className="l-burst-inner absolute left-1/2 w-[620px] -translate-x-1/2 text-center"
                 style={{ top: 470 }}
               >
                 <Reveal pop>
@@ -510,11 +509,11 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
               </div>
             </div>
           </div>
-          <div className="mx-auto max-w-[620px] px-4 text-center sm:hidden">
-            <h2 className="text-balance text-[34px] leading-[1.1] tracking-[-1px]" style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: 0 }}>
+          <div className="l-burst-below mx-auto max-w-[620px] px-4 text-center">
+            <h2 className="l-h2 text-balance leading-[1.1]" style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: 0 }}>
               It learns from what you&rsquo;ve already written
             </h2>
-            <p className="mt-4 text-[16px] leading-[22px]" style={{ color: "var(--ink-60)" }}>
+            <p className="l-lead mx-auto mt-4" style={{ color: "var(--ink-60)" }}>
               Paste a few old posts and rewrite one boring one. CopyDogg picks up your rhythm, your jokes and the words you&rsquo;d never use.
             </p>
           </div>
@@ -523,13 +522,13 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         {/* Modes / features */}
         <section
           id="modes"
-          className="flex justify-center px-4 py-14 sm:px-6 lg:py-[120px]"
+          className="l-feat flex justify-center"
           onMouseEnter={() => setFeatPaused(true)}
           onMouseLeave={() => setFeatPaused(false)}
         >
-          <Reveal className="flex w-full max-w-[1100px] flex-col items-center justify-between gap-10 lg:flex-row lg:gap-16">
-            <div className="flex w-full flex-col gap-8 lg:flex-[0_1_476px]">
-              <h2 className="text-balance text-[34px] leading-[1.1] tracking-[-1px] lg:text-[52px] lg:tracking-[-3px]" style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: 0 }}>
+          <Reveal className="l-feat-row flex w-full max-w-[1100px] items-center justify-between">
+            <div className="l-feat-text flex w-full flex-col gap-8">
+              <h2 className="l-feature text-balance leading-[1.1]" style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: 0 }}>
                 One box. Four ways to use it.
               </h2>
               <div role="tablist" aria-label="Modes" className="flex flex-col">
@@ -537,15 +536,15 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                   const active = i === featIndex;
                   return (
                     <div key={f.mode} className="relative" style={{ borderTop: "1px solid var(--border-mid)" }}>
-                      <span
-                        aria-hidden
-                        className="absolute left-0 top-[-1px] h-[2px]"
-                        style={{
-                          background: "var(--ink)",
-                          width: active ? "100%" : "0%",
-                          transition: active ? "width 200ms linear" : "none",
-                        }}
-                      />
+                      {active && (
+                        <span
+                          key={featIndex}
+                          aria-hidden
+                          className={`landing-grow absolute left-0 top-[-1px] h-[2px] ${featPaused ? "is-paused" : ""}`}
+                          style={{ background: "var(--ink)" }}
+                          onAnimationEnd={() => setFeatIndex((n) => (n + 1) % FEATURES.length)}
+                        />
+                      )}
                       <button
                         type="button"
                         role="tab"
@@ -574,7 +573,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                             </p>
                             <Link
                               href="/app"
-                              className="inline-flex items-center gap-[10px] whitespace-nowrap rounded-full px-[15px] py-[7px] text-[14px] leading-5 font-semibold no-underline hover:bg-[var(--surface-hover)]"
+                              className="inline-flex items-center gap-[10px] whitespace-nowrap rounded-full px-[15px] py-[7px] text-[14px] leading-5 font-semibold no-underline hover:border-[var(--border-strong)] hover:bg-[rgba(27,28,20,.04)]"
                               style={{ border: "1px solid var(--border)", color: "var(--ink)", transition: "border-color 150ms ease, background-color 150ms ease" }}
                             >
                               {f.cta}
@@ -589,8 +588,8 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
               </div>
             </div>
             <div
-              className="flex w-full flex-col justify-center gap-3 overflow-hidden rounded-3xl p-5 sm:p-8 lg:aspect-[583/540] lg:min-h-0 lg:flex-[0_1_583px]"
-              style={{ background: "var(--surface-warm)", minHeight: 300 }}
+              className="l-feat-vis flex w-full flex-col justify-center gap-3 overflow-hidden rounded-3xl"
+              style={{ background: "var(--surface-warm)" }}
             >
               {feature.blocks.map((bl, i) => {
                 if (bl.kind === "chips") {
@@ -648,28 +647,28 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         </section>
 
         {/* Privacy (dark) */}
-        <section id="privacy" data-nav-dark="1" className="mx-3 md:mx-0 lg:mx-8">
+        <section id="privacy" data-nav-dark="1" className="l-privacy">
           <div
             ref={clipRef}
-            className="flex flex-col items-center px-6 py-16 sm:px-10 sm:py-16 lg:px-[88px] lg:py-[120px]"
+            className="l-privacy-pad flex flex-col items-center"
             style={{ background: "#2A2B22", color: CREAM, clipPath: "inset(10% 14% round 40px)", willChange: "clip-path" }}
           >
             <div aria-hidden className="grid h-[88px] w-[88px] place-items-center rounded-3xl" style={{ background: "rgba(255,253,245,.07)", color: CREAM }}>
               <Icon name="LockKeyhole" size={36} />
             </div>
             <h2
-              className="mt-10 max-w-[760px] text-balance text-center text-[34px] leading-[1.1] tracking-[-1px] sm:text-[38px] lg:text-[52px] lg:leading-[1.08] lg:tracking-[-2px]"
+              className="l-dark max-w-[760px] text-balance text-center leading-[1.08]"
               style={{ ...serifFont, fontWeight: 400, color: CREAM, margin: "40px 0 0" }}
             >
               Your voice stays on your machine
             </h2>
-            <p className="mt-5 max-w-[560px] text-center text-[16px] leading-[22px] sm:text-[18px] sm:leading-[26px] lg:text-[20px] lg:leading-[30px]" style={{ color: "rgba(255,253,245,.78)" }}>
+            <p className="l-lead mt-5 max-w-[560px] text-center" style={{ color: "rgba(255,253,245,.78)" }}>
               CopyDogg is built for one person running their own copy. No accounts, no database service, nothing to sign up for.
             </p>
-            <div className="mt-16 grid w-full max-w-[1100px] grid-cols-1 gap-11 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4">
+            <div className="l-privacy-grid mt-16 grid w-full max-w-[1100px]">
               {PRIVACY.map(([icon, chip, sub, title, body]) => (
                 <div key={title} className="flex flex-col gap-[18px]">
-                  <div className="flex h-[60px] items-center gap-[10px] rounded-2xl p-[10px] lg:h-16" style={{ background: "rgba(255,253,245,.07)" }}>
+                  <div className="l-privacy-chip flex items-center gap-[10px] rounded-[14px] p-[10px]" style={{ background: "rgba(255,253,245,.07)" }}>
                     <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-[10px]" style={{ background: "rgba(255,253,245,.10)", color: CREAM }}>
                       <Icon name={icon} size={18} />
                     </span>
@@ -702,7 +701,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
             Formatted for wherever you&rsquo;re posting
           </p>
           <div style={{ WebkitMaskImage: "linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)", maskImage: "linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)" }}>
-            <div className="landing-marquee-track flex w-max gap-10 sm:gap-12">
+            <div className="landing-marquee-track l-marquee flex w-max">
               {[...PLATFORMS, ...PLATFORMS].map(([label, icon], i) => (
                 <span key={i} className="inline-flex items-center gap-3 whitespace-nowrap text-[32px] leading-[1.2] tracking-[-0.5px]" style={{ ...serifFont, color: "var(--ink-50)" }}>
                   <Icon name={icon} size={24} />
@@ -714,13 +713,13 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         </section>
 
         {/* Examples */}
-        <section id="examples" className="flex flex-col items-center gap-12 px-4 py-16 sm:px-6">
+        <section id="examples" className="flex flex-col items-center gap-12 py-20" style={{ paddingInline: "clamp(16px,4vw,24px)" }}>
           <Reveal className="w-full">
-            <h2 className="mx-auto max-w-[760px] text-balance text-center text-[38px] leading-[0.98] tracking-[-2px] lg:text-[62px] lg:tracking-[-3px]" style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: 0 }}>
+            <h2 className="l-xl mx-auto max-w-[760px] text-balance text-center leading-[0.98]" style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: "0 auto" }}>
               A few words in. Your voice out.
             </h2>
           </Reveal>
-          <div className="w-full max-w-[1100px] [column-gap:17px] sm:[column-count:2] lg:[column-count:3]">
+          <div className="l-examples w-full max-w-[1100px] [column-gap:17px]">
             {EXAMPLES.map(([typedText, platform, icon, out], i) => (
               <article
                 key={i}
@@ -744,9 +743,9 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         </section>
 
         {/* FAQ */}
-        <section id="faq" className="flex flex-col items-center px-4 py-16 sm:px-6 lg:py-24">
+        <section id="faq" className="flex flex-col items-center py-24" style={{ paddingInline: "clamp(16px,4vw,24px)" }}>
           <Reveal>
-            <h2 className="text-center text-[34px] leading-[1.1] tracking-[-1px] lg:text-[52px] lg:tracking-[-3px]" style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: 0 }}>
+            <h2 className="l-h2 text-center leading-[1.1]" style={{ ...serifFont, fontWeight: 400, color: "var(--ink)", margin: 0 }}>
               Questions, answered plainly
             </h2>
           </Reveal>
@@ -779,26 +778,26 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         </section>
 
         {/* Closing CTA */}
-        <section data-nav-dark="1" className="px-4 py-10 sm:px-6">
+        <section data-nav-dark="1" className="py-10" style={{ paddingInline: "clamp(16px,4vw,24px)" }}>
           <Reveal>
-            <div className="relative mx-auto max-w-[1100px] overflow-hidden rounded-[20px] p-8 sm:p-10 lg:rounded-[32px] lg:p-28" style={{ background: "#2A2B22" }}>
+            <div className="l-cta-box relative mx-auto max-w-[1100px] overflow-hidden" style={{ background: "#2A2B22" }}>
               <div
                 aria-hidden
                 className="pointer-events-none absolute whitespace-nowrap"
-                style={{ right: "-8%", bottom: "-40%", ...serifFont, fontSize: 320, lineHeight: 1, letterSpacing: "-12px", color: "rgba(255,253,245,.07)" }}
+                style={{ right: "-8%", bottom: "-40%", ...serifFont, fontSize: 420, lineHeight: 1, letterSpacing: "-12px", color: "rgba(255,253,245,.07)" }}
               >
                 woof
               </div>
               <div className="relative flex max-w-[520px] flex-col gap-8">
                 <div>
-                  <h2 className="text-[34px] leading-[1.1] tracking-[-1px] lg:text-[68px] lg:tracking-[-3px]" style={{ ...serifFont, fontWeight: 400, color: CREAM, margin: 0 }}>
+                  <h2 className="l-cta leading-[1.1]" style={{ ...serifFont, fontWeight: 400, color: CREAM, margin: 0 }}>
                     Teach it your voice once
                   </h2>
                   <p className="mt-4 max-w-[420px] text-[18px] leading-[26px]" style={{ color: "rgba(255,253,245,.78)" }}>
                     Then just say what you want. Setup takes about five minutes.
                   </p>
                 </div>
-                <div className="flex min-h-[52px] items-center gap-2 rounded-2xl py-[6px] pl-4 pr-[6px]" style={{ background: "rgba(255,253,245,.07)", border: "1px solid rgba(255,253,245,.10)" }}>
+                <div className="flex min-h-[52px] items-center gap-2 rounded-[14px] py-[6px] pl-4 pr-[6px]" style={{ background: "rgba(255,253,245,.07)", border: "1px solid rgba(255,253,245,.10)" }}>
                   <code
                     className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-[14px] leading-5"
                     style={{ ...monoFont, color: CREAM, scrollbarWidth: "none" }}
@@ -833,7 +832,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
         </section>
       </main>
 
-      <footer className="flex flex-col gap-14 overflow-hidden px-4 pt-10 sm:px-6">
+      <footer className="flex flex-col gap-14 overflow-hidden pt-10" style={{ paddingInline: "clamp(16px,4vw,24px)" }}>
         <div className="mx-auto flex w-full max-w-[1100px] flex-wrap justify-between gap-10">
           <div className="flex max-w-[320px] flex-col gap-3">
             <span className="text-[24px] leading-8 tracking-[-0.5px]" style={{ ...serifFont, color: "var(--ink)" }}>CopyDogg</span>
@@ -841,25 +840,37 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
               Posts that sound like you. Free, open source, and yours to run.
             </p>
           </div>
-          <nav aria-label="Footer" className="flex flex-col gap-4">
-            <span style={{ ...monoFont, fontSize: 12, lineHeight: 1.3, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-65)" }}>Product</span>
-            <div className="flex flex-col gap-[10px]">
-              {[
-                ["How it works", "#learn"],
-                ["Modes", "#modes"],
-                ["Examples", "#examples"],
-                ["FAQ", "#faq"],
-              ].map(([label, href]) => (
-                <a key={href} href={href} className="text-[15px] leading-[1.4] no-underline hover:underline" style={{ color: "var(--ink)" }}>
-                  {label}
-                </a>
-              ))}
-            </div>
+          <nav aria-label="Footer" className="flex flex-wrap gap-x-14 gap-y-7">
+            {FOOTER_COLUMNS.map((col) => (
+              <div key={col.title} className="flex flex-col gap-4">
+                <span style={{ ...monoFont, fontSize: 12, lineHeight: 1.3, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-65)" }}>{col.title}</span>
+                <div className="flex flex-col gap-[10px]">
+                  {col.links.map(([label, href]) =>
+                    href.startsWith("/") ? (
+                      <Link key={href} href={href} className="text-[15px] leading-[1.4] no-underline hover:underline" style={{ color: "var(--ink)" }}>
+                        {label}
+                      </Link>
+                    ) : (
+                      <a key={href} href={href} className="text-[15px] leading-[1.4] no-underline hover:underline" style={{ color: "var(--ink)" }}>
+                        {label}
+                      </a>
+                    ),
+                  )}
+                </div>
+              </div>
+            ))}
           </nav>
         </div>
-        <div className="mx-auto flex w-full max-w-[1100px] flex-wrap justify-between gap-3 pb-10 text-[14px] leading-[1.4]" style={{ color: "var(--ink-65)" }}>
+        <div className="mx-auto flex w-full max-w-[1100px] flex-wrap justify-between gap-x-6 gap-y-3 text-[14px] leading-[1.4]" style={{ color: "var(--ink-65)" }}>
           <span>MIT license. Built for one person running their own copy.</span>
           <span>Yes, the name is a dog pun. It fetches your tone.</span>
+        </div>
+        <div
+          aria-hidden
+          className="l-wordmark whitespace-nowrap text-center"
+          style={{ ...serifFont, lineHeight: 0.8, color: "var(--border-soft)", marginBottom: "-0.12em" }}
+        >
+          CopyDogg
         </div>
       </footer>
     </div>
