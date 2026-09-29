@@ -21,9 +21,9 @@ export default function CheckResultCard({
   onRewrite: () => void;
 }) {
   return (
-    <div className="rounded-md border border-hairline bg-card p-4">
+    <div className="rounded-md border border-border bg-surface p-4">
       <p className={META}>How it comes across</p>
-      <p className="mt-2 font-display text-heading text-ink">{result.verdict}</p>
+      <p className="mt-2 font-display text-h3 text-ink">{result.verdict}</p>
 
       {result.traits.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -39,14 +39,14 @@ export default function CheckResultCard({
       )}
 
       {result.suggestions.length > 0 && (
-        <ul className="mt-4 flex list-disc flex-col gap-1 pl-5 text-body text-ink marker:text-ink-soft">
+        <ul className="mt-4 flex list-disc flex-col gap-1 pl-5 text-body text-ink marker:text-ink-50">
           {result.suggestions.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ul>
       )}
 
-      <div className="mt-4 border-t border-dashed border-hairline pt-3">
+      <div className="mt-4 border-t border-border-soft pt-3">
         <Button size="sm" onClick={onRewrite}>
           Rewrite it in my voice
         </Button>

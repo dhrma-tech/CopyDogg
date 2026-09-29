@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { setDictationLanguage } from "@/app/actions";
-import { Select } from "@/components/ui/Field";
 import { useDictationSupported } from "@/lib/useDictation";
 import { DICTATION_LANGUAGES } from "@/lib/writingOptions";
 
@@ -33,32 +32,37 @@ export default function DictationSettings({
   return (
     <div className="mt-4 flex flex-col gap-2">
       {!supported && (
-        <p className="text-small text-ink-soft">
+        <p className="text-ui text-ink-65">
           This browser can&rsquo;t dictate. Use Chrome, Edge or Safari for the mic (Firefox
           doesn&rsquo;t support speech recognition).
         </p>
       )}
       <label className="flex flex-wrap items-center gap-3">
-        <span className="text-body font-medium text-ink">Dictation language</span>
-        <Select value={language} onChange={(e) => void change(e.target.value)} disabled={!enabled}>
+        <span className={`text-body font-medium ${enabled ? "text-ink" : "text-ink-40"}`}>Dictation language</span>
+        <select
+          value={language}
+          onChange={(e) => void change(e.target.value)}
+          disabled={!enabled}
+          className="h-11 max-w-full rounded-lg border border-ink-50 bg-surface px-3 text-body text-ink transition-[border-color,box-shadow] hover:border-ink focus:border-ink focus:shadow-ring focus:outline-none disabled:cursor-not-allowed disabled:text-ink-40"
+        >
           {DICTATION_LANGUAGES.map((l) => (
             <option key={l.tag} value={l.tag}>
               {l.label}
             </option>
           ))}
-        </Select>
+        </select>
         {status === "saved" && (
-          <span role="status" className="text-small font-medium text-success">
+          <span role="status" className="text-ui font-medium text-success">
             Saved.
           </span>
         )}
       </label>
       {status === "error" && (
-        <p role="alert" className="text-small text-danger">
+        <p role="alert" className="text-ui text-ink">
           Couldn&rsquo;t save that. Try again.
         </p>
       )}
-      <p className="text-small text-ink-soft">
+      <p className="text-ui text-ink-65">
         Pick the language you&rsquo;ll speak: the browser can&rsquo;t detect it by itself.
         CopyDogg can still write the result in another language (&ldquo;more options&rdquo; on the
         writing screen).

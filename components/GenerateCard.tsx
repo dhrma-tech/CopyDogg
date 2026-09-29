@@ -8,7 +8,7 @@ import { patchGeneration } from "@/lib/generateClient";
 import { wordDiff } from "@/lib/diff";
 import { suggestWords } from "@/lib/wordSuggestions";
 import { learnWords } from "@/app/actions";
-import Button, { buttonClasses } from "@/components/ui/Button";
+import Button, { TEXT_BUTTON } from "@/components/ui/Button";
 import { chipClasses } from "@/components/ui/Chip";
 import { SELECT } from "@/components/ui/Field";
 
@@ -34,17 +34,16 @@ export interface CardHandle {
   tweak: (tweak: Tweak) => void;
 }
 
-const CARD = "rounded-md border border-hairline bg-card p-4 transition-colors";
+const CARD = "rounded-md border border-border bg-surface p-4 transition-colors";
 // Keyboard-shortcut target: an ink edge instead of the hairline.
-const ACTIVE_CARD = "rounded-md border border-ink bg-card p-4 transition-colors";
+const ACTIVE_CARD = "rounded-md border border-ink bg-surface p-4 transition-colors";
 const PLATFORM_LABEL = "label";
-const ACTION_ROW = "mt-4 border-t border-dashed border-hairline pt-3";
-const TEXT_BUTTON = buttonClasses({ variant: "quiet", size: "sm" });
+const ACTION_ROW = "mt-4 border-t border-border-soft pt-3";
 const SMALL_PILL = chipClasses(false, "sm");
 const ICON_BASE = "grid h-9 w-9 place-items-center rounded-sm transition-colors";
-const ICON_BUTTON = `${ICON_BASE} text-ink-soft hover:bg-highlight-soft hover:text-ink`;
-const ICON_LIKED = `${ICON_BASE} bg-highlight text-on-highlight hover:bg-highlight-hover`;
-const ICON_DISLIKED = `${ICON_BASE} text-danger hover:bg-highlight-soft`;
+const ICON_BUTTON = `${ICON_BASE} text-ink-65 hover:bg-surface-hover hover:text-ink`;
+const ICON_LIKED = `${ICON_BASE} bg-primary text-on-primary hover:bg-primary-hover`;
+const ICON_DISLIKED = `${ICON_BASE} bg-surface-hover text-ink`;
 
 function WritingRow() {
   return (
@@ -60,7 +59,7 @@ function StreamingText({ text }: { text: string }) {
       {text}
       <span
         aria-hidden
-        className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[2px] bg-ink motion-safe:animate-pulse"
+        className="ml-0.5 inline-block h-3.5 w-[2px] translate-y-[1px] bg-ink motion-safe:animate-[blink_1s_step-end_infinite]"
       />
     </p>
   );
@@ -81,14 +80,14 @@ export function StreamingCard({ text, platform }: { text: string; platform: Plat
 export function SkeletonCard() {
   return (
     <div className={CARD} aria-hidden>
-      <div className="h-3 w-12 rounded-full bg-hairline motion-safe:animate-pulse" />
+      <div className="h-3 w-12 rounded-xs bg-surface-press motion-safe:animate-pulse" />
       <div className="mt-4 flex flex-col gap-2">
-        <div className="h-3 w-[92%] rounded-full bg-hairline motion-safe:animate-pulse" />
-        <div className="h-3 w-[78%] rounded-full bg-hairline motion-safe:animate-pulse" />
-        <div className="h-3 w-[55%] rounded-full bg-hairline motion-safe:animate-pulse" />
+        <div className="h-3 w-[92%] rounded-xs bg-surface-press motion-safe:animate-pulse" />
+        <div className="h-3 w-[78%] rounded-xs bg-surface-press motion-safe:animate-pulse" />
+        <div className="h-3 w-[55%] rounded-xs bg-surface-press motion-safe:animate-pulse" />
       </div>
       <div className={ACTION_ROW}>
-        <div className="h-3 w-40 rounded-full bg-hairline motion-safe:animate-pulse" />
+        <div className="h-3 w-40 rounded-xs bg-surface-press motion-safe:animate-pulse" />
       </div>
     </div>
   );
@@ -283,7 +282,7 @@ export default function GenerateCard({
       <div className="flex items-center justify-between gap-3">
         <p className={PLATFORM_LABEL}>{platformRules[platform].label}</p>
         {shortcutNumber !== undefined && shortcutNumber <= 9 && (
-          <kbd className="label hidden rounded-sm border border-control px-1.5 pointer-fine:inline">
+          <kbd className="label hidden rounded-sm border border-ink-50 px-1.5 pointer-fine:inline">
             {shortcutNumber}
           </kbd>
         )}
@@ -301,7 +300,7 @@ export default function GenerateCard({
             rows={Math.min(12, Math.max(3, editDraft.split("\n").length + 1))}
             autoFocus
             aria-label="Edit this version"
-            className="w-full resize-y rounded-md border border-ink bg-card px-3 py-2 text-body text-ink ring-[3px] ring-highlight focus:outline-none"
+            className="w-full resize-y rounded-lg border border-ink bg-surface px-4 py-3 text-body text-ink shadow-ring focus:outline-none"
           />
           <div className="flex gap-2">
             <Button size="sm" onClick={handleEditDone}>
@@ -320,12 +319,12 @@ export default function GenerateCard({
                 <span key={i}>{part.text}</span>
               ) : part.type === "add" ? (
                 <span key={i}>
-                  <ins className="rounded-sm bg-highlight-soft text-ink no-underline">{part.text}</ins>
+                  <ins className="bg-mark text-ink no-underline">{part.text}</ins>
                   {diff[i + 1]?.type === "del" && !/\s$/.test(part.text) && !/^\s/.test(diff[i + 1].text) && " "}
                 </span>
               ) : (
                 <span key={i}>
-                  <del className="text-ink-soft decoration-danger">{part.text}</del>
+                  <del className="text-ink-50">{part.text}</del>
                   {/* Keep a removed word and the word replacing it visibly apart. */}
                   {diff[i + 1]?.type === "add" && !/\s$/.test(part.text) && !/^\s/.test(diff[i + 1].text) && " "}
                 </span>
@@ -333,13 +332,13 @@ export default function GenerateCard({
             )}
           </p>
         ) : (
-          <p className="mt-2 text-small text-ink-soft">Too long to compare word by word.</p>
+          <p className="mt-2 text-ui text-ink-65">Too long to compare word by word.</p>
         )
       ) : (
         <p className="mt-2 whitespace-pre-wrap text-body text-ink">{text}</p>
       )}
 
-      <div className={`${ACTION_ROW} -ml-3.5 flex flex-wrap items-center gap-1`}>
+      <div className={`${ACTION_ROW} -ml-3 flex flex-wrap items-center gap-1`}>
         <button type="button" onClick={handleCopy} className={TEXT_BUTTON}>
           {copied ? "copied" : "Copy"}
         </button>
@@ -350,7 +349,7 @@ export default function GenerateCard({
             rel="noopener noreferrer"
             // Copy too: some apps ignore the prefilled text, so it's ready to paste.
             onClick={() => void copyText()}
-            className="link mx-2 text-small"
+            className="link mx-2 text-ui font-medium"
           >
             {SEND_LABELS[platform]}
           </a>
@@ -440,7 +439,7 @@ export default function GenerateCard({
       )}
 
       {expanded && remixOpen && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-hairline pt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border-soft pt-3">
           <select
             value={remixPlatform}
             onChange={(e) => setRemixPlatform(e.target.value as Platform)}
@@ -460,8 +459,8 @@ export default function GenerateCard({
       )}
 
       {wordTips.length > 0 && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-hairline pt-3" role="group" aria-label="Add to your words">
-          <span className="text-small text-ink-soft">Add to your words?</span>
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-border-soft pt-3" role="group" aria-label="Add to your words">
+          <span className="text-ui text-ink-65">Add to your words?</span>
           {wordTips.map((w) => (
             <button key={w} type="button" onClick={() => void addWord(w)} className={SMALL_PILL}>
               + {w}
@@ -473,7 +472,7 @@ export default function GenerateCard({
         </div>
       )}
 
-      {actionError && <p role="alert" className="mt-2 text-small text-danger">{actionError}</p>}
+      {actionError && <p role="alert" className="mt-2 text-ui text-ink">{actionError}</p>}
     </div>
   );
 }

@@ -35,6 +35,13 @@ const VARIANTS: Record<ButtonVariant, string> = {
   destructive: INK_FILL,
 };
 
+/**
+ * Small text-only action ("Copy", "Edit", "more options"): 36px tall with
+ * 12px sides, so a row of them lines up with the card edge using -ml-3.
+ */
+export const TEXT_BUTTON =
+  "inline-flex h-9 items-center gap-1.5 whitespace-nowrap rounded-pill px-3 text-ui font-medium text-ink-65 transition-colors hover:bg-surface-hover hover:text-ink disabled:cursor-not-allowed disabled:bg-transparent disabled:text-ink-40";
+
 /** Class string for anything that should look like a button (e.g. a Link). */
 export function buttonClasses({ variant = "primary", size = "md", block = false }: ButtonStyle = {}) {
   return `${BASE} ${SIZES[size]} ${VARIANTS[variant]}${block ? " w-full" : ""}`;

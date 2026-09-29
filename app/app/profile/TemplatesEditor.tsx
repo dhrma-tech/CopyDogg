@@ -48,20 +48,20 @@ export default function TemplatesEditor({
   }
 
   return (
-    <section id="templates" className="flex scroll-mt-6 flex-col gap-4 rounded-md border border-hairline bg-card p-5 sm:p-6">
+    <section id="templates" className="flex scroll-mt-20 flex-col gap-4 rounded-md border border-border bg-surface p-4 sm:p-6">
       <div>
-        <h2 className="font-display text-heading text-ink">Templates</h2>
-        <p className="mt-1 text-body text-ink-soft">
+        <h2 className="font-display text-h3 text-ink">Templates</h2>
+        <p className="mt-1 text-body text-ink-65">
           A structure you reuse. Pick it under &ldquo;more options&rdquo; and your idea fills it in.
         </p>
       </div>
 
       {templates.length === 0 && (
-        <p className="text-body text-ink-soft">No templates yet — a weekly update or launch post is a good first one.</p>
+        <p className="rounded-md bg-surface-warm px-4 py-3 text-body text-ink-65">No templates yet — a weekly update or launch post is a good first one.</p>
       )}
 
       {templates.map((t) => (
-        <div key={t.key} className="flex flex-col gap-2 border-t border-dashed border-control pt-4 first:border-0 first:pt-0">
+        <div key={t.key} className="flex flex-col gap-2 border-t border-border-soft pt-4 first:border-0 first:pt-0">
           <div className="flex gap-2">
             <input
               value={t.name}
@@ -77,7 +77,7 @@ export default function TemplatesEditor({
                 setStatus("idle");
               }}
               aria-label={`Remove ${t.name || "this template"}`}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-sm text-ink-soft transition-colors hover:bg-highlight-soft hover:text-danger"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-sm text-ink-65 transition-colors hover:bg-surface-hover hover:text-ink"
             >
               <X size={16} />
             </button>
@@ -109,9 +109,9 @@ export default function TemplatesEditor({
         >
           {status === "saving" ? "saving..." : "Save templates"}
         </button>
-        {status === "saved" && <span role="status" className="text-small font-medium text-success">Saved.</span>}
+        {status === "saved" && <span role="status" className="text-ui font-medium text-success">Saved.</span>}
       </div>
-      {status === "error" && <p role="alert" className="text-small text-danger">{error}</p>}
+      {status === "error" && <p role="alert" className="text-ui text-ink">{error}</p>}
     </section>
   );
 }
