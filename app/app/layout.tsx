@@ -6,8 +6,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <AppHeader />
-      {/* Room for the phone tab bar at the bottom. */}
-      <div className="flex flex-1 flex-col pb-20 sm:pb-0">{children}</div>
+      {/* 24px under the sticky header; room for the phone tab bar at the bottom. */}
+      <div className="flex flex-1 flex-col pt-6 pb-20 sm:pb-0">{children}</div>
     </>
   );
 }

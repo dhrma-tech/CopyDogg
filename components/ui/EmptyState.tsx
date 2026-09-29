@@ -11,9 +11,9 @@ export default function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-control px-5 py-8 text-center">
-      <p className="font-display text-heading text-ink">{title}</p>
-      {children && <div className="max-w-sm text-small text-ink-soft">{children}</div>}
+    <div className="flex flex-col items-center gap-3 rounded-md bg-surface-warm p-8 text-center">
+      <p className="font-display text-h3 text-ink">{title}</p>
+      {children && <div className="max-w-sm text-ui text-ink-65">{children}</div>}
       {action}
     </div>
   );

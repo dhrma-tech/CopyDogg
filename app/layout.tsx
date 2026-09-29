@@ -1,23 +1,23 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Geist, Geist_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono, Newsreader } from "next/font/google";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
-// Highlighter type (docs/design-system.md). Variable fonts, self-hosted by
-// next/font at build time; Bricolage keeps its optical-size axis.
-const bricolage = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+// Warm Serif type (docs/design-system.md). Variable fonts, self-hosted by
+// next/font at build time; Newsreader keeps its optical-size axis.
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
   subsets: ["latin"],
   axes: ["opsz"],
 });
 
-const geist = Geist({
-  variable: "--font-geist",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jbmono",
   subsets: ["latin"],
 });
 
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${bricolage.variable} ${geist.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${newsreader.variable} ${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
       // The theme script sets data-theme before React loads.
       suppressHydrationWarning
     >
