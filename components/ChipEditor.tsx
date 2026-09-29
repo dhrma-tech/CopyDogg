@@ -40,7 +40,7 @@ export default function ChipEditor({
 
   return (
     <div>
-      <p className="text-small font-medium text-ink">{label}</p>
+      <p className="text-ui font-medium text-ink">{label}</p>
 
       {suggestions && (
         <div className="mt-2 flex flex-wrap gap-2">
@@ -83,7 +83,7 @@ export default function ChipEditor({
                 type="button"
                 onClick={() => onRemove(item)}
                 aria-label={`Remove: ${item}`}
-                className="grid h-6 w-6 place-items-center rounded-sm hover:bg-highlight-hover"
+                className="grid h-6 w-6 place-items-center rounded-pill transition-colors hover:bg-current/10"
               >
                 <X size={14} strokeWidth={2.5} />
               </button>

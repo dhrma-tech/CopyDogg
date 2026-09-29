@@ -51,20 +51,20 @@ export default function PeopleEditor({
   }
 
   return (
-    <section id="people" className="flex scroll-mt-6 flex-col gap-4 rounded-md border border-hairline bg-card p-5 sm:p-6">
+    <section id="people" className="flex scroll-mt-20 flex-col gap-4 rounded-md border border-border bg-surface p-4 sm:p-6">
       <div>
-        <h2 className="font-display text-heading text-ink">People you write to</h2>
-        <p className="mt-1 text-body text-ink-soft">
+        <h2 className="font-display text-h3 text-ink">People you write to</h2>
+        <p className="mt-1 text-body text-ink-65">
           Pick one under &ldquo;more options&rdquo; and CopyDogg matches how you&rsquo;d talk to them.
         </p>
       </div>
 
       {people.length === 0 && (
-        <p className="text-body text-ink-soft">No one yet — add your boss, a client, a friend.</p>
+        <p className="rounded-md bg-surface-warm px-4 py-3 text-body text-ink-65">No one yet — add your boss, a client, a friend.</p>
       )}
 
       {people.map((p) => (
-        <div key={p.key} className="flex flex-col gap-2 border-t border-dashed border-control pt-4 first:border-0 first:pt-0">
+        <div key={p.key} className="flex flex-col gap-2 border-t border-border-soft pt-4 first:border-0 first:pt-0">
           <div className="flex gap-2">
             <input
               value={p.name}
@@ -92,7 +92,7 @@ export default function PeopleEditor({
                 setStatus("idle");
               }}
               aria-label={`Remove ${p.name || "this person"}`}
-              className="grid h-11 w-11 shrink-0 place-items-center rounded-sm text-ink-soft transition-colors hover:bg-highlight-soft hover:text-danger"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-sm text-ink-65 transition-colors hover:bg-surface-hover hover:text-ink"
             >
               <X size={16} />
             </button>
@@ -125,9 +125,9 @@ export default function PeopleEditor({
         >
           {status === "saving" ? "saving..." : "Save people"}
         </button>
-        {status === "saved" && <span role="status" className="text-small font-medium text-success">Saved.</span>}
+        {status === "saved" && <span role="status" className="text-ui font-medium text-success">Saved.</span>}
       </div>
-      {status === "error" && <p role="alert" className="text-small text-danger">{error}</p>}
+      {status === "error" && <p role="alert" className="text-ui text-ink">{error}</p>}
     </section>
   );
 }

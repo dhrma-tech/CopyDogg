@@ -30,7 +30,7 @@ export default function ThemeSwitch() {
           </button>
         ))}
       </div>
-      <p className="mt-2 text-small text-ink-soft">
+      <p className="mt-2 text-ui text-ink-65">
         System follows your device&rsquo;s light or dark setting. Saved in this browser.
       </p>
     </section>

@@ -10,8 +10,7 @@ export default async function OnboardingPage() {
   }
 
   return (
-    <main className="flex flex-1 justify-center px-4 py-12 sm:px-6">
-      <OnboardingFlow />
-    </main>
+    // OnboardingFlow renders its own header (it shows the current step) and <main>.
+    <OnboardingFlow />
   );
 }

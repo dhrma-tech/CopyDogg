@@ -64,7 +64,7 @@ export default function VoiceSwitcher({
               setAdding(true);
               setConfirmingDelete(false);
             }}
-            className={`${chipClasses(false)} border-dashed border-control`}
+            className={`${chipClasses(false)} border-dashed border-ink-50`}
           >
             + New voice
           </button>
@@ -83,20 +83,20 @@ export default function VoiceSwitcher({
               }
             );
           }}
-          className="flex flex-col gap-3 rounded-md border border-dashed border-control bg-card p-4"
+          className="flex flex-col gap-3 rounded-md border border-border bg-surface p-4"
         >
-          <p className="text-body text-ink-soft">
+          <p className="text-body text-ink-65">
             Starts as a copy of <span className="font-medium text-ink">{active?.name}</span>, then
             adjust it below.
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="e.g. Work me, Friends me"
               aria-label="New voice name"
               autoFocus
-              className={`${FIELD} min-w-0 flex-1`}
+              className={`${FIELD} min-w-0 flex-[1_1_200px]`}
             />
             <button
               type="submit"
@@ -117,7 +117,7 @@ export default function VoiceSwitcher({
       )}
 
       {voices.length > 1 && !adding && (
-        <div className="text-small">
+        <div className="text-ui">
           {confirmingDelete ? (
             <span className="flex flex-wrap items-center gap-3">
               <span className="text-ink">
@@ -127,11 +127,11 @@ export default function VoiceSwitcher({
                 type="button"
                 onClick={() => run(() => deleteVoice(activeId), () => setConfirmingDelete(false))}
                 disabled={pending}
-                className={`${buttonClasses({ variant: "danger", size: "sm" })} -ml-3.5`}
+                className={`${buttonClasses({ variant: "danger", size: "sm" })} -ml-3`}
               >
                 Delete voice
               </button>
-              <button type="button" onClick={() => setConfirmingDelete(false)} className="text-ink-soft">
+              <button type="button" onClick={() => setConfirmingDelete(false)} className="text-ink-65">
                 Keep it
               </button>
             </span>
@@ -139,7 +139,7 @@ export default function VoiceSwitcher({
             <button
               type="button"
               onClick={() => setConfirmingDelete(true)}
-              className="text-ink-soft underline decoration-control underline-offset-2 hover:text-danger"
+              className="text-ink-65 underline decoration-ink-50 underline-offset-2 hover:text-ink"
             >
               Delete this voice
             </button>
@@ -147,7 +147,7 @@ export default function VoiceSwitcher({
         </div>
       )}
 
-      {error && <p role="alert" className="text-small text-danger">{error}</p>}
+      {error && <p role="alert" className="text-ui text-ink">{error}</p>}
     </section>
   );
 }

@@ -159,11 +159,11 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
   }
 
   return (
-    <div className="w-full max-w-2xl">
-      <h1 className="font-display text-title text-ink">
+    <div className="w-full">
+      <h1 className="font-display text-h3 text-ink">
         {name.trim() || "Your voice"}
       </h1>
-      <p className="mt-2 text-body text-ink-soft">
+      <p className="mt-2 text-body text-ink-65">
         This is what CopyDogg uses every time it writes as this voice.
       </p>
 
@@ -172,8 +172,8 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
           <p className="label">Learn from your posts</p>
           {retune.state === "proposed" ? (
             <div className="mt-3 flex flex-col gap-3">
-              <p className="text-body text-ink-soft">Here&rsquo;s your voice, updated from what you liked and edited:</p>
-              <p className="rounded-md bg-paper px-4 py-3 text-body text-ink">
+              <p className="text-body text-ink-65">Here&rsquo;s your voice, updated from what you liked and edited:</p>
+              <p className="rounded-md bg-surface-warm px-4 py-3 text-body text-ink">
                 {retune.proposal.voiceDescription}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -187,7 +187,7 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
             </div>
           ) : (
             <div className="mt-2 flex flex-col gap-3">
-              <p className="text-body text-ink-soft">
+              <p className="text-body text-ink-65">
                 {learnableCount >= MIN_LEARNABLE_POSTS
                   ? `You've liked or edited ${learnableCount} posts. CopyDogg can refresh your voice from them.`
                   : `Like or edit ${MIN_LEARNABLE_POSTS - learnableCount} more post${MIN_LEARNABLE_POSTS - learnableCount === 1 ? "" : "s"} and CopyDogg can refresh your voice from them.`}
@@ -201,7 +201,7 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
               >
                 {retune.state === "loading" ? "re-reading your voice..." : "Retune my voice"}
               </Button>
-              {retune.state === "error" && <p role="alert" className="text-small text-danger">{retune.error}</p>}
+              {retune.state === "error" && <p role="alert" className="text-ui text-ink">{retune.error}</p>}
             </div>
           )}
       </Card>
@@ -209,7 +209,7 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
       <Card variant="main" className="mt-4 flex flex-col gap-6">
 
         <label className="flex flex-col gap-2">
-          <span className="text-small font-medium text-ink">Voice name</span>
+          <span className="text-ui font-medium text-ink">Voice name</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -220,7 +220,7 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
         </label>
 
         <div>
-          <p className="text-small font-medium text-ink">Voice description</p>
+          <p className="text-ui font-medium text-ink">Voice description</p>
           <textarea
             value={voiceDescription}
             onChange={(e) => setVoiceDescription(e.target.value)}
@@ -231,7 +231,7 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
         </div>
 
         <div className="flex flex-col gap-3">
-          <p className="text-small font-medium text-ink">Platforms you post on</p>
+          <p className="text-ui font-medium text-ink">Platforms you post on</p>
           <PlatformMultiPicker value={platforms} onChange={setPlatforms} />
           {platforms.map((p) => (
             <label key={p} className="flex flex-col gap-2">
@@ -270,14 +270,15 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
           placeholder="indie hacking, fitness, parenting..."
         />
 
-        {status === "error" && <p role="alert" className="text-small text-danger">{errorMessage}</p>}
+        {status === "error" && <p role="alert" className="text-ui text-ink">{errorMessage}</p>}
 
         <div className="flex items-center gap-3">
-          <Button onClick={() => handleSave()} disabled={status === "saving"}>
+          {/* The one green button on Profile. */}
+          <Button variant="accent" onClick={() => handleSave()} disabled={status === "saving"}>
             {status === "saving" ? "saving..." : "Save changes"}
           </Button>
           {status === "saved" && !dirty && (
-            <span role="status" className="text-small font-medium text-success">
+            <span role="status" className="text-ui font-medium text-success">
               Saved.
             </span>
           )}
@@ -289,14 +290,14 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
         <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4 sm:bottom-6">
           <div
             role="status"
-            className="flex items-center gap-4 rounded-full bg-ink py-1.5 pl-5 pr-1.5 text-small text-paper motion-safe:animate-[toast-in_200ms_ease-out]"
+            className="flex items-center gap-4 whitespace-nowrap rounded-pill bg-[var(--toast-bg)] py-1.5 pl-5 pr-1.5 text-ui text-[var(--toast-text)] motion-safe:animate-[toast-in_200ms_var(--ease-out-soft)]"
           >
             <span>Unsaved changes</span>
             <button
               type="button"
               onClick={() => handleSave()}
               disabled={status === "saving"}
-              className="min-h-9 rounded-full bg-highlight px-4 text-small font-semibold text-on-highlight transition-colors hover:bg-highlight-hover disabled:cursor-wait"
+              className="min-h-9 rounded-pill bg-[var(--toast-action-bg)] px-4 text-ui font-semibold text-[var(--toast-action-text)] transition-colors hover:bg-[var(--toast-action-hover)] disabled:cursor-wait"
             >
               {status === "saving" ? "saving..." : "Save"}
             </button>

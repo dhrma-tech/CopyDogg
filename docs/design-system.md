@@ -220,4 +220,6 @@ All in `components/ui/`. Pages use these instead of re-writing class strings. In
 
 ## Migration status
 
-Adopted 2026-09-29 for the **landing page only** (`app/page.tsx` / `components/landing/`), which defines its own scoped tokens in `app/landing.css` under a `.landing` root class so the rest of the app is untouched. `components/ui/*` and the `/app`, `/onboarding`, `/unlock`, `/app/library`, `/app/settings` screens still run on the previous "Highlighter" tokens in `app/globals.css` pending a follow-up migration — don't assume `bg-ink`/`bg-highlight`/etc. utilities in those files already mean Warm Serif.
+**Done (2026-09-29):** every screen runs on Warm Serif. The tokens above live in `app/globals.css` (light + dark), the three fonts load in `app/layout.tsx`, `components/ui/*` and the shared components follow the Components specs, and `/app`, `/onboarding`, `/unlock`, `/app/library`, `/app/profile` and `/app/settings` were reworked against their Claude Design mockups. The Highlighter names (`paper`, `highlight`, `ink-soft`, `text-small`...) are gone; don't reintroduce them.
+
+The landing page (`components/landing/`) still uses its own scoped copy of the tokens in `app/landing.css` (same values). Folding it onto the global tokens is optional cleanup.

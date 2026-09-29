@@ -9,7 +9,7 @@ import { patchGeneration } from "@/lib/generateClient";
 import { prefillIdea } from "@/lib/draft";
 import { removeIdea } from "@/app/actions";
 import { useUndoToast } from "@/components/UndoToast";
-import { buttonClasses } from "@/components/ui/Button";
+import { TEXT_BUTTON, buttonClasses } from "@/components/ui/Button";
 import { chipClasses } from "@/components/ui/Chip";
 import { FIELD } from "@/components/ui/Field";
 import EmptyState from "@/components/ui/EmptyState";
@@ -38,9 +38,13 @@ type Tab = "saved" | "recent" | "ideas";
 const META = "label";
 const PILL_ON = chipClasses(true, "sm");
 const PILL_OFF = chipClasses(false, "sm");
-const CARD = "rounded-md border border-hairline bg-card p-4";
-const TEXT_BUTTON = buttonClasses({ variant: "quiet", size: "sm" });
-const ACTION_ROW = "mt-3 -ml-3.5 flex flex-wrap items-center gap-1 border-t border-dashed border-hairline pt-2";
+const CARD = "rounded-md border border-border bg-surface p-4";
+// Copy / Unsave / Delete under a post; lines up with the card edge.
+const ACTION_ROW = "mt-2 -ml-3 flex flex-wrap items-center gap-1";
+// Under an idea: a divider, then "Write it now" and Delete.
+const IDEA_ROW = "mt-3 flex flex-wrap items-center gap-1 border-t border-border-soft pt-2";
+const SORT_BUTTON =
+  "inline-flex min-h-12 shrink-0 items-center whitespace-nowrap rounded-pill border border-ink-50 px-4 text-ui font-semibold text-ink transition-colors hover:border-ink hover:bg-surface-hover";
 const WRITE_LINK = buttonClasses({ variant: "secondary", size: "sm" });
 
 async function deleteGenerationRequest(id: string): Promise<boolean> {
@@ -175,7 +179,7 @@ export default function LibraryList({
 
   return (
     <div className="w-full max-w-2xl">
-      <h1 className="font-display text-title text-ink">Library</h1>
+      <h1 className="font-display text-h3 text-ink">Library</h1>
 
       <div className={`mt-5 ${SEGMENT_TRACK}`} role="tablist" aria-label="Library sections">
         {tabs.map((t) => (
@@ -187,12 +191,12 @@ export default function LibraryList({
             onClick={() => setTab(t.id)}
             className={segmentClasses(tab === t.id)}
           >
-            {t.label} <span className="font-mono text-label opacity-80">{t.count}</span>
+            {t.label} <span className="font-mono text-micro opacity-80">{t.count}</span>
           </button>
         ))}
       </div>
 
-      {error && <p role="alert" className="mt-3 text-small text-danger">{error}</p>}
+      {error && <p role="alert" className="mt-3 text-ui text-ink">{error}</p>}
 
       {tab === "ideas" ? (
         ideas.length === 0 ? (
@@ -210,8 +214,8 @@ export default function LibraryList({
               <div key={idea.id} className={CARD}>
                 <p className={META}>{formatDate(idea.createdAt)}</p>
                 <p className="mt-2 whitespace-pre-wrap text-body text-ink">{idea.text}</p>
-                <div className={ACTION_ROW}>
-                  <button type="button" onClick={() => writeFromIdea(idea)} className="link mx-3.5 text-small">
+                <div className={IDEA_ROW}>
+                  <button type="button" onClick={() => writeFromIdea(idea)} className="link mr-2 text-ui font-medium">
                     Write it now
                   </button>
                   <button type="button" onClick={() => deleteIdeaById(idea)} className={TEXT_BUTTON}>
@@ -236,7 +240,7 @@ export default function LibraryList({
               <button
                 type="button"
                 onClick={() => setNewestFirst((v) => !v)}
-                className={`shrink-0 ${buttonClasses({ variant: "secondary" })} px-3.5 text-small`}
+                className={SORT_BUTTON}
                 aria-label={newestFirst ? "Showing newest first" : "Showing oldest first"}
               >
                 {newestFirst ? "newest ↓" : "oldest ↓"}
@@ -344,12 +348,12 @@ function SavedCard({
   return (
     <div className={CARD}>
       <CardHeader g={g} />
-      <p className="mt-2 line-clamp-2 text-small text-ink-soft">{sourceLine(g)}</p>
+      <p className="mt-2 line-clamp-2 text-ui text-ink-65">{sourceLine(g)}</p>
       <p className="mt-2 whitespace-pre-wrap text-body text-ink">{text}</p>
       <div className={ACTION_ROW}>
         <CopyButton text={text} />
         {link && (
-          <a href={link} target="_blank" rel="noopener noreferrer" className="link mx-2 text-small">
+          <a href={link} target="_blank" rel="noopener noreferrer" className="link mx-2 text-ui font-medium">
             {SEND_LABELS[g.platform] ?? "Open"}
           </a>
         )}
@@ -368,14 +372,14 @@ function RecentCard({ g, onSave }: { g: LibraryGeneration; onSave: (text: string
   return (
     <div className={CARD}>
       <CardHeader g={g} />
-      <p className="mt-2 line-clamp-2 text-small text-ink-soft">{sourceLine(g)}</p>
-      <div className="mt-2 flex flex-col divide-y divide-dashed divide-hairline">
+      <p className="mt-2 line-clamp-2 text-ui text-ink-65">{sourceLine(g)}</p>
+      <div className="mt-2 flex flex-col divide-y divide-border-soft">
         {g.outputs.map((text, i) => {
           const isSaved = g.saved && (g.chosenOutput ?? g.outputs[0]) === text;
           return (
             <div key={i} className="py-3 first:pt-1 last:pb-0">
               <p className="whitespace-pre-wrap text-body text-ink">{text}</p>
-              <div className="mt-1 -ml-3.5 flex gap-1">
+              <div className="mt-2 -ml-3 flex gap-1">
                 <CopyButton text={text} />
                 <button
                   type="button"

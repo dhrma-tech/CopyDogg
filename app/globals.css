@@ -1,35 +1,63 @@
 @import "tailwindcss";
 
 /*
- * Highlighter design tokens — values from docs/design-system.md (the source
+ * Warm Serif design tokens — values from docs/design-system.md (the source
  * of truth). Components use the Tailwind names below; no raw hex anywhere else.
  */
 :root {
-  --paper: #f5f5f1;
-  --card: #ffffff;
-  --ink: #141413;
-  --ink-soft: #5e5e58;
-  --hairline: #e2e2dc;
-  --control: #8e8e86;
-  --highlight: #f2d64b;
-  --highlight-hover: #e8c623;
-  --on-highlight: #141413;
-  --highlight-soft: #fbf1bf;
-  --primary: #141413;
-  --primary-hover: #33332f;
-  --on-primary: #ffffff;
-  --success: #1f6b45;
-  --danger: #b42318;
-  --focus: #141413;
-  /* Color of the offset shadows (ink in light mode, light ink in dark). */
-  --shadow-ink: #141413;
-  /* Primary buttons get an offset shadow in light mode only. */
-  --button-shadow: 2px 2px 0 #141413;
-  /* Highlighter mark: a low band behind ink text in light mode; in dark mode
-     yellow words on a thin yellow underline (a full block would overlap the
-     tight display line-height). */
-  --mark-top: 58%;
-  --mark-text: var(--ink);
+  --bg: #fffdf5;
+  --surface: #ffffff;
+  --surface-cream: #fffaeb;
+  --surface-warm: #fbf8ef;
+  --surface-hover: #f4ecd9;
+  --surface-press: #f2efe4;
+  --bg-dark: #2a2b22;
+
+  --ink: #1b1c14;
+  --ink-80: rgba(27, 28, 20, 0.8);
+  --ink-65: rgba(27, 28, 20, 0.65);
+  --ink-60: rgba(27, 28, 20, 0.6);
+  --ink-50: rgba(27, 28, 20, 0.5);
+  --ink-40: rgba(27, 28, 20, 0.4);
+  --on-dark: #fffdf5;
+  --on-dark-78: rgba(255, 253, 245, 0.78);
+  --on-dark-62: rgba(255, 253, 245, 0.62);
+  --on-dark-55: rgba(255, 253, 245, 0.55);
+  --on-dark-fill-07: rgba(255, 253, 245, 0.07);
+  --on-dark-fill-10: rgba(255, 253, 245, 0.1);
+
+  --border: rgba(0, 0, 0, 0.1);
+  --border-soft: rgba(27, 28, 20, 0.08);
+  --border-mid: rgba(27, 28, 20, 0.12);
+  --border-strong: rgba(27, 28, 20, 0.16);
+  --border-input: rgba(27, 28, 20, 0.28);
+
+  --accent: #00674f;
+  --accent-10: rgba(0, 103, 79, 0.1);
+  --accent-16: rgba(0, 103, 79, 0.16);
+  --success: var(--accent);
+
+  /* Ink fills (primary button, selected chip/segment, slider fill). Invert
+     to cream in dark mode — the reference's "CTA inverts to cream" rule. */
+  --primary: #1b1c14;
+  --on-primary: #fffdf5;
+  --primary-hover-fill: #1b1c14;
+  /* Diff inserts and the text mark. */
+  --mark: var(--accent-10);
+  /* Sticky header: bg at 75% under a 14px blur. */
+  --header-bg: rgba(255, 253, 245, 0.75);
+  /* Undo toast: bg-dark pill, cream action. */
+  --toast-bg: #2a2b22;
+  --toast-text: #fffdf5;
+  --toast-action-bg: #fffaeb;
+  --toast-action-text: #1b1c14;
+  --toast-action-hover: #ffffff;
+
+  --sh-float: 0 4px 32px rgba(27, 28, 21, 0.1);
+  --sh-hover-sm: 0 10px 30px rgba(27, 28, 21, 0.06);
+  --sh-btn-inset: inset 0 1px 1px rgba(0, 0, 0, 0.2);
+  --ring: 0 0 0 4px rgba(27, 28, 20, 0.08);
+
   color-scheme: light;
 }
 
@@ -37,133 +65,211 @@
    Settings, which sets data-theme on <html>. Kept identical in both blocks. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #121211;
-    --card: #1c1c1a;
-    --ink: #f2f2ec;
-    --ink-soft: #a3a39b;
-    --hairline: #2e2e2b;
-    --control: #6b6b64;
-    --highlight: #f2d64b;
-    --highlight-hover: #f7e27a;
-    --on-highlight: #141413;
-    --highlight-soft: #3a3418;
-    --primary: #f2d64b;
-    --primary-hover: #f7e27a;
-    --on-primary: #141413;
-    --success: #7fcb9e;
-    --danger: #f08f84;
-    --focus: #f2d64b;
-    --shadow-ink: #f2f2ec;
-    --button-shadow: none;
-    --mark-top: 88%;
-    --mark-text: var(--highlight);
+    --bg: #2a2b22;
+    --surface: var(--on-dark-fill-07);
+    --surface-cream: var(--on-dark-fill-07);
+    --surface-warm: var(--on-dark-fill-07);
+    --surface-hover: var(--on-dark-fill-10);
+    --surface-press: var(--on-dark-fill-10);
+    --ink: #fffdf5;
+    --ink-80: var(--on-dark-78);
+    --ink-65: var(--on-dark-78);
+    --ink-60: var(--on-dark-62);
+    --ink-50: var(--on-dark-55);
+    --ink-40: var(--on-dark-55);
+    --border: var(--on-dark-fill-10);
+    --border-soft: var(--on-dark-fill-10);
+    --border-mid: var(--on-dark-fill-10);
+    --border-strong: var(--on-dark-fill-10);
+    --border-input: var(--on-dark-fill-10);
+    --success: var(--on-dark);
+    --primary: #fffaeb;
+    --on-primary: #1b1c14;
+    --primary-hover-fill: #ffffff;
+    --mark: var(--accent-16);
+    --header-bg: rgba(42, 43, 34, 0.72);
+    --toast-bg: #fffaeb;
+    --toast-text: #1b1c14;
+    --toast-action-bg: #1b1c14;
+    --toast-action-text: #fffdf5;
+    --toast-action-hover: #1b1c14;
+    --sh-float: none;
+    --sh-hover-sm: none;
+    --ring: 0 0 0 4px rgba(255, 253, 245, 0.1);
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --paper: #121211;
-  --card: #1c1c1a;
-  --ink: #f2f2ec;
-  --ink-soft: #a3a39b;
-  --hairline: #2e2e2b;
-  --control: #6b6b64;
-  --highlight: #f2d64b;
-  --highlight-hover: #f7e27a;
-  --on-highlight: #141413;
-  --highlight-soft: #3a3418;
-  --primary: #f2d64b;
-  --primary-hover: #f7e27a;
-  --on-primary: #141413;
-  --success: #7fcb9e;
-  --danger: #f08f84;
-  --focus: #f2d64b;
-  --shadow-ink: #f2f2ec;
-  --button-shadow: none;
-  --mark-top: 88%;
-  --mark-text: var(--highlight);
+  --bg: #2a2b22;
+  --surface: var(--on-dark-fill-07);
+  --surface-cream: var(--on-dark-fill-07);
+  --surface-warm: var(--on-dark-fill-07);
+  --surface-hover: var(--on-dark-fill-10);
+  --surface-press: var(--on-dark-fill-10);
+  --ink: #fffdf5;
+  --ink-80: var(--on-dark-78);
+  --ink-65: var(--on-dark-78);
+  --ink-60: var(--on-dark-62);
+  --ink-50: var(--on-dark-55);
+  --ink-40: var(--on-dark-55);
+  --border: var(--on-dark-fill-10);
+  --border-soft: var(--on-dark-fill-10);
+  --border-mid: var(--on-dark-fill-10);
+  --border-strong: var(--on-dark-fill-10);
+  --border-input: var(--on-dark-fill-10);
+  --success: var(--on-dark);
+  --primary: #fffaeb;
+  --on-primary: #1b1c14;
+  --primary-hover-fill: #ffffff;
+  --mark: var(--accent-16);
+  --header-bg: rgba(42, 43, 34, 0.72);
+  --toast-bg: #fffaeb;
+  --toast-text: #1b1c14;
+  --toast-action-bg: #1b1c14;
+  --toast-action-text: #fffdf5;
+  --toast-action-hover: #1b1c14;
+  --sh-float: none;
+  --sh-hover-sm: none;
+  --ring: 0 0 0 4px rgba(255, 253, 245, 0.1);
   color-scheme: dark;
 }
 
 @theme inline {
-  --color-paper: var(--paper);
-  --color-card: var(--card);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-cream: var(--surface-cream);
+  --color-surface-warm: var(--surface-warm);
+  --color-surface-hover: var(--surface-hover);
+  --color-surface-press: var(--surface-press);
+  --color-bg-dark: var(--bg-dark);
   --color-ink: var(--ink);
-  --color-ink-soft: var(--ink-soft);
-  --color-hairline: var(--hairline);
-  --color-control: var(--control);
-  --color-highlight: var(--highlight);
-  --color-highlight-hover: var(--highlight-hover);
-  --color-on-highlight: var(--on-highlight);
-  --color-highlight-soft: var(--highlight-soft);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-on-primary: var(--on-primary);
+  --color-ink-80: var(--ink-80);
+  --color-ink-65: var(--ink-65);
+  --color-ink-60: var(--ink-60);
+  --color-ink-50: var(--ink-50);
+  --color-ink-40: var(--ink-40);
+  --color-on-dark: var(--on-dark);
+  --color-on-dark-78: var(--on-dark-78);
+  --color-on-dark-62: var(--on-dark-62);
+  --color-on-dark-55: var(--on-dark-55);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-border-mid: var(--border-mid);
+  --color-border-strong: var(--border-strong);
+  --color-border-input: var(--border-input);
+  --color-accent: var(--accent);
+  --color-accent-10: var(--accent-10);
+  --color-accent-16: var(--accent-16);
   --color-success: var(--success);
-  --color-danger: var(--danger);
-  --color-focus: var(--focus);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-hover: var(--primary-hover-fill);
+  --color-mark: var(--mark);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
+  --radius-xs: 8px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
   --radius-lg: 14px;
-  --radius-chip: 8px;
+  --radius-2xl: 20px;
+  --radius-3xl: 24px;
+  --radius-pill: 999px;
 
-  --shadow-card: 4px 4px 0 var(--shadow-ink);
-  --shadow-raise: var(--button-shadow);
+  --shadow-float: var(--sh-float);
+  --shadow-hover-sm: var(--sh-hover-sm);
+  --shadow-btn-inset: var(--sh-btn-inset);
+  --shadow-ring: var(--ring);
 
-  --font-sans: var(--font-geist);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-bricolage);
+  --font-sans: var(--font-inter), Inter, Arial, system-ui, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, monospace;
+  --font-display: var(--font-newsreader), Georgia, serif;
 
-  --text-display: clamp(42px, 8vw, 70px);
-  --text-display--line-height: 0.98;
-  --text-display--letter-spacing: -0.035em;
-  --text-display--font-weight: 700;
-  --text-title: clamp(26px, 5vw, 30px);
-  --text-title--line-height: 1.1;
-  --text-title--letter-spacing: -0.02em;
-  --text-title--font-weight: 650;
-  --text-heading: 21px;
-  --text-heading--line-height: 1.2;
-  --text-heading--letter-spacing: -0.01em;
-  --text-heading--font-weight: 600;
+  --ease-out-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: ease;
+}
+
+/* Type scale. Not inline, so the responsive steps below can override the
+   display/h2/lead variables per breakpoint. */
+@theme {
+  --text-display: 68px;
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -3px;
+  --text-display--font-weight: 400;
+  --text-h2: 52px;
+  --text-h2--line-height: 1.1;
+  --text-h2--letter-spacing: -3px;
+  --text-h2--font-weight: 400;
+  --text-h3: 24px;
+  --text-h3--line-height: 32px;
+  --text-h3--letter-spacing: -0.5px;
+  --text-h3--font-weight: 400;
+  --text-lead: 20px;
+  --text-lead--line-height: 30px;
+  --text-btn-lg: 18px;
+  --text-btn-lg--line-height: 24px;
   --text-body: 16px;
-  --text-body--line-height: 1.55;
-  --text-small: 14px;
-  --text-small--line-height: 1.45;
-  --text-label: 12px;
-  --text-label--line-height: 1.3;
+  --text-body--line-height: 24px;
+  --text-ui: 14px;
+  --text-ui--line-height: 20px;
+  --text-meta: 13px;
+  --text-meta--line-height: 18px;
+  --text-micro: 12px;
+  --text-micro--line-height: 1.3;
 
-  --default-transition-duration: 160ms;
-  --default-transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+/* Responsive headings (reference breakpoint table). */
+@media (max-width: 991px) {
+  :root {
+    --text-display: 60px;
+    --text-lead: 18px;
+    --text-lead--line-height: 26px;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --text-display: 54px;
+    --text-display--letter-spacing: -1px;
+    --text-h2: 50px;
+    --text-h2--letter-spacing: -2px;
+  }
+}
+@media (max-width: 479px) {
+  :root {
+    --text-display: 50px;
+    --text-h2: 34px;
+    --text-h2--letter-spacing: -1px;
+    --text-lead: 16px;
+    --text-lead--line-height: 22px;
+  }
 }
 
 /* Mono meta label: platform tags, dates, counts, shortcuts. */
 @utility label {
-  font-family: var(--font-geist-mono);
+  font-family: var(--font-jbmono), ui-monospace, monospace;
   font-size: 12px;
   line-height: 1.3;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: var(--ink-soft);
+  color: var(--ink-65);
 }
 
-/* Highlighter pen over a few words. */
+/* A green band behind a few words (landing only, at most once). */
 @utility marker {
-  color: var(--mark-text);
-  background: linear-gradient(transparent var(--mark-top), var(--highlight) var(--mark-top), var(--highlight) 92%, transparent 92%);
-  padding: 0 0.08em;
+  color: var(--ink);
+  background: var(--mark);
+  padding: 0 0.12em;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
 }
 
-/* Ink link with a highlighter underline. */
+/* Ink link with a soft ink underline. */
 @utility link {
   color: var(--ink);
-  font-weight: 500;
   text-decoration-line: underline;
-  text-decoration-color: var(--highlight);
-  text-decoration-thickness: 2px;
+  text-decoration-color: var(--ink-50);
+  text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   &:hover {
     text-decoration-color: var(--ink);
@@ -171,27 +277,26 @@
 }
 
 body {
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
   font-size: 16px;
-  line-height: 1.55;
+  line-height: 24px;
 }
 
-/* Headlines use the display face at the optical size that suits them. */
+/* Headings: one serif, weight 400, never bold. */
 .font-display {
-  font-variation-settings: "opsz" 96;
+  font-weight: 400;
 }
 
-/* Visible keyboard focus on controls. Text fields show a highlight ring
-   instead (see components/ui/Field.tsx), so they're left out here. */
+/* Visible keyboard focus on controls. Text fields show a soft ring instead
+   (see components/ui/Field.tsx), so they're left out here. */
 a:focus-visible,
 button:focus-visible,
 select:focus-visible,
 summary:focus-visible,
 [role="tab"]:focus-visible,
-input[type="checkbox"]:focus-visible,
-input[type="range"]:focus-visible {
-  outline: 2px solid var(--focus);
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
 
@@ -200,30 +305,31 @@ input[type="range"]:focus-visible {
   mask-image: linear-gradient(to right, black calc(100% - 28px), transparent);
 }
 
-/* Slider: hairline track with an ink fill, card thumb with an ink border.
-   The fill uses --fill (0-100%), set inline by components/ToneSliders.tsx. */
+/* Slider: border-input track with an ink fill, surface thumb with an ink
+   edge. The fill uses --fill (0-100%), set inline by components/ToneSliders.tsx. */
 input[type="range"].slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
   height: 24px;
+  margin: 0;
   background: transparent;
   cursor: pointer;
 }
 input[type="range"].slider::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 999px;
-  background: linear-gradient(to right, var(--ink) var(--fill, 50%), var(--hairline) var(--fill, 50%));
+  background: linear-gradient(to right, var(--primary) var(--fill, 50%), var(--border-input) var(--fill, 50%));
 }
 input[type="range"].slider::-moz-range-track {
   height: 4px;
   border-radius: 999px;
-  background: var(--hairline);
+  background: var(--border-input);
 }
 input[type="range"].slider::-moz-range-progress {
   height: 4px;
   border-radius: 999px;
-  background: var(--ink);
+  background: var(--primary);
 }
 input[type="range"].slider::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -231,20 +337,45 @@ input[type="range"].slider::-webkit-slider-thumb {
   height: 20px;
   margin-top: -8px;
   border-radius: 50%;
-  background: var(--card);
-  border: 2px solid var(--focus);
+  background: var(--surface);
+  border: 2px solid var(--ink);
 }
 input[type="range"].slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: var(--card);
-  border: 2px solid var(--focus);
+  background: var(--surface);
+  border: 2px solid var(--ink);
+}
+input[type="range"].slider:focus-visible {
+  outline: none;
+}
+input[type="range"].slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--ring);
+}
+input[type="range"].slider:focus-visible::-moz-range-thumb {
+  box-shadow: var(--ring);
 }
 
 @keyframes toast-in {
   from {
     opacity: 0;
     transform: translateY(6px);
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
