@@ -37,10 +37,10 @@ export default function WordsEditor({ initial }: { initial: string[] }) {
   }
 
   return (
-    <section id="words" className="flex scroll-mt-6 flex-col gap-4 rounded-md border border-hairline bg-card p-4 sm:p-6">
+    <section id="words" className="flex scroll-mt-20 flex-col gap-4 rounded-md border border-border bg-surface p-4 sm:p-6">
       <div>
-        <h2 className="font-display text-heading text-ink">Your words</h2>
-        <p className="mt-1 text-body text-ink-soft">
+        <h2 className="font-display text-h3 text-ink">Your words</h2>
+        <p className="mt-1 text-body text-ink-65">
           Names, jargon and acronyms to spell exactly. When dictation mishears one, CopyDogg
           fixes it. Edit a result and it&rsquo;ll offer to add new names for you.
         </p>
@@ -64,13 +64,13 @@ export default function WordsEditor({ initial }: { initial: string[] }) {
           {status === "saving" ? "saving..." : "Save words"}
         </button>
         {status === "saved" && (
-          <span role="status" className="text-small font-medium text-success">
+          <span role="status" className="text-ui font-medium text-success">
             Saved.
           </span>
         )}
       </div>
       {status === "error" && (
-        <p role="alert" className="text-small text-danger">
+        <p role="alert" className="text-ui text-ink">
           {error}
         </p>
       )}
