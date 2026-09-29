@@ -18,11 +18,6 @@
   --ink-50: rgba(27, 28, 20, 0.5);
   --ink-40: rgba(27, 28, 20, 0.4);
   --on-dark: #fffdf5;
-  --on-dark-78: rgba(255, 253, 245, 0.78);
-  --on-dark-62: rgba(255, 253, 245, 0.62);
-  --on-dark-55: rgba(255, 253, 245, 0.55);
-  --on-dark-fill-07: rgba(255, 253, 245, 0.07);
-  --on-dark-fill-10: rgba(255, 253, 245, 0.1);
 
   --border: rgba(0, 0, 0, 0.1);
   --border-soft: rgba(27, 28, 20, 0.08);
@@ -43,51 +38,9 @@
   color: var(--ink);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .landing {
-    --bg: #2a2b22;
-    --surface: var(--on-dark-fill-07);
-    --surface-cream: var(--on-dark-fill-07);
-    --surface-warm: var(--on-dark-fill-07);
-    --surface-hover: var(--on-dark-fill-10);
-    --surface-press: var(--on-dark-fill-10);
-    --ink: #fffdf5;
-    --ink-65: var(--on-dark-78);
-    --ink-60: var(--on-dark-62);
-    --ink-50: var(--on-dark-55);
-    --ink-40: var(--on-dark-55);
-    --border: var(--on-dark-fill-10);
-    --border-soft: var(--on-dark-fill-10);
-    --border-mid: var(--on-dark-fill-10);
-    --border-strong: var(--on-dark-fill-10);
-    --border-input: var(--on-dark-fill-10);
-    --ring: 0 0 0 4px rgba(255, 253, 245, 0.1);
-    --sh-float: none;
-    --sh-hover-sm: none;
-  }
-}
-
-:root[data-theme="dark"] .landing {
-  --bg: #2a2b22;
-  --surface: var(--on-dark-fill-07);
-  --surface-cream: var(--on-dark-fill-07);
-  --surface-warm: var(--on-dark-fill-07);
-  --surface-hover: var(--on-dark-fill-10);
-  --surface-press: var(--on-dark-fill-10);
-  --ink: #fffdf5;
-  --ink-65: var(--on-dark-78);
-  --ink-60: var(--on-dark-62);
-  --ink-50: var(--on-dark-55);
-  --ink-40: var(--on-dark-55);
-  --border: var(--on-dark-fill-10);
-  --border-soft: var(--on-dark-fill-10);
-  --border-mid: var(--on-dark-fill-10);
-  --border-strong: var(--on-dark-fill-10);
-  --border-input: var(--on-dark-fill-10);
-  --ring: 0 0 0 4px rgba(255, 253, 245, 0.1);
-  --sh-float: none;
-  --sh-hover-sm: none;
-}
+/* The landing page is fixed light regardless of OS/app theme — it's a
+   marketing page, not app UI. Only the Privacy and CTA sections are dark,
+   and Landing.tsx sets that with hardcoded inline styles, not theme tokens. */
 
 .landing a {
   color: var(--ink);
