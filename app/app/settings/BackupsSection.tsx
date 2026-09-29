@@ -54,7 +54,7 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
       <p className="mt-3 text-body text-ink-soft">
         CopyDogg keeps a copy of your data from each day you use it (the last 14), in:
       </p>
-      <p className="mt-2 break-all rounded-md bg-paper px-3 py-2 font-mono text-label text-ink">
+      <p className="mt-2 break-all rounded-md bg-surface-warm px-3 py-2 font-mono text-label text-ink">
         {folder}
       </p>
 

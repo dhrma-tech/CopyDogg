@@ -26,7 +26,7 @@ const DEFAULT_SLIDERS: Sliders = {
   emojiDensity: 20,
 };
 
-const PRIMARY_BUTTON = `flex-1 ${buttonClasses({ variant: "primary" })}`;
+const PRIMARY_BUTTON = `flex-1 ${buttonClasses({ variant: "accent" })}`;
 const SECONDARY_BUTTON = buttonClasses({ variant: "secondary" });
 const TEXTAREA = `${FIELD} resize-none`;
 const META_LABEL = "label";
@@ -362,7 +362,7 @@ function PlatformStep({
 
       <div className="flex flex-col gap-3 border-t border-dashed border-control pt-5">
         <p className="text-body font-medium text-ink">Now rewrite this the way you&rsquo;d actually say it:</p>
-        <p className="rounded-md bg-paper px-4 py-3 text-body italic text-ink-soft">
+        <p className="rounded-md bg-surface-warm px-4 py-3 text-body italic text-ink-soft">
           {blandPost}
         </p>
         <textarea

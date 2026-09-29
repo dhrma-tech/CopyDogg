@@ -173,7 +173,7 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
           {retune.state === "proposed" ? (
             <div className="mt-3 flex flex-col gap-3">
               <p className="text-body text-ink-soft">Here&rsquo;s your voice, updated from what you liked and edited:</p>
-              <p className="rounded-md bg-paper px-4 py-3 text-body text-ink">
+              <p className="rounded-md bg-surface-warm px-4 py-3 text-body text-ink">
                 {retune.proposal.voiceDescription}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -289,14 +289,14 @@ export default function ProfileForm({ persona, initialTopics, learnableCount }: 
         <div className="fixed inset-x-0 bottom-24 z-30 flex justify-center px-4 sm:bottom-6">
           <div
             role="status"
-            className="flex items-center gap-4 rounded-full bg-ink py-1.5 pl-5 pr-1.5 text-small text-paper motion-safe:animate-[toast-in_200ms_ease-out]"
+            className="flex items-center gap-4 rounded-full bg-[var(--toast-bg)] py-1.5 pl-5 pr-1.5 text-small text-[var(--toast-text)] motion-safe:animate-[toast-in_200ms_var(--ease-out-soft)]"
           >
             <span>Unsaved changes</span>
             <button
               type="button"
               onClick={() => handleSave()}
               disabled={status === "saving"}
-              className="min-h-9 rounded-full bg-highlight px-4 text-small font-semibold text-on-highlight transition-colors hover:bg-highlight-hover disabled:cursor-wait"
+              className="min-h-9 rounded-full bg-[var(--toast-action-bg)] px-4 text-small font-semibold text-[var(--toast-action-text)] transition-colors hover:bg-[var(--toast-action-hover)] disabled:cursor-wait"
             >
               {status === "saving" ? "saving..." : "Save"}
             </button>

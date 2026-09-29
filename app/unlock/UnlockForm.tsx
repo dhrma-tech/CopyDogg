@@ -50,7 +50,7 @@ export default function UnlockForm({ next }: { next: string }) {
           placeholder="Password"
           className={FIELD}
         />
-        <Button type="submit" block disabled={checking}>
+        <Button type="submit" variant="accent" block disabled={checking}>
           {checking ? "checking..." : "Unlock"}
         </Button>
         {error && <p role="alert" className="text-small text-danger">{error}</p>}

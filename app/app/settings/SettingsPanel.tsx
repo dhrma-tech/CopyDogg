@@ -92,7 +92,7 @@ export default function SettingsPanel({
           <p className="mt-3 text-body text-ink-soft">
             Everything lives in one file on this machine:
           </p>
-          <p className="mt-2 break-all rounded-md bg-paper px-3 py-2 font-mono text-label text-ink">
+          <p className="mt-2 break-all rounded-md bg-surface-warm px-3 py-2 font-mono text-label text-ink">
             {dataFile}
           </p>
           <a href="/api/export" download className={`mt-4 ${SECONDARY_BUTTON}`}>
