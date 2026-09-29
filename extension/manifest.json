@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "CopyDogg Launcher",
+  "version": "1.0.0",
+  "description": "Opens your local CopyDogg app in its own window, from a toolbar click or keyboard shortcut. Requires CopyDogg to already be running (npm run dev).",
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_title": "Open CopyDogg",
+    "default_icon": {
+      "16": "icons/16.png",
+      "48": "icons/48.png",
+      "128": "icons/128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "open-copydogg": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+X",
+        "mac": "Command+Shift+X"
+      },
+      "description": "Open CopyDogg"
+    }
+  },
+  "permissions": ["tabs"],
+  "host_permissions": ["http://localhost:3000/*", "http://127.0.0.1:3000/*"]
+}
