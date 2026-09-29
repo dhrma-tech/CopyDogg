@@ -12,7 +12,7 @@ const OPTIONS: { value: Theme; label: string }[] = [
 
 /** Per-device appearance; stored in this browser only. */
 export default function ThemeSwitch() {
-  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "system" as Theme);
+  const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "light" as Theme);
 
   return (
     <section>
