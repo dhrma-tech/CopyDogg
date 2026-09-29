@@ -14,7 +14,7 @@ import PlatformPicker from "@/components/PlatformPicker";
 import Button, { buttonClasses } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { chipClasses } from "@/components/ui/Chip";
-import { FIELD, SELECT } from "@/components/ui/Field";
+import { FIELD, Select } from "@/components/ui/Field";
 import { SEGMENT_TRACK, segmentClasses } from "@/components/ui/Segmented";
 import { DictationStatus, MicButton } from "@/components/MicButton";
 import { useDictation } from "@/lib/useDictation";
@@ -683,31 +683,21 @@ export default function GenerationScreen({
 
   return (
     <div className="w-full max-w-2xl">
-      <h1 className="mb-5 text-center font-display text-title text-ink sm:text-left">
+      <h1 className="mb-5 text-center font-display text-title text-ink">
         What are we writing today?
       </h1>
 
       <Card variant="main">
         {voices.length > 1 && (
-          <label className="relative mb-3 inline-flex">
-            <span className="sr-only">Voice</span>
-            <select
-              value={voice.id}
-              onChange={(e) => switchVoice(e.target.value)}
-              className={`${SELECT} cursor-pointer appearance-none pl-3.5 pr-9`}
-            >
+          <div className="mb-3">
+            <Select value={voice.id} onChange={(e) => switchVoice(e.target.value)} aria-label="Voice">
               {voices.map((v) => (
                 <option key={v.id} value={v.id}>
                   {v.name}
                 </option>
               ))}
-            </select>
-            <ChevronDown
-              size={14}
-              strokeWidth={2.5}
-              className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink"
-            />
-          </label>
+            </Select>
+          </div>
         )}
 
         <div className={SEGMENT_TRACK} role="group" aria-label="Mode">
@@ -717,7 +707,7 @@ export default function GenerationScreen({
               type="button"
               onClick={() => switchMode(m)}
               aria-pressed={mode === m}
-              className={segmentClasses(mode === m)}
+              className={segmentClasses(mode === m, { accent: true })}
             >
               {MODE_LABELS[m]}
             </button>
@@ -922,14 +912,14 @@ export default function GenerationScreen({
                 <label className="flex items-center gap-2">
                   <span className={META}>to</span>
                   {contacts.length > 0 ? (
-                    <select value={contactId} onChange={(e) => setContactId(e.target.value)} className={SELECT}>
+                    <Select value={contactId} onChange={(e) => setContactId(e.target.value)}>
                       <option value="">anyone</option>
                       {contacts.map((c) => (
                         <option key={c.id} value={c.id}>
                           {c.name} ({c.relationship})
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   ) : (
                     <Link href="/app/profile#people" className="link text-small">
                       add people
@@ -938,26 +928,26 @@ export default function GenerationScreen({
                 </label>
                 <label className="flex items-center gap-2">
                   <span className={META}>in</span>
-                  <select value={language} onChange={(e) => setLanguageInput(e.target.value)} className={SELECT}>
+                  <Select value={language} onChange={(e) => setLanguageInput(e.target.value)}>
                     <option value="">same language</option>
                     {LANGUAGES.map((l) => (
                       <option key={l} value={l}>
                         {l}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
                 <label className="flex items-center gap-2">
                   <span className={META}>shape</span>
                   {templates.length > 0 ? (
-                    <select value={templateId} onChange={(e) => setTemplateId(e.target.value)} className={SELECT}>
+                    <Select value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
                       <option value="">no template</option>
                       {templates.map((t) => (
                         <option key={t.id} value={t.id}>
                           {t.name}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   ) : (
                     <Link href="/app/profile#templates" className="link text-small">
                       add templates
@@ -968,7 +958,7 @@ export default function GenerationScreen({
             </div>
           )}
 
-          <Button type="submit" block disabled={status === "loading" || !canSubmit}>
+          <Button type="submit" variant="accent" block disabled={status === "loading" || !canSubmit}>
             {submitLabel}
           </Button>
 

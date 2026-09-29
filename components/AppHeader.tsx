@@ -28,7 +28,7 @@ export default function AppHeader() {
       {/* Same width as app content (max-w-2xl), so the logo lines up with the page. */}
       <header className="sticky top-0 z-30 w-full border-b border-border-soft bg-[var(--header-bg)] px-4 backdrop-blur-[14px] sm:px-6">
         <div className="mx-auto flex h-[62px] max-w-2xl items-center justify-between">
-          <Link href="/app" aria-label="CopyDogg, writing screen" className="no-underline">
+          <Link href="/" aria-label="CopyDogg, home" className="no-underline">
             <Logo />
           </Link>
           <nav aria-label="Main" className="hidden items-center gap-2 sm:flex">

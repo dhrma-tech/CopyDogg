@@ -10,7 +10,7 @@ import { suggestWords } from "@/lib/wordSuggestions";
 import { learnWords } from "@/app/actions";
 import Button, { buttonClasses } from "@/components/ui/Button";
 import { chipClasses } from "@/components/ui/Chip";
-import { SELECT } from "@/components/ui/Field";
+import { Select } from "@/components/ui/Field";
 
 export interface CardOutput {
   key: string;
@@ -320,12 +320,12 @@ export default function GenerateCard({
                 <span key={i}>{part.text}</span>
               ) : part.type === "add" ? (
                 <span key={i}>
-                  <ins className="rounded-sm bg-highlight-soft text-ink no-underline">{part.text}</ins>
+                  <ins className="rounded-sm bg-accent-10 text-ink no-underline">{part.text}</ins>
                   {diff[i + 1]?.type === "del" && !/\s$/.test(part.text) && !/^\s/.test(diff[i + 1].text) && " "}
                 </span>
               ) : (
                 <span key={i}>
-                  <del className="text-ink-soft decoration-danger">{part.text}</del>
+                  <del className="text-ink-50 decoration-danger">{part.text}</del>
                   {/* Keep a removed word and the word replacing it visibly apart. */}
                   {diff[i + 1]?.type === "add" && !/\s$/.test(part.text) && !/^\s/.test(diff[i + 1].text) && " "}
                 </span>
@@ -441,18 +441,17 @@ export default function GenerateCard({
 
       {expanded && remixOpen && (
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed border-hairline pt-3">
-          <select
+          <Select
             value={remixPlatform}
             onChange={(e) => setRemixPlatform(e.target.value as Platform)}
             aria-label="Remix for which platform"
-            className={SELECT}
           >
             {remixChoices.map((p) => (
               <option key={p} value={p}>
                 {platformRules[p].label}
               </option>
             ))}
-          </select>
+          </Select>
           <Button size="sm" onClick={handleRemix}>
             Remix
           </Button>

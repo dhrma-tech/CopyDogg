@@ -4,7 +4,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { saveContacts } from "@/app/actions";
 import { buttonClasses } from "@/components/ui/Button";
-import { FIELD } from "@/components/ui/Field";
+import { FIELD, Select } from "@/components/ui/Field";
 import { RELATIONSHIPS } from "@/lib/writingOptions";
 
 interface Person {
@@ -73,10 +73,11 @@ export default function PeopleEditor({
               aria-label="Name"
               className={`flex-1 ${INPUT}`}
             />
-            <select
+            <Select
               value={p.relationship}
               onChange={(e) => update(p.key, { relationship: e.target.value })}
               aria-label="Relationship"
+              variant="field"
               className={INPUT}
             >
               {RELATIONSHIPS.map((r) => (
@@ -84,7 +85,7 @@ export default function PeopleEditor({
                   {r}
                 </option>
               ))}
-            </select>
+            </Select>
             <button
               type="button"
               onClick={() => {
