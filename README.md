@@ -94,3 +94,7 @@ Next.js (App Router) + TypeScript + Tailwind, and the Claude API through the off
 - `lib/platformRules.ts` holds each platform's format rules and the setup prompts.
 - `lib/store.ts` is the JSON file store.
 - `docs/product-plan.md` and `docs/design-system.md` describe the product and the design tokens.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
