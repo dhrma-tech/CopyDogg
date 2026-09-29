@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { restoreFromBackup } from "@/app/actions";
-import { buttonClasses } from "@/components/ui/Button";
+import { TEXT_BUTTON, buttonClasses } from "@/components/ui/Button";
 
 interface Backup {
   name: string;
@@ -12,7 +12,6 @@ interface Backup {
 }
 
 const META = "label";
-const QUIET = buttonClasses({ variant: "quiet", size: "sm" });
 
 function describe(backup: Backup) {
   const day = backup.name.match(/copydogg-(\d{4}-\d{2}-\d{2})/)?.[1] ?? backup.date.slice(0, 10);
@@ -51,28 +50,28 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
   return (
     <section>
       <p className={META}>Backups</p>
-      <p className="mt-3 text-body text-ink-soft">
+      <p className="mt-3 text-body text-ink-65">
         CopyDogg keeps a copy of your data from each day you use it (the last 14), in:
       </p>
-      <p className="mt-2 break-all rounded-md bg-paper px-3 py-2 font-mono text-label text-ink">
+      <p className="mt-2 break-all rounded-md bg-surface-warm px-3 py-2 font-mono text-micro leading-normal text-ink">
         {folder}
       </p>
 
       {backups.length === 0 ? (
-        <p className="mt-3 text-body text-ink-soft">
+        <p className="mt-3 text-body text-ink-65">
           No backups yet — the first one is made the next day you use CopyDogg.
         </p>
       ) : (
-        <ul className="mt-3 flex flex-col divide-y divide-dashed divide-hairline">
+        <ul className="mt-3 flex flex-col divide-y divide-border-soft">
           {backups.map((b) => (
-            <li key={b.name} className="flex flex-wrap items-center justify-between gap-2 py-2 text-small">
+            <li key={b.name} className="flex flex-wrap items-center justify-between gap-2 py-2 text-ui">
               <span className="text-ink">
                 {describe(b)}{" "}
                 <span className="label">{Math.max(1, Math.round(b.bytes / 1024))} KB</span>
               </span>
               {confirming === b.name ? (
                 <span className="flex flex-wrap items-center gap-1">
-                  <span className="text-ink-soft">Replace your current data?</span>
+                  <span className="mr-1 text-ink-65">Replace your current data?</span>
                   <button
                     type="button"
                     onClick={() => restore(b)}
@@ -81,7 +80,7 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
                   >
                     {pending ? "restoring..." : "Restore"}
                   </button>
-                  <button type="button" onClick={() => setConfirming(null)} className={QUIET}>
+                  <button type="button" onClick={() => setConfirming(null)} className={TEXT_BUTTON}>
                     Cancel
                   </button>
                 </span>
@@ -100,7 +99,7 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
       )}
 
       {message && (
-        <p role={message.ok ? "status" : "alert"} className={`mt-2 text-small font-medium ${message.ok ? "text-success" : "text-danger"}`}>{message.text}</p>
+        <p role={message.ok ? "status" : "alert"} className={`mt-2 text-ui font-medium ${message.ok ? "text-success" : "text-ink"}`}>{message.text}</p>
       )}
     </section>
   );

@@ -70,17 +70,17 @@ export default function SettingsPanel({
 
   return (
     <div className="w-full max-w-2xl">
-      <h1 className="font-display text-title text-ink">Settings</h1>
+      <h1 className="font-display text-h3 text-ink">Settings</h1>
 
       <Card variant="main" className="mt-5 flex flex-col gap-8">
         <section>
           <p className={META_LABEL}>Usage</p>
-          <p className="mt-3 text-body text-ink-soft">
+          <p className="mt-3 text-body text-ink-65">
             {generationCount === 0
               ? "No posts generated yet."
               : `You've generated ${generationCount} post${generationCount === 1 ? "" : "s"} and saved ${savedCount}.`}
           </p>
-          <p className="mt-2 text-body text-ink-soft">
+          <p className="mt-2 text-body text-ink-65">
             {demoMode
               ? "Demo mode: no Claude API key found, so posts are placeholders. Add ANTHROPIC_API_KEY to .env.local and restart."
               : "Posts are written with your own Claude API key, billed to your Anthropic account."}
@@ -89,10 +89,10 @@ export default function SettingsPanel({
 
         <section>
           <p className={META_LABEL}>Your data</p>
-          <p className="mt-3 text-body text-ink-soft">
+          <p className="mt-3 text-body text-ink-65">
             Everything lives in one file on this machine:
           </p>
-          <p className="mt-2 break-all rounded-md bg-paper px-3 py-2 font-mono text-label text-ink">
+          <p className="mt-2 break-all rounded-md bg-surface-warm px-3 py-2 font-mono text-micro leading-normal text-ink">
             {dataFile}
           </p>
           <a href="/api/export" download className={`mt-4 ${SECONDARY_BUTTON}`}>
@@ -106,7 +106,7 @@ export default function SettingsPanel({
 
         <section>
           <p className={META_LABEL}>Voice input</p>
-          <p className="mt-3 text-body text-ink-soft">
+          <p className="mt-3 text-body text-ink-65">
             Adds a mic button to the writing screen so you can say your idea
             instead of typing it.
           </p>
@@ -128,14 +128,14 @@ export default function SettingsPanel({
               Turn on voice input
             </span>
           </label>
-          {voiceError && <p role="alert" className="mt-2 text-small text-danger">{voiceError}</p>}
+          {voiceError && <p role="alert" className="mt-2 text-ui text-ink">{voiceError}</p>}
           <DictationSettings enabled={voiceInput} initialLanguage={dictationLanguage} />
         </section>
 
         {passwordEnabled && (
           <section>
             <p className={META_LABEL}>Password</p>
-            <p className="mt-3 text-body text-ink-soft">
+            <p className="mt-3 text-body text-ink-65">
               This copy is password protected. Lock it to require the password
               again on this device.
             </p>
@@ -153,14 +153,14 @@ export default function SettingsPanel({
           </section>
         )}
 
-        <section className="border-t border-dashed border-control pt-6">
-          <p className="label text-danger">Start over</p>
+        <section className="border-t border-border-soft pt-6">
+          <p className="label text-ink">Start over</p>
 
           {resetStep === "idle" && (
             <button
               type="button"
               onClick={() => setResetStep("confirm")}
-              className={`mt-2 -ml-3.5 ${buttonClasses({ variant: "danger", size: "sm" })}`}
+              className="mt-2 -ml-3 inline-flex h-9 items-center whitespace-nowrap rounded-pill px-3 text-ui font-medium text-ink underline decoration-ink-50 underline-offset-[3px] transition-colors hover:bg-surface-hover"
             >
               Reset everything
             </button>
@@ -173,7 +173,7 @@ export default function SettingsPanel({
                 generated post from the data file. Export first if you want a
                 copy — this can&rsquo;t be undone.
               </p>
-              {resetError && <p role="alert" className="text-small text-danger">{resetError}</p>}
+              {resetError && <p role="alert" className="text-ui text-ink">{resetError}</p>}
               <div className="flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
