@@ -245,6 +245,15 @@ export const FOOTER_COLUMNS: { title: string; links: [string, string][] }[] = [
       ["FAQ", "#faq"],
     ],
   },
+  {
+    title: "Your copy",
+    links: [
+      ["Get started", "/onboarding"],
+      ["Open the app", "/app"],
+      ["Settings", "/app/settings"],
+      ["Privacy", "#privacy"],
+    ],
+  },
 ];
 
 export const FAQS: [string, string][] = [
