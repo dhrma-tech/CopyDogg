@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import Logo from "@/components/Logo";
 import { completeOnboarding } from "@/app/actions";
 import { onboardingPrompts, platformRules, type Platform } from "@/lib/platformRules";
 import type { Sliders } from "@/lib/voicePreview";
@@ -26,11 +28,12 @@ const DEFAULT_SLIDERS: Sliders = {
   emojiDensity: 20,
 };
 
-const PRIMARY_BUTTON = `flex-1 ${buttonClasses({ variant: "primary" })}`;
+// The one green action per step.
+const PRIMARY_BUTTON = `flex-1 ${buttonClasses({ variant: "accent" })}`;
 const SECONDARY_BUTTON = buttonClasses({ variant: "secondary" });
 const TEXTAREA = `${FIELD} resize-none`;
 const META_LABEL = "label";
-const HEADING = "font-display text-title text-ink";
+const HEADING = "text-balance font-display text-h2 text-ink";
 
 function hasContent(a: PlatformAnswers | undefined) {
   return !!a && (a.rewrite.trim() !== "" || a.samples.some((s) => s.trim() !== ""));
@@ -184,123 +187,135 @@ export default function OnboardingFlow() {
   const totalSteps = platforms.length + 2;
 
   return (
-    <div className="w-full max-w-xl">
-      <p className={META_LABEL}>
-        {step === 0 ? "Getting started" : `Step ${step + 1} of ${totalSteps}`}
-      </p>
+    <>
+      {/* Onboarding's own header: logo back to the landing page, step count on the right. */}
+      <header className="sticky top-0 z-30 w-full border-b border-border-soft bg-[var(--header-bg)] px-4 backdrop-blur-[14px] sm:px-6">
+        <div className="mx-auto flex h-[62px] max-w-xl items-center justify-between gap-3">
+          <Link href="/" aria-label="CopyDogg" className="no-underline">
+            <Logo />
+          </Link>
+          <p className={META_LABEL}>
+            {step === 0 ? "Getting started" : `Step ${step + 1} of ${totalSteps}`}
+          </p>
+        </div>
+      </header>
 
-      <Card variant="main" className="mt-3">
-        {step === 0 && (
-          <div className="flex flex-col gap-4">
-            <h1 className={HEADING}>
-              Where do you post?
-            </h1>
-            <p className="text-body text-ink-soft">
-              Pick every place you want CopyDogg to write for. You can change
-              this later.
-            </p>
-            <PlatformMultiPicker value={platforms} onChange={setPlatforms} />
-            <button
-              type="button"
-              onClick={() => setStep(1)}
-              disabled={platforms.length === 0}
-              className={`mt-2 ${PRIMARY_BUTTON}`}
-            >
-              Next
-            </button>
-          </div>
-        )}
+      <main className="flex flex-1 justify-center px-4 pt-6 pb-12 sm:px-6">
+        <div className="w-full max-w-xl">
+          <Card variant="main">
+            {step === 0 && (
+              <div className="flex flex-col gap-4">
+                <h1 className={HEADING}>
+                  Where do you post?
+                </h1>
+                <p className="text-body text-ink-65">
+                  Pick every place you want CopyDogg to write for. You can change
+                  this later.
+                </p>
+                <PlatformMultiPicker value={platforms} onChange={setPlatforms} />
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  disabled={platforms.length === 0}
+                  className={`mt-2 ${PRIMARY_BUTTON}`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
 
-        {currentPlatform && (
-          <PlatformStep
-            key={currentPlatform}
-            platform={currentPlatform}
-            answers={answers[currentPlatform] ?? EMPTY_ANSWERS}
-            onChange={(next) => updateAnswers(currentPlatform, next)}
-            isLast={step === platforms.length}
-            reading={reading}
-            readError={readError}
-            onBack={() => setStep(step - 1)}
-            onNext={() => advanceFromPlatform()}
-            onSkip={() => skipPlatform(currentPlatform)}
-            onUseDefaults={goToDefaults}
-          />
-        )}
-
-        {step === resultsStep && step > 0 && (
-          <div className="flex flex-col gap-6">
-            <div>
-              <h1 className={HEADING}>
-                Here&rsquo;s how you sound
-              </h1>
-              <p className="mt-2 text-body text-ink-soft">
-                {usedDefaults
-                  ? "You skipped the samples, so these are starting defaults. Adjust them now, or fine-tune later in Profile."
-                  : "This is what CopyDogg uses every time it writes for you. Change anything that's off."}
-              </p>
-            </div>
-
-            <label className="flex flex-col gap-2">
-              <span className={META_LABEL}>Your voice</span>
-              <textarea
-                value={voiceDescription}
-                onChange={(e) => setVoiceDescription(e.target.value)}
-                rows={5}
-                placeholder="e.g. You write in short, direct lines and rarely use emoji."
-                className={TEXTAREA}
+            {currentPlatform && (
+              <PlatformStep
+                key={currentPlatform}
+                platform={currentPlatform}
+                answers={answers[currentPlatform] ?? EMPTY_ANSWERS}
+                onChange={(next) => updateAnswers(currentPlatform, next)}
+                isLast={step === platforms.length}
+                reading={reading}
+                readError={readError}
+                onBack={() => setStep(step - 1)}
+                onNext={() => advanceFromPlatform()}
+                onSkip={() => skipPlatform(currentPlatform)}
+                onUseDefaults={goToDefaults}
               />
-            </label>
+            )}
 
-            <div className="flex flex-col gap-3">
-              <span className={META_LABEL}>Your tone</span>
-              <ToneSliders
-                sliders={sliders}
-                onChange={(key, value) => setSliders((s) => ({ ...s, [key]: value }))}
-              />
-            </div>
+            {step === resultsStep && step > 0 && (
+              <div className="flex flex-col gap-6">
+                <div>
+                  <h1 className={HEADING}>
+                    Here&rsquo;s how you sound
+                  </h1>
+                  <p className="mt-2 text-body text-ink-65">
+                    {usedDefaults
+                      ? "You skipped the samples, so these are starting defaults. Adjust them now, or fine-tune later in Profile."
+                      : "This is what CopyDogg uses every time it writes for you. Change anything that's off."}
+                  </p>
+                </div>
 
-            <div className="flex flex-col gap-4">
-              <span className={META_LABEL}>Per platform</span>
-              {platforms.map((p) => (
-                <label key={p} className="flex flex-col gap-2">
-                  <span className="text-small font-medium text-ink">{platformRules[p].label}</span>
+                <label className="flex flex-col gap-2">
+                  <span className={META_LABEL}>Your voice</span>
                   <textarea
-                    value={platformVoices[p] ?? ""}
-                    onChange={(e) =>
-                      setPlatformVoices((v) => ({ ...v, [p]: e.target.value }))
-                    }
-                    rows={2}
-                    placeholder={`Anything different about how you sound on ${platformRules[p].label}?`}
+                    value={voiceDescription}
+                    onChange={(e) => setVoiceDescription(e.target.value)}
+                    rows={5}
+                    placeholder="e.g. You write in short, direct lines and rarely use emoji."
                     className={TEXTAREA}
                   />
                 </label>
-              ))}
-            </div>
 
-            {saveError && <p role="alert" className="text-small text-danger">{saveError}</p>}
+                <div className="flex flex-col gap-3">
+                  <span className={META_LABEL}>Your tone</span>
+                  <ToneSliders
+                    sliders={sliders}
+                    onChange={(key, value) => setSliders((s) => ({ ...s, [key]: value }))}
+                  />
+                </div>
 
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setStep(platforms.length)}
-                disabled={saving}
-                className={SECONDARY_BUTTON}
-              >
-                Back
-              </button>
-              <button
-                type="button"
-                onClick={handleFinish}
-                disabled={saving}
-                className={PRIMARY_BUTTON}
-              >
-                {saving ? "setting things up..." : "Start writing"}
-              </button>
-            </div>
-          </div>
-        )}
-      </Card>
-    </div>
+                <div className="flex flex-col gap-4">
+                  <span className={META_LABEL}>Per platform</span>
+                  {platforms.map((p) => (
+                    <label key={p} className="flex flex-col gap-2">
+                      <span className="text-ui font-medium text-ink">{platformRules[p].label}</span>
+                      <textarea
+                        value={platformVoices[p] ?? ""}
+                        onChange={(e) =>
+                          setPlatformVoices((v) => ({ ...v, [p]: e.target.value }))
+                        }
+                        rows={2}
+                        placeholder={`Anything different about how you sound on ${platformRules[p].label}?`}
+                        className={TEXTAREA}
+                      />
+                    </label>
+                  ))}
+                </div>
+
+                {saveError && <p role="alert" className="text-ui text-ink">{saveError}</p>}
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setStep(platforms.length)}
+                    disabled={saving}
+                    className={SECONDARY_BUTTON}
+                  >
+                    Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleFinish}
+                    disabled={saving}
+                    className={PRIMARY_BUTTON}
+                  >
+                    {saving ? "setting things up..." : "Start writing"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </Card>
+        </div>
+      </main>
+    </>
   );
 }
 
@@ -334,11 +349,7 @@ function PlatformStep({
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className={HEADING}>
-          How you sound on {label}
-        </h1>
-      </div>
+      <h1 className={HEADING}>How you sound on {label}</h1>
 
       <div className="flex flex-col gap-2">
         <p className="text-body font-medium text-ink">
@@ -360,9 +371,9 @@ function PlatformStep({
         ))}
       </div>
 
-      <div className="flex flex-col gap-3 border-t border-dashed border-control pt-5">
+      <div className="flex flex-col gap-3 border-t border-border-soft pt-5">
         <p className="text-body font-medium text-ink">Now rewrite this the way you&rsquo;d actually say it:</p>
-        <p className="rounded-md bg-paper px-4 py-3 text-body italic text-ink-soft">
+        <p className="rounded-md bg-surface-warm px-4 py-3 text-body italic text-ink-65">
           {blandPost}
         </p>
         <textarea
@@ -376,8 +387,8 @@ function PlatformStep({
 
       {readError && (
         <div className="flex flex-col gap-2">
-          <p role="alert" className="text-small text-danger">{readError}</p>
-          <button type="button" onClick={onUseDefaults} className="link self-start text-small">
+          <p role="alert" className="text-ui text-ink">{readError}</p>
+          <button type="button" onClick={onUseDefaults} className="link self-start text-ui font-medium">
             Continue with defaults
           </button>
         </div>
