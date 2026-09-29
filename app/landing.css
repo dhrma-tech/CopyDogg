@@ -1,0 +1,182 @@
+/*
+ * Warm Serif tokens (docs/design-system.md), scoped to `.landing` so the rest
+ * of the app keeps running on Highlighter (app/globals.css) until it migrates.
+ */
+.landing {
+  --bg: #fffdf5;
+  --surface: #ffffff;
+  --surface-cream: #fffaeb;
+  --surface-warm: #fbf8ef;
+  --surface-hover: #f4ecd9;
+  --surface-press: #f2efe4;
+  --bg-dark: #2a2b22;
+
+  --ink: #1b1c14;
+  --ink-80: rgba(27, 28, 20, 0.8);
+  --ink-65: rgba(27, 28, 20, 0.65);
+  --ink-60: rgba(27, 28, 20, 0.6);
+  --ink-50: rgba(27, 28, 20, 0.5);
+  --ink-40: rgba(27, 28, 20, 0.4);
+  --on-dark: #fffdf5;
+  --on-dark-78: rgba(255, 253, 245, 0.78);
+  --on-dark-62: rgba(255, 253, 245, 0.62);
+  --on-dark-55: rgba(255, 253, 245, 0.55);
+  --on-dark-fill-07: rgba(255, 253, 245, 0.07);
+  --on-dark-fill-10: rgba(255, 253, 245, 0.1);
+
+  --border: rgba(0, 0, 0, 0.1);
+  --border-soft: rgba(27, 28, 20, 0.08);
+  --border-mid: rgba(27, 28, 20, 0.12);
+  --border-strong: rgba(27, 28, 20, 0.16);
+  --border-input: rgba(27, 28, 20, 0.28);
+
+  --accent: #00674f;
+  --accent-10: rgba(0, 103, 79, 0.1);
+  --accent-16: rgba(0, 103, 79, 0.16);
+
+  --sh-float: 0 4px 32px rgba(27, 28, 21, 0.1);
+  --sh-hover-sm: 0 10px 30px rgba(27, 28, 21, 0.06);
+  --sh-btn-inset: inset 0 1px 1px rgba(0, 0, 0, 0.2);
+  --ring: 0 0 0 4px rgba(27, 28, 20, 0.08);
+
+  background: var(--bg);
+  color: var(--ink);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .landing {
+    --bg: #2a2b22;
+    --surface: var(--on-dark-fill-07);
+    --surface-cream: var(--on-dark-fill-07);
+    --surface-warm: var(--on-dark-fill-07);
+    --surface-hover: var(--on-dark-fill-10);
+    --surface-press: var(--on-dark-fill-10);
+    --ink: #fffdf5;
+    --ink-65: var(--on-dark-78);
+    --ink-60: var(--on-dark-62);
+    --ink-50: var(--on-dark-55);
+    --ink-40: var(--on-dark-55);
+    --border: var(--on-dark-fill-10);
+    --border-soft: var(--on-dark-fill-10);
+    --border-mid: var(--on-dark-fill-10);
+    --border-strong: var(--on-dark-fill-10);
+    --border-input: var(--on-dark-fill-10);
+    --ring: 0 0 0 4px rgba(255, 253, 245, 0.1);
+    --sh-float: none;
+    --sh-hover-sm: none;
+  }
+}
+
+:root[data-theme="dark"] .landing {
+  --bg: #2a2b22;
+  --surface: var(--on-dark-fill-07);
+  --surface-cream: var(--on-dark-fill-07);
+  --surface-warm: var(--on-dark-fill-07);
+  --surface-hover: var(--on-dark-fill-10);
+  --surface-press: var(--on-dark-fill-10);
+  --ink: #fffdf5;
+  --ink-65: var(--on-dark-78);
+  --ink-60: var(--on-dark-62);
+  --ink-50: var(--on-dark-55);
+  --ink-40: var(--on-dark-55);
+  --border: var(--on-dark-fill-10);
+  --border-soft: var(--on-dark-fill-10);
+  --border-mid: var(--on-dark-fill-10);
+  --border-strong: var(--on-dark-fill-10);
+  --border-input: var(--on-dark-fill-10);
+  --ring: 0 0 0 4px rgba(255, 253, 245, 0.1);
+  --sh-float: none;
+  --sh-hover-sm: none;
+}
+
+.landing a {
+  color: var(--ink);
+}
+
+.landing :focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@keyframes landing-blink {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes landing-marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.landing-caret {
+  animation: landing-blink 1s step-end infinite;
+}
+
+.landing-marquee-track {
+  animation: landing-marquee 55s linear infinite;
+}
+@media (max-width: 991px) {
+  .landing-marquee-track {
+    animation-duration: 42s;
+  }
+}
+
+.landing-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 900ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.landing-reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.landing-burst-card {
+  transition:
+    opacity 700ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.landing-pop {
+  opacity: 0;
+  transform: scale(0.95);
+  transition:
+    opacity 900ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.landing-pop.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes landing-grow {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+.landing-grow {
+  animation: landing-grow 7000ms linear forwards;
+}
+.landing-grow.is-paused {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing *,
+  .landing *::before,
+  .landing *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .landing-reveal,
+  .landing-burst-card {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
