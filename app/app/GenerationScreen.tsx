@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import { Bookmark, ChevronDown, ChevronUp } from "lucide-react";
 import PlatformPicker from "@/components/PlatformPicker";
-import Button, { buttonClasses } from "@/components/ui/Button";
+import Button, { TEXT_BUTTON } from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { chipClasses } from "@/components/ui/Chip";
 import { FIELD, SELECT } from "@/components/ui/Field";
@@ -113,7 +113,7 @@ const META = "label";
 const PILL_ON = chipClasses(true, "sm");
 const PILL_OFF = chipClasses(false, "sm");
 // Small text-only controls in the row under the text box.
-const QUIET = buttonClasses({ variant: "quiet", size: "sm" });
+const QUIET = TEXT_BUTTON;
 
 interface Voice {
   id: string;
@@ -131,6 +131,8 @@ interface GenerationScreenProps {
   dictationLanguage: string;
   /** "Your words" from Profile. */
   words: string[];
+  /** Mode to open in, from a link like /app?mode=reply. */
+  initialMode?: Mode;
 }
 
 type Status = "idle" | "loading" | "error";
@@ -143,6 +145,7 @@ export default function GenerationScreen({
   voiceInput,
   dictationLanguage,
   words,
+  initialMode,
 }: GenerationScreenProps) {
   // Grows when a card's "Add to your words?" is used, so later edits don't re-suggest.
   const [knownWords, setKnownWords] = useState(words);
@@ -157,7 +160,7 @@ export default function GenerationScreen({
   const [ideaInput, setIdeaInput] = useState<string | null>(null);
   const [contextInput, setContextInput] = useState<string | null>(null);
   const [platformChoice, setPlatformChoice] = useState<Platform | "all" | null>(null);
-  const [modeInput, setModeInput] = useState<Mode | null>(null);
+  const [modeInput, setModeInput] = useState<Mode | null>(initialMode ?? null);
   const [languageInput, setLanguageInput] = useState<string | null>(null);
   const idea = ideaInput ?? draft.idea;
   const context = contextInput ?? draft.context;
@@ -683,7 +686,7 @@ export default function GenerationScreen({
 
   return (
     <div className="w-full max-w-2xl">
-      <h1 className="mb-5 text-center font-display text-title text-ink sm:text-left">
+      <h1 className="mb-5 font-display text-h3 text-ink">
         What are we writing today?
       </h1>
 
@@ -717,7 +720,7 @@ export default function GenerationScreen({
               type="button"
               onClick={() => switchMode(m)}
               aria-pressed={mode === m}
-              className={segmentClasses(mode === m)}
+              className={segmentClasses(mode === m, { accent: true })}
             >
               {MODE_LABELS[m]}
             </button>
@@ -769,7 +772,7 @@ export default function GenerationScreen({
               >
                 {keepWords ? "keep my words ✓" : "keep my words"}
               </button>
-              <span className="text-small text-ink-soft">
+              <span className="text-ui text-ink-65">
                 {keepWords
                   ? "Just tidies punctuation, paragraphs and lists."
                   : "Rewrites it to sound like you."}
@@ -778,7 +781,7 @@ export default function GenerationScreen({
           )}
 
           {mode === "notes" && (
-            <p className="text-small text-ink-soft">
+            <p className="text-ui text-ink-65">
               {platformRules[platform].kind === "message"
                 ? `You'll get a recap ${platformRules[platform].label === "Work chat" ? "update" : platformRules[platform].label.toLowerCase()} with a summary, decisions and next steps.`
                 : "You'll get clean notes: summary, decisions and next steps. Pick Email or Work chat for a recap message."}
@@ -819,7 +822,7 @@ export default function GenerationScreen({
           {micOn && <DictationStatus dictation={dictation} />}
 
           {showChips && (
-            <div className="scroll-fade-x -mx-5 flex items-center gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6">
+            <div className="scroll-fade-x -mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:-mx-6 sm:px-6">
               <div className="flex gap-2" role="group" aria-label="Situation">
                 {SITUATIONS.map((s) => (
                   <button
@@ -833,7 +836,7 @@ export default function GenerationScreen({
                   </button>
                 ))}
               </div>
-              <span aria-hidden className="h-5 w-px shrink-0 bg-control" />
+              <span aria-hidden className="h-5 w-px shrink-0 bg-border-mid" />
               <div className="flex gap-2" role="group" aria-label="Who it's for">
                 {SCENARIO_KEYS.map((key) => (
                   <button
@@ -856,7 +859,7 @@ export default function GenerationScreen({
                 type="button"
                 onClick={() => setOverridesOpen((v) => !v)}
                 aria-expanded={overridesOpen}
-                className={`-ml-3.5 whitespace-nowrap ${QUIET}`}
+                className={`-ml-3 ${QUIET}`}
               >
                 {overridesOpen ? <ChevronUp size={14} strokeWidth={2.5} /> : <ChevronDown size={14} strokeWidth={2.5} />}
                 {overridesOpen ? "hide options" : "more options"}
@@ -870,7 +873,7 @@ export default function GenerationScreen({
                   type="button"
                   onClick={handleSaveIdea}
                   disabled={ideaSaved !== "idle"}
-                  className={`whitespace-nowrap ${QUIET}`}
+                  className={QUIET}
                 >
                   <Bookmark size={13} strokeWidth={2.5} fill={ideaSaved === "saved" ? "currentColor" : "none"} />
                   {ideaSaved === "saved" ? "saved for later" : "save idea"}
@@ -882,7 +885,7 @@ export default function GenerationScreen({
                   type="button"
                   onClick={() => setHelpOpen((v) => !v)}
                   aria-expanded={helpOpen}
-                  className={`-mr-3.5 whitespace-nowrap ${QUIET}`}
+                  className={`-mr-3 ${QUIET}`}
                 >
                   shortcuts ?
                 </button>
@@ -891,13 +894,13 @@ export default function GenerationScreen({
           </div>
 
           {helpOpen && (
-            <div className="border-t border-dashed border-control pt-3" aria-label="Keyboard shortcuts">
+            <div className="border-t border-border-soft pt-3" aria-label="Keyboard shortcuts">
               <p className={META}>Keyboard shortcuts</p>
-              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-small">
+              <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-ui">
                 {SHORTCUTS.filter(([keys]) => micOn || (keys !== "m" && keys !== "esc")).map(([keys, what]) => (
                   <div key={keys} className="contents">
                     <dt className="label text-ink">{keys}</dt>
-                    <dd className="text-ink-soft">{what}</dd>
+                    <dd className="text-ink-65">{what}</dd>
                   </div>
                 ))}
               </dl>
@@ -905,7 +908,7 @@ export default function GenerationScreen({
           )}
 
           {overridesOpen && mode !== "check" && (
-            <div className="flex flex-col gap-3 border-t border-dashed border-control pt-3">
+            <div className="flex flex-col gap-3 border-t border-border-soft pt-3">
               <ChipRow options={TONE_CHIPS} value={tone} onToggle={(v) => toggle(v, tone, setTone)} />
               <ChipRow options={LENGTH_CHIPS} value={length} onToggle={(v) => toggle(v, length, setLength)} />
               {mode === "write" && (
@@ -931,7 +934,7 @@ export default function GenerationScreen({
                       ))}
                     </select>
                   ) : (
-                    <Link href="/app/profile#people" className="link text-small">
+                    <Link href="/app/profile#people" className="link text-ui font-medium">
                       add people
                     </Link>
                   )}
@@ -959,7 +962,7 @@ export default function GenerationScreen({
                       ))}
                     </select>
                   ) : (
-                    <Link href="/app/profile#templates" className="link text-small">
+                    <Link href="/app/profile#templates" className="link text-ui font-medium">
                       add templates
                     </Link>
                   )}
@@ -968,11 +971,11 @@ export default function GenerationScreen({
             </div>
           )}
 
-          <Button type="submit" block disabled={status === "loading" || !canSubmit}>
+          <Button type="submit" variant="accent" block disabled={status === "loading" || !canSubmit}>
             {submitLabel}
           </Button>
 
-          {status === "error" && <p role="alert" className="text-small text-danger">{errorMessage}</p>}
+          {status === "error" && <p role="alert" className="text-ui text-ink">{errorMessage}</p>}
         </form>
       </Card>
 

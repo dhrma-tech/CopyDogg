@@ -572,7 +572,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                               <span style={{ ...monoFont, fontSize: 12, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-65)" }}>{f.noteLabel}</span> {f.note}
                             </p>
                             <Link
-                              href="/app"
+                              href={f.href}
                               className="inline-flex items-center gap-[10px] whitespace-nowrap rounded-full px-[15px] py-[7px] text-[14px] leading-5 font-semibold no-underline hover:border-[var(--border-strong)] hover:bg-[rgba(27,28,20,.04)]"
                               style={{ border: "1px solid var(--border)", color: "var(--ink)", transition: "border-color 150ms ease, background-color 150ms ease" }}
                             >

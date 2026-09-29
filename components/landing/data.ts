@@ -94,6 +94,7 @@ export type FeatureBlock =
 
 export const FEATURES: {
   mode: string;
+  href: string;
   title: string;
   lead: string;
   noteLabel: string;
@@ -103,6 +104,7 @@ export const FEATURES: {
 }[] = [
   {
     mode: "Write",
+    href: "/app?mode=write",
     title: "Type an idea. Get posts that sound like you.",
     lead: "A few words is plenty. CopyDogg writes 2–3 versions for X, LinkedIn, Instagram, Threads, Reddit or a newsletter, already formatted for each.",
     noteLabel: "You type",
@@ -124,6 +126,7 @@ export const FEATURES: {
   },
   {
     mode: "Reply",
+    href: "/app?mode=reply",
     title: "Reply the way you’d actually reply",
     lead: "Paste the message you got, say what you want to say back, and get replies in your voice. Texts, emails, work chat, even whole conversations.",
     noteLabel: "One tap",
@@ -144,6 +147,7 @@ export const FEATURES: {
   },
   {
     mode: "Tweak",
+    href: "/app?mode=rewrite",
     title: "Tweak it until it’s right",
     lead: "Shorter, warmer, more direct, funnier. Or edit it by hand — CopyDogg learns from your edits and the posts you like.",
     noteLabel: "Keyboard",
@@ -169,6 +173,7 @@ export const FEATURES: {
   },
   {
     mode: "Check",
+    href: "/app?mode=check",
     title: "Check how it comes across before you send it",
     lead: "Paste something you wrote and see if it reads cold, too formal, or just right. One tap rewrites it.",
     noteLabel: "Before you hit send",
