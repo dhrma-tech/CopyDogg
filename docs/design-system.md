@@ -220,18 +220,6 @@ All in `components/ui/`. Pages use these instead of re-writing class strings. In
 
 ## Migration status
 
-**Done:** the tokens above live in `app/globals.css` (light + dark), the three fonts load in `app/layout.tsx`, and `components/ui/*`, `Logo`, `AppHeader`, `UndoToast` and `ToneSliders` follow the Components specs. The landing page (`components/landing/`) still uses its own scoped copy of the tokens in `app/landing.css`.
+**Done (2026-09-29):** every screen runs on Warm Serif. The tokens above live in `app/globals.css` (light + dark), the three fonts load in `app/layout.tsx`, `components/ui/*` and the shared components follow the Components specs, and `/app`, `/onboarding`, `/unlock`, `/app/library`, `/app/profile` and `/app/settings` were reworked against their Claude Design mockups. The Highlighter names (`paper`, `highlight`, `ink-soft`, `text-small`...) are gone; don't reintroduce them.
 
-**In progress:** the screens (`/app`, `/onboarding`, `/unlock`, `/app/library`, `/app/profile`, `/app/settings`) still use Highlighter utility names. Those names are kept in `globals.css` as **aliases** pointing at Warm Serif values, so every screen already renders in the new skin:
-
-| Old name | Now means |
-|---|---|
-| `paper`, `card` | `bg`, `surface` |
-| `ink-soft`, `control`, `hairline` | `ink-65`, `ink-50`, `border` |
-| `highlight` / `on-highlight` / `highlight-hover` | `primary` / `on-primary` / `primary-hover` (ink fill, cream in dark mode) |
-| `highlight-soft` | `surface-hover` |
-| `danger`, `focus` | `ink` (no red) |
-| `text-title`, `text-heading` / `text-small` / `text-label` | `text-h3` / `text-ui` / `text-micro` |
-| `rounded-chip` / `shadow-card` / `shadow-raise` | `rounded-pill` / `shadow-float` / `shadow-btn-inset` |
-
-As each screen is reworked against its mockup, swap these for the real names and move its main action to `Button variant="accent"` (`segmentClasses(on, { accent: true })` for the `/app` mode switch). Delete the aliases once nothing uses them.
+The landing page (`components/landing/`) still uses its own scoped copy of the tokens in `app/landing.css` (same values). Folding it onto the global tokens is optional cleanup.
