@@ -11,7 +11,7 @@ export default function ToneSliders({ sliders, onChange }: ToneSlidersProps) {
       <div className="flex flex-col gap-4">
         {SLIDER_FIELDS.map(({ key, label }) => (
           <label key={key} className="flex flex-col gap-1">
-            <span className="flex items-baseline justify-between text-small font-medium text-ink">
+            <span className="flex items-baseline justify-between text-ui font-medium text-ink">
               {label}
               <span className="label">{sliders[key]}</span>
             </span>
@@ -28,7 +28,7 @@ export default function ToneSliders({ sliders, onChange }: ToneSlidersProps) {
         ))}
       </div>
 
-      <p className="rounded-md bg-paper px-4 py-3 text-small text-ink-soft">
+      <p className="rounded-md bg-surface-warm px-4 py-3 text-ui text-ink-65">
         {previewSentence(sliders)}
       </p>
     </div>

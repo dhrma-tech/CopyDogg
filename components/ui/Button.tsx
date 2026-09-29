@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-export type ButtonVariant = "primary" | "secondary" | "quiet" | "danger" | "destructive";
+export type ButtonVariant = "accent" | "primary" | "secondary" | "quiet" | "danger" | "destructive";
 export type ButtonSize = "md" | "sm";
 
 interface ButtonStyle {
@@ -9,26 +9,30 @@ interface ButtonStyle {
   block?: boolean;
 }
 
+// Every button is a pill. Buttons don't move on press. Disabled is a
+// surface-press fill with ink-40 text, never an opacity fade.
 const BASE =
-  "inline-flex select-none items-center justify-center gap-2 rounded-md border font-semibold transition-[background-color,border-color,color,box-shadow,transform] active:translate-y-px disabled:translate-y-0 disabled:cursor-not-allowed";
+  "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-pill border transition-[background-color,border-color,color,filter] disabled:cursor-not-allowed disabled:border-transparent disabled:bg-surface-press disabled:text-ink-40 disabled:shadow-none disabled:filter-none";
 
 const SIZES: Record<ButtonSize, string> = {
-  md: "min-h-11 px-5 text-body",
-  sm: "min-h-9 px-3.5 text-small",
+  md: "min-h-11 px-5 py-2.5 text-body",
+  sm: "min-h-9 px-4 py-2 text-ui",
 };
 
+const INK_FILL =
+  "border-transparent bg-primary font-normal text-on-primary shadow-btn-inset hover:bg-primary-hover hover:brightness-[1.3]";
+const QUIET = "border-transparent bg-transparent font-medium hover:bg-surface-hover hover:text-ink";
+
 const VARIANTS: Record<ButtonVariant, string> = {
-  primary:
-    "border-transparent bg-primary text-on-primary shadow-raise hover:bg-primary-hover disabled:bg-hairline disabled:text-ink-soft disabled:shadow-none",
-  secondary:
-    "border-control bg-transparent text-ink hover:border-ink hover:bg-highlight-soft disabled:border-hairline disabled:bg-transparent disabled:text-ink-soft",
-  quiet:
-    "border-transparent bg-transparent font-medium text-ink-soft hover:bg-highlight-soft hover:text-ink disabled:bg-transparent disabled:text-ink-soft",
-  danger:
-    "border-transparent bg-transparent font-medium text-danger hover:underline disabled:no-underline disabled:text-ink-soft",
+  // The one main action per screen.
+  accent: "border-transparent bg-accent font-medium text-on-dark shadow-btn-inset hover:brightness-[1.15]",
+  primary: INK_FILL,
+  secondary: "border-ink-50 bg-transparent font-semibold text-ink hover:border-ink hover:bg-surface-hover",
+  quiet: `${QUIET} text-ink-65`,
+  // No red: the label carries the meaning ("Delete").
+  danger: `${QUIET} text-ink`,
   // Only for the final "yes, delete it" of an irreversible action.
-  destructive:
-    "border-transparent bg-danger text-card hover:bg-ink hover:text-paper disabled:bg-hairline disabled:text-ink-soft",
+  destructive: INK_FILL,
 };
 
 /** Class string for anything that should look like a button (e.g. a Link). */

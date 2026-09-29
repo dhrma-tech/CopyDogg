@@ -220,4 +220,18 @@ All in `components/ui/`. Pages use these instead of re-writing class strings. In
 
 ## Migration status
 
-Adopted 2026-09-29 for the **landing page only** (`app/page.tsx` / `components/landing/`), which defines its own scoped tokens in `app/landing.css` under a `.landing` root class so the rest of the app is untouched. `components/ui/*` and the `/app`, `/onboarding`, `/unlock`, `/app/library`, `/app/settings` screens still run on the previous "Highlighter" tokens in `app/globals.css` pending a follow-up migration — don't assume `bg-ink`/`bg-highlight`/etc. utilities in those files already mean Warm Serif.
+**Done:** the tokens above live in `app/globals.css` (light + dark), the three fonts load in `app/layout.tsx`, and `components/ui/*`, `Logo`, `AppHeader`, `UndoToast` and `ToneSliders` follow the Components specs. The landing page (`components/landing/`) still uses its own scoped copy of the tokens in `app/landing.css`.
+
+**In progress:** the screens (`/app`, `/onboarding`, `/unlock`, `/app/library`, `/app/profile`, `/app/settings`) still use Highlighter utility names. Those names are kept in `globals.css` as **aliases** pointing at Warm Serif values, so every screen already renders in the new skin:
+
+| Old name | Now means |
+|---|---|
+| `paper`, `card` | `bg`, `surface` |
+| `ink-soft`, `control`, `hairline` | `ink-65`, `ink-50`, `border` |
+| `highlight` / `on-highlight` / `highlight-hover` | `primary` / `on-primary` / `primary-hover` (ink fill, cream in dark mode) |
+| `highlight-soft` | `surface-hover` |
+| `danger`, `focus` | `ink` (no red) |
+| `text-title`, `text-heading` / `text-small` / `text-label` | `text-h3` / `text-ui` / `text-micro` |
+| `rounded-chip` / `shadow-card` / `shadow-raise` | `rounded-pill` / `shadow-float` / `shadow-btn-inset` |
+
+As each screen is reworked against its mockup, swap these for the real names and move its main action to `Button variant="accent"` (`segmentClasses(on, { accent: true })` for the `/app` mode switch). Delete the aliases once nothing uses them.
