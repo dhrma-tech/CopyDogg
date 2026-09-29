@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Newsreader } from "next/font/google";
 import { THEME_SCRIPT } from "@/lib/theme";
 import "./globals.css";
@@ -24,6 +24,16 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "CopyDogg",
   description: "Teach it your voice once. Then just say what you want.",
+  // Installed (standalone) look on iOS home screen; Android/desktop read this from manifest.ts.
+  appleWebApp: {
+    capable: true,
+    title: "CopyDogg",
+    statusBarStyle: "default",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#FFFDF5",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
