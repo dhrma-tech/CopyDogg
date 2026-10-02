@@ -2,6 +2,7 @@ import path from "node:path";
 import { connection } from "next/server";
 import { BACKUP_DIR, DATA_FILE, listBackups, readStore } from "@/lib/store";
 import { isDemoMode } from "@/lib/demoMode";
+import { providerLabel } from "@/lib/llm";
 import SettingsPanel from "./SettingsPanel";
 
 /** "data/copydogg.json" rather than a long absolute path, when it's inside the project. */
@@ -21,6 +22,7 @@ export default async function SettingsPage() {
         savedCount={generations.filter((g) => g.saved).length}
         dataFile={shortPath(DATA_FILE)}
         demoMode={isDemoMode}
+        providerLabel={providerLabel}
         passwordEnabled={!!process.env.COPYDOGG_PASSWORD}
         voiceInput={settings.voiceInput}
         dictationLanguage={settings.dictationLanguage}

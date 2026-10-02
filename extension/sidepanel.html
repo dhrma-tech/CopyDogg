@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CopyDogg</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <p id="loading" class="note">fetching your app...</p>
+
+    <section id="offline" class="card" hidden>
+      <h1>CopyDogg isn't running</h1>
+      <p>Start it with <code>npm run dev</code> in the CopyDogg folder, then try again.</p>
+      <button id="retry" type="button">Try again</button>
+    </section>
+
+    <!-- clipboard-write: copy buttons. microphone: opt-in voice input. -->
+    <iframe id="app" title="CopyDogg" allow="clipboard-read; clipboard-write; microphone" hidden></iframe>
+
+    <script src="sidepanel.js"></script>
+  </body>
+</html>

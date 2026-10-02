@@ -2,7 +2,7 @@
 
 **One-liner:** Teach it your voice once. Then just say what you want.
 
-**Stack:** Next.js (App Router) + Tailwind + Claude API, data in one local JSON file. Open source and self-hosted: each person runs their own copy with their own API key. Built with Claude Code, edited in VS Code, pushed to GitHub.
+**Stack:** Next.js (App Router) + Tailwind + Claude API (or Gemini, added 2026-10-02 on request: whichever key is set), data in one local JSON file. Open source and self-hosted: each person runs their own copy with their own API key. Built with Claude Code, edited in VS Code, pushed to GitHub.
 
 *2026-09-28: moved from Supabase + magic-link auth to single-user self-hosting — no accounts, no sign-in, no database service. See section 2.*
 
@@ -196,7 +196,7 @@ Landing page section order (*revised 2026-09-28: simpler, light humor that isn't
 3. "How it works" — three one-line steps matching onboarding: pick where you post / show it how you write / say what you want
 4. One dry closing joke + final CTA. No pricing table, no feature grid, no "why I built this" note.
 
-No sign-in page: the CTA opens the app directly (setup on first visit). Hero sub-line: "Free and open source. Runs on your own Claude API key."
+No sign-in page: the CTA opens the app directly (setup on first visit). Hero sub-line: "Free and open source. Runs on your own Claude or Gemini API key."
 
 ---
 
@@ -233,7 +233,7 @@ Added on request, after v1: CopyDogg covers daily messages, not just social post
 
 To protect the "no complexity" goal, defer these to v2 even if tempting:
 - ~~Multi-persona switching (ship with one default persona only)~~ (added 2026-09-28 on request; see 4b)
-- Browser extension
+- ~~Browser extension~~ (side panel added 2026-10-02 on request: `extension/` frames the local app; no content scripts, nothing injected into social sites)
 - Song/mood suggestions
 - Long-form repurposing (blog → thread)
 - Team/sharing features

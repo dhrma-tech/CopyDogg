@@ -3,6 +3,7 @@
 import { useSyncExternalStore } from "react";
 import { applyTheme, readTheme, subscribeTheme, type Theme } from "@/lib/theme";
 import { SEGMENT_TRACK, segmentClasses } from "@/components/ui/Segmented";
+import { SettingRow } from "./SettingsLayout";
 
 const OPTIONS: { value: Theme; label: string }[] = [
   { value: "system", label: "System" },
@@ -15,24 +16,24 @@ export default function ThemeSwitch() {
   const theme = useSyncExternalStore(subscribeTheme, readTheme, () => "light" as Theme);
 
   return (
-    <section>
-      <p className="label">Appearance</p>
-      <div className={`mt-3 max-w-xs ${SEGMENT_TRACK}`} role="group" aria-label="Appearance">
-        {OPTIONS.map((o) => (
-          <button
-            key={o.value}
-            type="button"
-            onClick={() => applyTheme(o.value)}
-            aria-pressed={theme === o.value}
-            className={segmentClasses(theme === o.value)}
-          >
-            {o.label}
-          </button>
-        ))}
-      </div>
-      <p className="mt-2 text-small text-ink-soft">
-        System follows your device&rsquo;s light or dark setting. Saved in this browser.
-      </p>
-    </section>
+    <SettingRow
+      title="Theme"
+      description="Saved in this browser. System follows your device."
+      control={
+        <div className={`w-full sm:w-60 ${SEGMENT_TRACK}`} role="group" aria-label="Theme">
+          {OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => applyTheme(o.value)}
+              aria-pressed={theme === o.value}
+              className={segmentClasses(theme === o.value)}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      }
+    />
   );
 }

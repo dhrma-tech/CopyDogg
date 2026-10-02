@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { checkTone } from "@/lib/claude";
+import { aiErrorMessage } from "@/lib/llm";
 import { isPlatform } from "@/lib/platformRules";
 import { isDemoMode, DEMO_TONE_CHECK } from "@/lib/demoMode";
 import { readStore } from "@/lib/store";
@@ -33,10 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Couldn't read that one. Try again." }, { status: 502 });
     }
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json(
-      { error: "Couldn't reach Claude. Check your API key and connection, then try again." },
-      { status: 502 }
-    );
+  } catch (err) {
+    return NextResponse.json({ error: aiErrorMessage(err) }, { status: 502 });
   }
 }

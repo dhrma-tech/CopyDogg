@@ -2,7 +2,14 @@
 
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { GATE_COOKIE, gatePassword, isCorrectPassword, tokenFor } from "@/lib/passwordGate";
+import {
+  GATE_COOKIE,
+  GATE_MAX_AGE_SECONDS,
+  assertUnlocked,
+  gatePassword,
+  isCorrectPassword,
+  newToken,
+} from "@/lib/passwordGate";
 import { checkRateLimit, clientIp } from "@/lib/rateLimit";
 import { DICTATION_TAGS, RELATIONSHIPS, isOneOf } from "@/lib/writingOptions";
 import {
@@ -66,6 +73,7 @@ function cleanVoiceProfile(input: VoiceProfileInput) {
 export async function completeOnboarding(
   input: VoiceProfileInput & { samplePosts: string[] }
 ): Promise<ActionResult> {
+  await assertUnlocked();
   const profile = cleanVoiceProfile(input);
   if (profile.platforms.length === 0) {
     return { ok: false, error: "Pick at least one platform first." };
@@ -89,6 +97,7 @@ export async function completeOnboarding(
 export async function saveProfile(
   input: VoiceProfileInput & { personaId: string; name: string; rules: string[]; topics: string[] }
 ): Promise<ActionResult> {
+  await assertUnlocked();
   const { personas } = await readStore();
   if (!personas.some((p) => p.id === input.personaId)) {
     return { ok: false, error: "That voice no longer exists. Reload the page." };
@@ -122,6 +131,7 @@ export async function createVoice(
   sourceId: string,
   name: string
 ): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  await assertUnlocked();
   const clean = String(name ?? "").trim().slice(0, 40);
   if (!clean) return { ok: false, error: "Give the new voice a name." };
   try {
@@ -134,6 +144,7 @@ export async function createVoice(
 }
 
 export async function deleteVoice(id: string): Promise<ActionResult> {
+  await assertUnlocked();
   try {
     if (!(await deletePersona(String(id)))) {
       return { ok: false, error: "You need at least one voice, so the last one can't be deleted." };
@@ -146,6 +157,7 @@ export async function deleteVoice(id: string): Promise<ActionResult> {
 
 /** Remembers the voice last used, so /app and Profile open with it. */
 export async function selectVoice(id: string): Promise<ActionResult> {
+  await assertUnlocked();
   try {
     if (!(await setActivePersona(String(id)))) {
       return { ok: false, error: "That voice no longer exists. Reload the page." };
@@ -159,6 +171,7 @@ export async function selectVoice(id: string): Promise<ActionResult> {
 // ---- Backups --------------------------------------------------------------
 
 export async function restoreFromBackup(name: string): Promise<ActionResult> {
+  await assertUnlocked();
   try {
     await restoreBackup(String(name));
   } catch {
@@ -169,6 +182,7 @@ export async function restoreFromBackup(name: string): Promise<ActionResult> {
 
 /** Settings "reset everything": wipes the data file back to empty. */
 export async function resetAllData(): Promise<ActionResult> {
+  await assertUnlocked();
   try {
     await resetStore();
   } catch {
@@ -179,11 +193,10 @@ export async function resetAllData(): Promise<ActionResult> {
 
 // ---- Optional password gate (only active when COPYDOGG_PASSWORD is set) ----
 
-const THIRTY_DAYS = 60 * 60 * 24 * 30;
-
 /** Only same-site paths, so ?next= can't bounce people to another site. */
 function safeNextPath(next: string): string {
-  return next.startsWith("/") && !next.startsWith("//") ? next : "/";
+  // Browsers read a backslash as a slash, so "/\evil.com" would leave the site too.
+  return next.startsWith("/") && !next.startsWith("//") && !/[\\\u0000-\u001f]/.test(next) ? next : "/";
 }
 
 export async function unlock(password: string, next: string): Promise<ActionResult> {
@@ -196,12 +209,14 @@ export async function unlock(password: string, next: string): Promise<ActionResu
     return { ok: false, error: "That's not the password. Check COPYDOGG_PASSWORD in your .env.local." };
   }
 
-  const proto = (await headers()).get("x-forwarded-proto");
-  (await cookies()).set(GATE_COOKIE, tokenFor(password), {
+  // The browser's own Origin is the one signal a client can't fake for someone else.
+  const h = await headers();
+  const https = h.get("x-forwarded-proto") === "https" || (h.get("origin") ?? "").startsWith("https:");
+  (await cookies()).set(GATE_COOKIE, newToken(password), {
     httpOnly: true,
-    sameSite: "lax",
-    secure: proto === "https",
-    maxAge: THIRTY_DAYS,
+    sameSite: "strict",
+    secure: https,
+    maxAge: GATE_MAX_AGE_SECONDS,
     path: "/",
   });
   redirect(safeNextPath(next));
@@ -215,6 +230,7 @@ export async function lock(): Promise<void> {
 // ---- Ideas, people, templates, settings -----------------------------------
 
 export async function saveIdea(text: string): Promise<ActionResult> {
+  await assertUnlocked();
   const idea = typeof text === "string" ? text.trim().slice(0, 2000) : "";
   if (!idea) return { ok: false, error: "Type an idea first." };
   try {
@@ -226,6 +242,7 @@ export async function saveIdea(text: string): Promise<ActionResult> {
 }
 
 export async function removeIdea(id: string): Promise<ActionResult> {
+  await assertUnlocked();
   try {
     await deleteIdea(String(id));
   } catch {
@@ -237,6 +254,7 @@ export async function removeIdea(id: string): Promise<ActionResult> {
 export async function saveContacts(
   input: { id?: string; name: string; relationship: string; note: string }[]
 ): Promise<{ ok: true; items: Contact[] } | { ok: false; error: string }> {
+  await assertUnlocked();
   const contacts = (Array.isArray(input) ? input : [])
     .map((c) => ({
       id: typeof c.id === "string" ? c.id : undefined,
@@ -256,6 +274,7 @@ export async function saveContacts(
 export async function saveTemplates(
   input: { id?: string; name: string; body: string }[]
 ): Promise<{ ok: true; items: Template[] } | { ok: false; error: string }> {
+  await assertUnlocked();
   const templates = (Array.isArray(input) ? input : [])
     .map((t) => ({
       id: typeof t.id === "string" ? t.id : undefined,
@@ -272,6 +291,7 @@ export async function saveTemplates(
 }
 
 export async function setVoiceInput(enabled: boolean): Promise<ActionResult> {
+  await assertUnlocked();
   try {
     await updateSettings({ voiceInput: enabled === true });
   } catch {
@@ -285,6 +305,7 @@ export async function setVoiceInput(enabled: boolean): Promise<ActionResult> {
 export async function saveWords(
   words: string[]
 ): Promise<{ ok: true; items: string[] } | { ok: false; error: string }> {
+  await assertUnlocked();
   try {
     return { ok: true, items: await setWords(cleanStrings(words, 300, 60)) };
   } catch {
@@ -296,6 +317,7 @@ export async function saveWords(
 export async function learnWords(
   words: string[]
 ): Promise<{ ok: true; items: string[] } | { ok: false; error: string }> {
+  await assertUnlocked();
   try {
     return { ok: true, items: await addWords(cleanStrings(words, 20, 60)) };
   } catch {
@@ -306,6 +328,7 @@ export async function learnWords(
 export async function saveSnippets(
   input: { id?: string; trigger: string; text: string }[]
 ): Promise<{ ok: true; items: Snippet[] } | { ok: false; error: string }> {
+  await assertUnlocked();
   const seen = new Set<string>();
   const snippets = (Array.isArray(input) ? input : [])
     .map((s) => ({
@@ -323,6 +346,7 @@ export async function saveSnippets(
 }
 
 export async function setDictationLanguage(tag: string): Promise<ActionResult> {
+  await assertUnlocked();
   if (!isOneOf(DICTATION_TAGS, tag)) return { ok: false, error: "Pick a language from the list." };
   try {
     await updateSettings({ dictationLanguage: tag });

@@ -16,9 +16,9 @@
     "node": ">=20.9.0"
   },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H localhost",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -H localhost",
     "lint": "eslint"
   },
   "dependencies": {

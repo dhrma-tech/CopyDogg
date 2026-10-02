@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { streamPostVariations } from "@/lib/claude";
+import { aiErrorMessage } from "@/lib/llm";
 import { isPlatform, platformRules, type Structure } from "@/lib/platformRules";
 import { isDemoMode, demoStream } from "@/lib/demoMode";
 import { splitVariations } from "@/lib/variations";
@@ -144,13 +145,10 @@ export async function POST(request: Request) {
           raw += chunk;
           send({ type: "delta", text: chunk });
         }
-      } catch {
+      } catch (err) {
         // A closed tab or a newer request aborted this one: nobody is listening.
         if (request.signal.aborted) return close();
-        send({
-          type: "error",
-          error: "Couldn't reach Claude. Check your API key and connection, then try again.",
-        });
+        send({ type: "error", error: aiErrorMessage(err) });
         return close();
       }
 

@@ -222,7 +222,9 @@ All in `components/ui/`. Pages use these instead of re-writing class strings. In
 
 **Done:** the tokens above live in `app/globals.css` (light + dark), the three fonts load in `app/layout.tsx`, and `components/ui/*`, `Logo`, `AppHeader`, `UndoToast` and `ToneSliders` follow the Components specs. The landing page (`components/landing/`) still uses its own scoped copy of the tokens in `app/landing.css`.
 
-**In progress:** the screens (`/app`, `/onboarding`, `/unlock`, `/app/library`, `/app/profile`, `/app/settings`) still use Highlighter utility names. Those names are kept in `globals.css` as **aliases** pointing at Warm Serif values, so every screen already renders in the new skin:
+**Reworked:** `/app/settings` (2026-10-02: grouped setting rows, `SettingsLayout.tsx`, real token names only).
+
+**In progress:** the screens (`/app`, `/onboarding`, `/unlock`, `/app/library`, `/app/profile`) still use Highlighter utility names. Those names are kept in `globals.css` as **aliases** pointing at Warm Serif values, so every screen already renders in the new skin:
 
 | Old name | Now means |
 |---|---|

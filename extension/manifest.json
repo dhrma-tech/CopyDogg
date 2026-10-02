@@ -1,8 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "CopyDogg Launcher",
-  "version": "1.0.0",
-  "description": "Opens your local CopyDogg app in its own window, from a toolbar click or keyboard shortcut. Requires CopyDogg to already be running (npm run dev).",
+  "name": "CopyDogg",
+  "version": "1.1.0",
+  "description": "Opens your local CopyDogg app in the side panel, next to whatever you're posting on. Requires CopyDogg to already be running (npm run dev).",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz8CcbM6w5ayFPfToMdwYxTTtYqC4vEikEak1w42DoeZqy0ctDx0P7IPsKHzOwug+p97fjjDMqZ1TeOMK3CBhMS3MdjxyxK9MFv+FDLJEubNgOAvXAo9ZCXJkaaF1P6wWRXdpHmYuT70HDivYAPw0Vk2tcT37iDKLErVsLWaJ0krC3gYEAMJK/YKcLamMA/1TTIrbqKayp2OnZZ6WnNcRbs6askH7v/1hrOgIDQ+06OVygOtygeBlmzMv0ghFQjwdpiJEihH9dt9aO4l6Yxsm15uqHW3CXj/tQmqx4j7DHMT2I7xb4VmnbUG0bA8F4Sgg5bXK0fMjTwYN1zPlcL/OjQIDAQAB",
+  "minimum_chrome_version": "116",
   "icons": {
     "16": "icons/16.png",
     "48": "icons/48.png",
@@ -16,6 +18,9 @@
       "128": "icons/128.png"
     }
   },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
   "background": {
     "service_worker": "background.js"
   },
@@ -25,9 +30,12 @@
         "default": "Ctrl+Shift+X",
         "mac": "Command+Shift+X"
       },
-      "description": "Open CopyDogg"
+      "description": "Open CopyDogg in the side panel"
+    },
+    "open-copydogg-window": {
+      "description": "Open CopyDogg in its own window"
     }
   },
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "sidePanel"],
   "host_permissions": ["http://localhost:3000/*", "http://127.0.0.1:3000/*"]
 }

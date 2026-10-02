@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { extractVoiceProfile, type PlatformSamples } from "@/lib/claude";
+import { aiErrorMessage } from "@/lib/llm";
 import { isDemoMode, demoExtractedVoice } from "@/lib/demoMode";
 import { activePersona, generationBelongsTo, readStore } from "@/lib/store";
 import type { Platform } from "@/lib/platformRules";
@@ -66,10 +67,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Couldn't make sense of that. Try again." }, { status: 502 });
     }
     return NextResponse.json(result);
-  } catch {
-    return NextResponse.json(
-      { error: "Couldn't reach Claude. Check your API key and connection, then try again." },
-      { status: 502 }
-    );
+  } catch (err) {
+    return NextResponse.json({ error: aiErrorMessage(err) }, { status: 502 });
   }
 }

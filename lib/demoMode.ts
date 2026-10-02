@@ -1,24 +1,25 @@
 import type { Platform } from "./platformRules";
 import type { ExtractedVoice } from "./claude";
 import type { GenerateMode } from "./writingOptions";
+import { provider } from "./llm";
 
 /**
- * Demo mode: no ANTHROPIC_API_KEY set. The app still runs and saves data for
- * real — only the Claude calls are replaced with placeholders, so you can
+ * Demo mode: no ANTHROPIC_API_KEY or GEMINI_API_KEY set. The app still runs and saves
+ * data for real — only the AI calls are replaced with placeholders, so you can
  * click around before adding a key. Server-side only.
  */
-export const isDemoMode = !process.env.ANTHROPIC_API_KEY;
+export const isDemoMode = !provider;
 
 export const DEMO_OUTPUTS = [
-  "This is a placeholder post. Add ANTHROPIC_API_KEY to .env.local to get real ones.",
-  "Placeholder #2 — demo mode, no Claude call was made.",
+  "This is a placeholder post. Add ANTHROPIC_API_KEY or GEMINI_API_KEY to .env.local to get real ones.",
+  "Placeholder #2 — demo mode, no AI call was made.",
   "Placeholder #3, written by nobody in particular. Still demo mode.",
 ];
 
 export function demoExtractedVoice(platforms: Platform[]): ExtractedVoice {
   return {
     voiceDescription:
-      "Demo mode placeholder: with an API key, Claude writes a paragraph here describing how you sound — rhythm, quirks, what you avoid.",
+      "Demo mode placeholder: with an API key, the AI writes a paragraph here describing how you sound — rhythm, quirks, what you avoid.",
     tone: {
       formality: 30,
       humor: 65,

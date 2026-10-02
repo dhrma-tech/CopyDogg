@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { restoreFromBackup } from "@/app/actions";
 import { buttonClasses } from "@/components/ui/Button";
+import { SettingRow } from "./SettingsLayout";
 
 interface Backup {
   name: string;
@@ -11,8 +12,8 @@ interface Backup {
   bytes: number;
 }
 
-const META = "label";
 const QUIET = buttonClasses({ variant: "quiet", size: "sm" });
+const SHOWN_AT_FIRST = 3;
 
 function describe(backup: Backup) {
   const day = backup.name.match(/copydogg-(\d{4}-\d{2}-\d{2})/)?.[1] ?? backup.date.slice(0, 10);
@@ -29,6 +30,7 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   function restore(backup: Backup) {
@@ -48,31 +50,36 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
     });
   }
 
-  return (
-    <section>
-      <p className={META}>Backups</p>
-      <p className="mt-3 text-body text-ink-soft">
-        CopyDogg keeps a copy of your data from each day you use it (the last 14), in:
-      </p>
-      <p className="mt-2 break-all rounded-md bg-surface-warm px-3 py-2 font-mono text-label text-ink">
-        {folder}
-      </p>
+  const shown = showAll ? backups : backups.slice(0, SHOWN_AT_FIRST);
 
+  return (
+    <SettingRow
+      title="Daily backups"
+      description={
+        <>
+          A copy from each day you use CopyDogg, the last 14.
+          <span className="mt-1 block break-all font-mono text-micro text-ink">{folder}</span>
+        </>
+      }
+    >
       {backups.length === 0 ? (
-        <p className="mt-3 text-body text-ink-soft">
-          No backups yet — the first one is made the next day you use CopyDogg.
+        <p className="mt-3 rounded-md bg-surface-warm px-4 py-3 text-ui text-ink-65">
+          No backups yet. The first one is made the next day you use CopyDogg.
         </p>
       ) : (
-        <ul className="mt-3 flex flex-col divide-y divide-dashed divide-hairline">
-          {backups.map((b) => (
-            <li key={b.name} className="flex flex-wrap items-center justify-between gap-2 py-2 text-small">
-              <span className="text-ink">
-                {describe(b)}{" "}
+        <ul className="mt-3 divide-y divide-border-soft rounded-md bg-surface-warm px-4">
+          {shown.map((b) => (
+            <li key={b.name} className="flex min-h-14 flex-wrap items-center justify-between gap-x-3 gap-y-2 py-2.5">
+              <span className="flex items-baseline gap-2 text-ui text-ink">
+                {describe(b)}
                 <span className="label">{Math.max(1, Math.round(b.bytes / 1024))} KB</span>
               </span>
               {confirming === b.name ? (
                 <span className="flex flex-wrap items-center gap-1">
-                  <span className="text-ink-soft">Replace your current data?</span>
+                  <span className="mr-1 text-ui text-ink-65">Replace your current data?</span>
+                  <button type="button" onClick={() => setConfirming(null)} className={QUIET}>
+                    Cancel
+                  </button>
                   <button
                     type="button"
                     onClick={() => restore(b)}
@@ -80,9 +87,6 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
                     className={buttonClasses({ size: "sm" })}
                   >
                     {pending ? "restoring..." : "Restore"}
-                  </button>
-                  <button type="button" onClick={() => setConfirming(null)} className={QUIET}>
-                    Cancel
                   </button>
                 </span>
               ) : (
@@ -99,9 +103,20 @@ export default function BackupsSection({ backups, folder }: { backups: Backup[];
         </ul>
       )}
 
-      {message && (
-        <p role={message.ok ? "status" : "alert"} className={`mt-2 text-small font-medium ${message.ok ? "text-success" : "text-danger"}`}>{message.text}</p>
+      {backups.length > SHOWN_AT_FIRST && (
+        <button type="button" onClick={() => setShowAll((v) => !v)} className={`mt-2 -ml-4 ${QUIET}`}>
+          {showAll ? "Show fewer" : `Show all ${backups.length}`}
+        </button>
       )}
-    </section>
+
+      {message && (
+        <p
+          role={message.ok ? "status" : "alert"}
+          className={`mt-2 text-ui font-medium ${message.ok ? "text-success" : "text-ink"}`}
+        >
+          {message.text}
+        </p>
+      )}
+    </SettingRow>
   );
 }

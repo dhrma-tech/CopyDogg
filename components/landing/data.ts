@@ -193,7 +193,7 @@ export const FEATURES: {
 // [icon, chip, sub, title, body]
 export const PRIVACY: [string, string, string, string, string][] = [
   ["FileJson", "One file", "data/copydogg.json", "Your data is one file", "Voice profile, rules and posts live in plain JSON on your machine. Copy it to back it up."],
-  ["KeyRound", "Your key", "Claude API", "You bring the API key", "Posts are written with your own Claude key and billed to your account. No middleman."],
+  ["KeyRound", "Your key", "Claude or Gemini", "You bring the API key", "Posts are written with your own Claude or Gemini key and billed to your account. No middleman."],
   ["UserX", "No accounts", "Single user", "Nothing to sign up for", "Clone it, add a key, run it. There’s no login and no database service."],
   ["MicOff", "Voice input", "Off by default", "The mic stays off", "Dictation is opt-in, with a plain warning that your browser’s speech service hears it."],
 ];
@@ -223,7 +223,7 @@ export const EXAMPLES: [string, string, string, string][] = [
 
 export const TRUST: [string, string][] = [
   ["Laptop", "Runs on your machine"],
-  ["KeyRound", "Your own Claude key"],
+  ["KeyRound", "Your own Claude or Gemini key"],
   ["Github", "Open source, MIT"],
   ["UserX", "No account needed"],
 ];
@@ -257,10 +257,10 @@ export const FOOTER_COLUMNS: { title: string; links: [string, string][] }[] = [
 ];
 
 export const FAQS: [string, string][] = [
-  ["Does it cost anything?", "CopyDogg is free and open source. You pay Anthropic for your own Claude API usage, billed to your account."],
+  ["Does it cost anything?", "CopyDogg is free and open source. You pay for your own Claude or Gemini API usage, billed to your account. Gemini has a free tier."],
   [
     "What leaves my machine?",
-    "Only what’s needed to write: your voice profile, your idea or pasted text, and a few posts you liked, sent to the Claude API. If you turn on voice input, your browser’s speech service hears what you dictate.",
+    "Only what’s needed to write: your voice profile, your idea or pasted text, and a few posts you liked, sent to Claude or Gemini, whichever you picked. If you turn on voice input, your browser’s speech service hears what you dictate.",
   ],
   ["How long does setup take?", "About five minutes. Pick your platforms, paste a few old posts, and rewrite one boring post your way."],
   ["Can I have more than one voice?", "Yes. Make a “Work me” and a “Friends me”, each with its own tone and platforms."],

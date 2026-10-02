@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "./Icon";
 import { Reveal } from "./Reveal";
+import { VideoModal } from "./VideoModal";
+import { REPO_URL } from "@/lib/siteOnly";
 import {
   BURST_CARDS,
   DEMOS,
@@ -39,7 +41,25 @@ function Caret() {
   );
 }
 
-export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: string }) {
+/** `siteOnly`: the public website (lib/siteOnly.ts), where the app isn't running and every "start" link goes to GitHub. */
+export function Landing({ ctaHref, ctaLabel, siteOnly = false }: { ctaHref: string; ctaLabel: string; siteOnly?: boolean }) {
+  const installCommand = siteOnly
+    ? `git clone ${REPO_URL}.git && cd CopyDogg && npm install && npm run dev`
+    : "npm install && npm run dev";
+  const footerColumns = siteOnly
+    ? FOOTER_COLUMNS.map((col) =>
+        col.title === "Your copy"
+          ? {
+              ...col,
+              links: [
+                ["Get it on GitHub", REPO_URL],
+                ["Setup guide", `${REPO_URL}#readme`],
+                ["Privacy", "#privacy"],
+              ] as [string, string][],
+            }
+          : col,
+      )
+    : FOOTER_COLUMNS;
   const [navShown, setNavShown] = useState(false);
   const [navDark, setNavDark] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,6 +77,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
 
   const [faqOpen, setFaqOpen] = useState<number | null>(0);
   const [copied, setCopied] = useState(false);
+  const [videoOpen, setVideoOpen] = useState(false);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -192,7 +213,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
 
   const copyInstall = () => {
     try {
-      navigator.clipboard?.writeText("npm install && npm run dev");
+      navigator.clipboard?.writeText(installCommand);
     } catch {
       // clipboard access can fail silently (permissions, insecure context)
     }
@@ -332,13 +353,16 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
               >
                 {ctaLabel}
               </Link>
-              <a
-                href="#learn"
-                className="inline-flex min-h-11 items-center gap-[10px] whitespace-nowrap rounded-full px-[19px] py-[9px] text-[16px] leading-6 font-semibold no-underline hover:border-[var(--border-strong)] hover:bg-[rgba(27,28,20,.04)]"
+              <button
+                type="button"
+                onClick={() => setVideoOpen(true)}
+                aria-haspopup="dialog"
+                className="inline-flex min-h-11 cursor-pointer items-center gap-[10px] whitespace-nowrap rounded-full bg-transparent px-[19px] py-[9px] text-[16px] leading-6 font-semibold hover:border-[var(--border-strong)] hover:bg-[rgba(27,28,20,.04)]"
                 style={{ border: "1px solid var(--border)", color: "var(--ink)", transition: "border-color 150ms ease, background-color 150ms ease" }}
               >
                 See how it works
-              </a>
+              </button>
+              <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} fallbackHref="#learn" />
             </div>
             <div className="mt-6 flex flex-wrap justify-center gap-x-7 gap-y-3">
               {TRUST.map(([icon, label]) => (
@@ -572,7 +596,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                               <span style={{ ...monoFont, fontSize: 12, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-65)" }}>{f.noteLabel}</span> {f.note}
                             </p>
                             <Link
-                              href="/app"
+                              href={ctaHref}
                               className="inline-flex items-center gap-[10px] whitespace-nowrap rounded-full px-[15px] py-[7px] text-[14px] leading-5 font-semibold no-underline hover:border-[var(--border-strong)] hover:bg-[rgba(27,28,20,.04)]"
                               style={{ border: "1px solid var(--border)", color: "var(--ink)", transition: "border-color 150ms ease, background-color 150ms ease" }}
                             >
@@ -690,7 +714,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
               Set up your copy
             </Link>
             <p className="mt-6 max-w-[560px] text-center text-[12px] leading-[1.5]" style={{ color: "rgba(255,253,245,.62)" }}>
-              The only thing that leaves your machine is what&rsquo;s needed to write: your voice profile and your idea, sent to the Claude API.
+              The only thing that leaves your machine is what&rsquo;s needed to write: your voice profile and your idea, sent to Claude or Gemini.
             </p>
           </div>
         </section>
@@ -802,7 +826,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                     className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-[14px] leading-5"
                     style={{ ...monoFont, color: CREAM, scrollbarWidth: "none" }}
                   >
-                    npm install &amp;&amp; npm run dev
+                    {installCommand}
                   </code>
                   <button
                     type="button"
@@ -823,7 +847,7 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
                     {ctaLabel}
                   </Link>
                   <p className="text-[13px] leading-[18px]" style={{ margin: 0, color: "rgba(255,253,245,.62)" }}>
-                    Needs Node.js 20.9+ and a Claude API key. No key yet? Demo mode works too.
+                    Needs Node.js 20.9+ and a Claude or Gemini API key. No key yet? Demo mode works too.
                   </p>
                 </div>
               </div>
@@ -839,9 +863,35 @@ export function Landing({ ctaHref, ctaLabel }: { ctaHref: string; ctaLabel: stri
             <p className="text-[15px] leading-[1.4]" style={{ margin: 0, color: "var(--ink-65)" }}>
               Posts that sound like you. Free, open source, and yours to run.
             </p>
+            <div className="mt-5 flex flex-col gap-2">
+              {/* The signature is a mask filled with ink, so it follows light/dark mode. */}
+              <span
+                role="img"
+                aria-label="Signature of Dharmaraj Aparadh"
+                className="block w-[150px]"
+                style={{
+                  aspectRatio: "2396 / 661",
+                  backgroundColor: "var(--ink)",
+                  WebkitMask: "url(/signature.svg) left center / contain no-repeat",
+                  mask: "url(/signature.svg) left center / contain no-repeat",
+                }}
+              />
+              <span style={{ ...monoFont, fontSize: 12, lineHeight: 1.3, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-65)" }}>
+                Designed and developed by{" "}
+                <a
+                  href="https://github.com/dhrma-tech"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-[3px] hover:no-underline"
+                  style={{ color: "var(--ink)", textDecorationColor: "var(--ink-50)" }}
+                >
+                  @dhrma-tech
+                </a>
+              </span>
+            </div>
           </div>
           <nav aria-label="Footer" className="flex flex-wrap gap-x-14 gap-y-7">
-            {FOOTER_COLUMNS.map((col) => (
+            {footerColumns.map((col) => (
               <div key={col.title} className="flex flex-col gap-4">
                 <span style={{ ...monoFont, fontSize: 12, lineHeight: 1.3, fontWeight: 500, letterSpacing: "0.02em", color: "var(--ink-65)" }}>{col.title}</span>
                 <div className="flex flex-col gap-[10px]">

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { extractVoiceProfile, type PlatformSamples } from "@/lib/claude";
+import { aiErrorMessage } from "@/lib/llm";
 import { isPlatform } from "@/lib/platformRules";
 import { isDemoMode, demoExtractedVoice } from "@/lib/demoMode";
 import { checkRateLimit, clientIpFromRequest } from "@/lib/rateLimit";
@@ -45,11 +46,8 @@ export async function POST(request: Request) {
   let result;
   try {
     result = await extractVoiceProfile(input);
-  } catch {
-    return NextResponse.json(
-      { error: "Couldn't reach Claude. Check your API key and connection, then try again." },
-      { status: 502 }
-    );
+  } catch (err) {
+    return NextResponse.json({ error: aiErrorMessage(err) }, { status: 502 });
   }
 
   if (!result || !result.voiceDescription) {
