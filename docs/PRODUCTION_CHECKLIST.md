@@ -6,7 +6,7 @@ Remember: CopyDogg is **single-user**. This checklist is for reaching **your own
 
 ## Before You Start
 
-- [ ] Read [SECURITY.md](./SECURITY.md)
+- [ ] Read [SECURITY.md](../.github/SECURITY.md)
 - [ ] You're running the latest version (`git pull`, then `npm install`)
 
 ## Access

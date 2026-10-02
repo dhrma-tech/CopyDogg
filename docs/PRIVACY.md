@@ -68,9 +68,9 @@ You can also open, copy or delete `data/copydogg.json` directly. It's plain JSON
 ## Keeping It Private
 
 - Don't commit `data/` or `.env.local` to git. Both are git-ignored by default.
-- Keep CopyDogg on `localhost` unless you need it elsewhere. If you do, set a password and use HTTPS (see [PRODUCTION_CHECKLIST.md](../PRODUCTION_CHECKLIST.md)).
+- Keep CopyDogg on `localhost` unless you need it elsewhere. If you do, set a password and use HTTPS (see [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)).
 - If you share your screen or screenshots, remember your library and profile are visible.
 
 ## Questions
 
-Open an [issue](https://github.com/dhrma-tech/CopyDogg/issues), or for anything security-related, follow [SECURITY.md](../SECURITY.md).
+Open an [issue](https://github.com/dhrma-tech/CopyDogg/issues), or for anything security-related, follow [SECURITY.md](../.github/SECURITY.md).

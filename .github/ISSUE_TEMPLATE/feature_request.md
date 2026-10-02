@@ -16,5 +16,5 @@ A clear description of what you want.
 Other ways you've thought about solving it.
 
 **Fits the project rules?**
-CopyDogg stays self-hosted and single-user, with no accounts or extra services, and the writing screen stays one card. See [CONTRIBUTING.md](../../CONTRIBUTING.md#project-rules).
+CopyDogg stays self-hosted and single-user, with no accounts or extra services, and the writing screen stays one card. See [CONTRIBUTING.md](https://github.com/dhrma-tech/CopyDogg/blob/main/.github/CONTRIBUTING.md#project-rules).
 - [ ] This doesn't need accounts, a database service or another hosted service

@@ -1,6 +1,6 @@
 # CopyDogg Setup Guide
 
-This is the slow, step-by-step version of the setup in the [README](./README.md). If you can copy and paste, you can do this.
+This is the slow, step-by-step version of the setup in the [README](../README.md). If you can copy and paste, you can do this.
 
 ## Table of Contents
 
@@ -174,7 +174,7 @@ The extension opens CopyDogg in your browser's side panel, next to X, LinkedIn o
 4. Click **Load unpacked** and select the `extension/` folder.
 5. Click the CopyDogg icon, or press **Ctrl+Shift+X** (**Cmd+Shift+X** on Mac).
 
-More detail in [extension/README.md](./extension/README.md).
+More detail in [extension/README.md](../extension/README.md).
 
 ## Optional: Use It From Your Phone Or Another Computer
 
@@ -194,7 +194,7 @@ By default, CopyDogg only answers on the computer it runs on. To reach it from e
    npx next start -H 0.0.0.0
    ```
 
-4. Read [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) and [SECURITY.md](./SECURITY.md) first.
+4. Read [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) and [SECURITY.md](../.github/SECURITY.md) first.
 
 CopyDogg needs a computer with a normal disk, because it saves to a file. Serverless hosts like Vercel or Netlify Functions won't keep your data.
 

@@ -133,14 +133,14 @@ docs(readme): explain Gemini setup
 
 ## Project Rules
 
-CopyDogg has a few non-negotiable constraints. Pull requests that break them won't be merged, however good the code is. The full list is in [CLAUDE.md](./CLAUDE.md).
+CopyDogg has a few non-negotiable constraints. Pull requests that break them won't be merged, however good the code is. The full list is in [CLAUDE.md](../CLAUDE.md).
 
 - **Self-hosted, single user.** No accounts, no sign-in, no multi-tenant code. All data lives in one JSON file through `lib/store.ts`.
 - **No new services.** Setup must stay "clone, `npm install`, add a key, `npm run dev`". Don't add anything that needs another account, database or hosted service.
 - **Your data stays on the machine.** The only thing that leaves it is the prompt text sent to the chosen AI provider (plus opt-in voice input). Don't add analytics, telemetry or other outside calls.
 - **One screen does the work.** The writing screen (`/app`) stays a single card, with no multi-step wizard for the core loop.
 - **No complexity creep.** Check `docs/product-plan.md` before adding a feature. If it's on the "cut" list, open an issue to discuss it first.
-- **Design tokens are law.** Every color, font, radius and shadow comes from [`docs/design-system.md`](./docs/design-system.md). Don't add new hex values or fonts. If something is missing, raise it in your pull request.
+- **Design tokens are law.** Every color, font, radius and shadow comes from [`docs/design-system.md`](../docs/design-system.md). Don't add new hex values or fonts. If something is missing, raise it in your pull request.
 - **Copy voice.** Button labels, empty states and errors use plain verbs and sentence case. Banned words: "leverage," "seamless," "unlock," "empower," "supercharge." Loading states can be playful ("sniffing out your tone..."); everything else stays plain.
 
 ## Code Quality and Standards
@@ -208,10 +208,10 @@ If you find a vulnerability, **do not open a public issue**. Follow [SECURITY.md
 
 ## Documentation Requirements
 
-- Update [README.md](./README.md) when you change setup, environment variables or features.
+- Update [README.md](../README.md) when you change setup, environment variables or features.
 - Update `.env.example` when you add or change an environment variable.
-- Update [`docs/design-system.md`](./docs/design-system.md) before using a token that isn't documented yet.
-- Update [`docs/product-plan.md`](./docs/product-plan.md) when a feature is added or removed.
+- Update [`docs/design-system.md`](../docs/design-system.md) before using a token that isn't documented yet.
+- Update [`docs/product-plan.md`](../docs/product-plan.md) when a feature is added or removed.
 
 ## Pull Request Process
 
@@ -267,12 +267,12 @@ Check the [project rules](#project-rules) first: requests that need accounts, ho
 
 ## Getting Help
 
-- [README.md](./README.md): setup and how CopyDogg works
-- [SETUP.md](./SETUP.md): step-by-step setup and troubleshooting
-- [ROADMAP.md](./ROADMAP.md): what's planned, and what's out of scope
+- [README.md](../README.md): setup and how CopyDogg works
+- [SETUP.md](../docs/SETUP.md): step-by-step setup and troubleshooting
+- [ROADMAP.md](../docs/ROADMAP.md): what's planned, and what's out of scope
 - [SECURITY.md](./SECURITY.md): security model and reporting
-- [docs/product-plan.md](./docs/product-plan.md): the full feature spec
-- [docs/design-system.md](./docs/design-system.md): colors, type and components
+- [docs/product-plan.md](../docs/product-plan.md): the full feature spec
+- [docs/design-system.md](../docs/design-system.md): colors, type and components
 - GitHub Issues: bugs and feature requests
 
 ### Code of Conduct

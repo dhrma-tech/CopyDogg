@@ -21,6 +21,6 @@ Fixes # (issue number)
 - [ ] I tried it in the browser, including empty and loading states
 - [ ] No horizontal scroll at 375px, no console errors
 - [ ] Colors, fonts and radii come from `docs/design-system.md`
-- [ ] It follows the [project rules](../CONTRIBUTING.md#project-rules) (no accounts, no new services, one-screen core loop)
+- [ ] It follows the [project rules](https://github.com/dhrma-tech/CopyDogg/blob/main/.github/CONTRIBUTING.md#project-rules) (no accounts, no new services, one-screen core loop)
 - [ ] No API keys or `data/` content are committed
 - [ ] I updated the docs this change affects

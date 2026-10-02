@@ -1,6 +1,6 @@
 # CopyDogg Roadmap
 
-CopyDogg's goal is to stay small: teach it your voice once, then just say what you want. This roadmap follows that goal. Anything that adds accounts, hosted services or a multi-step core flow is out of scope. See the [project rules](./CONTRIBUTING.md#project-rules).
+CopyDogg's goal is to stay small: teach it your voice once, then just say what you want. This roadmap follows that goal. Anything that adds accounts, hosted services or a multi-step core flow is out of scope. See the [project rules](../.github/CONTRIBUTING.md#project-rules).
 
 ## Current Release: v0.1
 
@@ -50,4 +50,4 @@ To keep CopyDogg simple, these are deliberately not planned:
 
 ## Suggesting Something
 
-Open a [feature request](https://github.com/dhrma-tech/CopyDogg/issues/new/choose). Explain the problem it solves, and check it fits the [project rules](./CONTRIBUTING.md#project-rules).
+Open a [feature request](https://github.com/dhrma-tech/CopyDogg/issues/new/choose). Explain the problem it solves, and check it fits the [project rules](../.github/CONTRIBUTING.md#project-rules).

@@ -19,7 +19,7 @@ The project is designed to be easy to try first, then connect to a real AI provi
 
 This guide is written for non-technical users too. If you can install an app and copy-paste commands, you can run the demo.
 
-If you get stuck, check [SETUP.md](./SETUP.md). It has slower step-by-step instructions and troubleshooting.
+If you get stuck, check [SETUP.md](./docs/SETUP.md). It has slower step-by-step instructions and troubleshooting.
 
 ## Setup Option 1: Quick Demo
 
@@ -96,7 +96,7 @@ Short version:
 4. Save the file.
 5. Restart the app (`npm run dev`).
 
-Settings shows which provider is writing your posts. Detailed instructions are in [SETUP.md](./SETUP.md).
+Settings shows which provider is writing your posts. Detailed instructions are in [SETUP.md](./docs/SETUP.md).
 
 ## Features
 
@@ -194,7 +194,7 @@ cp .env.example .env.local
 | `COPYDOGG_DATA_DIR` | No | Where the data file lives. Defaults to `./data`. |
 | `COPYDOGG_SITE_ONLY` | No | Public intro website only: serves the landing page alone. **Never set it on a copy you use.** |
 
-Restart the app after changing any of these. See [.env.example](./.env.example) for the full list.
+Restart the app after changing any of these. See [.env.example](.env.example) for the full list.
 
 ## Project Status
 
@@ -211,7 +211,7 @@ CopyDogg is in active development and currently suitable for:
 - Serverless hosts (Vercel, Netlify Functions): their filesystem resets, so your data would disappear
 - Hosting for other people on your API key
 
-See [ROADMAP.md](./ROADMAP.md) for what's planned next.
+See [ROADMAP.md](./docs/ROADMAP.md) for what's planned next.
 
 ## Known Limitations
 
@@ -239,7 +239,7 @@ CopyDogg uses a small, layered security approach suited to a single-user tool:
 - Set `COPYDOGG_PASSWORD` and use HTTPS before exposing your copy beyond `localhost`
 - Use an API key with a spending limit
 
-See [SECURITY.md](./SECURITY.md) for complete security documentation.
+See [SECURITY.md](.github/SECURITY.md) for complete security documentation.
 
 ## Privacy and Your Data
 
@@ -264,7 +264,7 @@ See [docs/PRIVACY.md](./docs/PRIVACY.md) for detailed privacy information.
 The project currently has:
 - Type-checking and linting on every pull request (GitHub Actions)
 - A production build check in CI
-- Manual testing procedures (see [CONTRIBUTING.md](./CONTRIBUTING.md#testing-guidelines))
+- Manual testing procedures (see [CONTRIBUTING.md](.github/CONTRIBUTING.md#testing-guidelines))
 - No automated test suite (planned)
 
 **Planned Testing Improvements:**
@@ -273,7 +273,7 @@ The project currently has:
 - Security tests for the localhost check and password gate
 - End-to-end tests for setup and writing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) for testing guidelines.
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for testing guidelines.
 
 ## Folder Structure
 
@@ -291,12 +291,13 @@ CopyDogg/
 │   ├── claude.ts            # Builds every prompt
 │   ├── llm.ts               # Sends prompts to Claude or Gemini
 │   └── store.ts             # The JSON data file
-├── docs/                    # Product plan, design system, privacy, screenshots
+├── docs/                    # Setup guide, roadmap, privacy, checklists, design system, screenshots
 ├── extension/               # Optional browser side-panel extension
 ├── public/                  # Static files (signature, intro video)
-├── .github/                 # CI, issue templates, pull request template
+├── .github/                 # Contributing, security, code of conduct, CI, templates
 ├── proxy.ts                 # Request checks: localhost, password gate, website mode
-└── *.md                     # Project documentation
+├── README.md / LICENSE
+└── CLAUDE.md                # Project rules for AI coding assistants
 ```
 
 ## Important Notice Before Exposing It
@@ -309,7 +310,7 @@ Before making your copy reachable from anywhere other than `localhost`, review:
 - `COPYDOGG_DATA_DIR` points to a disk you back up
 - It's not on a serverless host
 
-Read [SECURITY.md](./SECURITY.md) and [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) first.
+Read [SECURITY.md](.github/SECURITY.md) and [PRODUCTION_CHECKLIST.md](./docs/PRODUCTION_CHECKLIST.md) first.
 
 ## Project Files To Know
 
@@ -323,12 +324,13 @@ Read [SECURITY.md](./SECURITY.md) and [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHE
 | `docs/design-system.md` | Colors, type and components: the source of truth for every style |
 | `docs/product-plan.md` | The full feature spec |
 | `.env.example` | Environment variable template |
-| `SETUP.md` | Detailed setup guide |
-| `SECURITY.md` | Security notes |
+| `docs/SETUP.md` | Detailed setup guide |
+| `.github/SECURITY.md` | Security notes |
+| `.github/CONTRIBUTING.md` | How to contribute |
 
 ## Contributing
 
-Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md).
+Contributions are welcome. Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 > **⚠️ SELF-HOSTED, SINGLE-USER TOOL**
 >
@@ -337,9 +339,9 @@ Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md).
 > Anyone who can reach an unprotected copy can generate posts on your API key and read your saved posts.
 >
 > **Required reading before exposing your copy:**
-> - [SECURITY.md](./SECURITY.md) - Security model and requirements
-> - [SETUP.md](./SETUP.md) - Complete setup guide
-> - [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) - Checklist for running it beyond your laptop
+> - [SECURITY.md](.github/SECURITY.md) - Security model and requirements
+> - [SETUP.md](./docs/SETUP.md) - Complete setup guide
+> - [PRODUCTION_CHECKLIST.md](./docs/PRODUCTION_CHECKLIST.md) - Checklist for running it beyond your laptop
 
 ## License
 

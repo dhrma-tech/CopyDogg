@@ -170,8 +170,8 @@ We follow coordinated disclosure:
 
 ## Additional Resources
 
-- [README.md](./README.md): setup and the security model summary
-- [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md): checklist for running it beyond your laptop
-- [docs/PRIVACY.md](./docs/PRIVACY.md): what's stored and what leaves your machine
+- [README.md](../README.md): setup and the security model summary
+- [PRODUCTION_CHECKLIST.md](../docs/PRODUCTION_CHECKLIST.md): checklist for running it beyond your laptop
+- [docs/PRIVACY.md](../docs/PRIVACY.md): what's stored and what leaves your machine
 - [CONTRIBUTING.md](./CONTRIBUTING.md): contributor guidelines
 - [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md): community standards
