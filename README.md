@@ -1,133 +1,186 @@
 # CopyDogg
 
-Posts that sound like you. Not like a press release.
+CopyDogg is an open-source writing tool that learns how you write. You show it your voice once (the platforms you post on, a few old posts, and one boring post rewritten your way), then type an idea in a few words and get 2–3 posts, replies or emails that already sound like you.
 
-CopyDogg is a small, personal writing tool. You show it how you write once — pick the platforms you post on, paste a few old posts, and rewrite one boring post your way. After that you type an idea in a few words ("hot take on remote work") and get 2–3 posts that already sound like you, formatted for X, LinkedIn, Instagram, Threads, Reddit, or a newsletter.
-
-It also handles everyday messages: reply to a text or email in your voice, rewrite a rough draft, check how something will come across before you send it, and write to specific people (your boss, a client, a friend) the way you'd actually talk to them.
-
-It's built for **one person running their own copy**. There are no accounts, no sign-up, and no database service — you bring your own [Claude](https://platform.claude.com/settings/keys) or [Gemini](https://aistudio.google.com/apikey) API key, and your voice profile and posts stay in a single file on your machine.
+The project is designed to be easy to try first, then connect to a real AI provider later.
 
 ## What You Can Do
 
-- Run a working demo with no API key and no account — everything works and saves, using placeholder text instead of real AI output.
-- Teach CopyDogg your voice in about five minutes, then generate real posts once you add a key.
-- Write, reply, rewrite, check tone, and turn notes into a recap — all in your own voice.
+- Run a working local demo without an API key or any account.
+- Teach CopyDogg your voice in about five minutes.
+- Write posts for X, LinkedIn, Instagram, Threads, Reddit and newsletters.
+- Reply to messages and emails, rewrite rough drafts, and turn meeting notes into a recap, all in your own voice.
+- Check how a message will come across before you send it.
 - Keep more than one voice ("Work me", "Friends me"), each with its own tone and platforms.
-- Save posts to a searchable library, export your data, or reset everything.
-- Install it as its own app window (PWA), and optionally open it in your browser's side panel with the extension.
+- Save posts to a searchable library, export your data, or restore a daily backup.
+- Connect Claude or Gemini for real posts, using your own API key.
 
 ## Who This README Is For
 
-This guide assumes you're comfortable installing an app and copy-pasting a few terminal commands — nothing more. If a step doesn't make sense, that's a bug in this README; open an issue.
+This guide is written for non-technical users too. If you can install an app and copy-paste commands, you can run the demo.
 
-## Setup Option 1: Try It Without an API Key
+If you get stuck, check [SETUP.md](./SETUP.md). It has slower step-by-step instructions and troubleshooting.
 
-Use this if you just want to see the app working before deciding whether to bring an API key.
+## Setup Option 1: Quick Demo
+
+Use this if you only want to see CopyDogg working on your laptop.
 
 ### Step 1: Install Node.js
+
+Install Node.js from:
 
 ```text
 https://nodejs.org
 ```
 
-Get the LTS version if you're unsure which one.
+Choose the LTS version if you are unsure. CopyDogg needs version 20.9 or newer.
 
-### Step 2: Open the Project Folder
+### Step 2: Get The Project
 
-Open a terminal in the folder you cloned CopyDogg into.
+```bash
+git clone https://github.com/dhrma-tech/CopyDogg.git
+cd CopyDogg
+```
 
-On Windows: open the folder in File Explorer, click the address bar, type `powershell`, press Enter.
+Or download the ZIP from GitHub (**Code → Download ZIP**) and unzip it.
 
-### Step 3: Install the App
+### Step 3: Open The Project Folder
+
+Open a terminal in the project folder.
+
+On Windows, you can open the folder, click the address bar, type `powershell`, and press Enter.
+
+### Step 4: Install The App
 
 ```bash
 npm install
 ```
 
-### Step 4: Start the App
+### Step 5: Start The App
 
 ```bash
 npm run dev
 ```
 
-### Step 5: Open It
+### Step 6: Open The Website
+
+Open this address in your browser:
 
 ```text
 http://localhost:3000
 ```
 
-The first visit walks you through setup (about five minutes). Leave both API keys unset and CopyDogg runs in **demo mode**: every screen works and saves normally, but generated posts are placeholder text and no API calls are made.
+## Demo Mode
 
-## Setup Option 2: Connect a Real API Key (Claude or Gemini)
+With no API key set, CopyDogg runs in **demo mode**. Every screen works and saves normally; only the AI is replaced with placeholder text.
 
-Use this once you're ready for CopyDogg to actually write in your voice.
+| Screen | Address | Works in Demo Mode |
+|---|---|---|
+| Voice setup | `/onboarding` | ✅ Fills in a placeholder voice profile |
+| Writing screen | `/app` | ✅ Returns placeholder posts |
+| Library | `/app/library` | ✅ Fully |
+| Profile | `/app/profile` | ✅ Fully |
+| Settings | `/app/settings` | ✅ Fully |
 
-1. Get a key: Claude at [platform.claude.com/settings/keys](https://platform.claude.com/settings/keys) (paid API credit), or Gemini at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (has a free tier).
-2. Copy the env file:
-   ```bash
-   cp .env.example .env.local      # Windows: copy .env.example .env.local
-   ```
-3. Paste it into `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` in `.env.local`. If you set both, Claude is used unless `AI_PROVIDER=gemini`.
-4. Restart the app (`npm run dev`).
+Demo data is saved to `data/copydogg.json` on your computer. It's safe for testing; add a key when you want real posts.
 
-For everyday use, run the faster production build instead:
+## Setup Option 2: Connect An AI Provider
 
-```bash
-npm run build
-npm start
-```
+Use this when you want CopyDogg to actually write in your voice.
+
+Short version:
+
+1. Get an API key: [Claude](https://platform.claude.com/settings/keys) (paid API credit) or [Gemini](https://aistudio.google.com/apikey) (has a free tier).
+2. Copy `.env.example` to `.env.local`.
+3. Paste your key into `ANTHROPIC_API_KEY` or `GEMINI_API_KEY` in `.env.local`.
+4. Save the file.
+5. Restart the app (`npm run dev`).
+
+Settings shows which provider is writing your posts. Detailed instructions are in [SETUP.md](./SETUP.md).
 
 ## Features
 
-- **Write**: type an idea and get 2–3 versions for X, LinkedIn, Instagram, Threads, Reddit, a newsletter, an email, a text, or a work chat. Output streams in as it's written.
-- **Reply**: paste a message you got and get replies in your voice.
-- **Rewrite**: paste your own messy draft and get it back clearer, still sounding like you. "Keep my words" tidies punctuation and structure only, without changing your wording.
-- **Check**: paste something before sending it and see how it comes across.
-- **Notes**: paste or dictate meeting notes and get a summary, decisions, and next steps.
-- **Tweak any result**: shorter, warmer, more direct, funnier — or edit it by hand, and CopyDogg learns from your edits.
-- **Retune**: refresh your voice profile from the posts you've liked and edited.
-- **People, templates, snippets, and languages**, under "more options" on the writing screen.
-- **Voice input** (optional, Chrome/Edge/Safari): dictate instead of type. Off by default — your browser sends the audio to its own speech service to transcribe it.
-- **Library**: saved posts, everything you've written recently, and ideas saved for later.
-- **Dark mode**: Light by default; pick Dark or System in Settings.
-- **Installable**: add it to your taskbar/dock as its own window (PWA), or open it in the browser side panel with the optional [extension](extension/README.md).
+- Voice profile from your own posts, with tone dials, hard rules and per-platform notes
+- Five modes: Write, Reply, Rewrite, Notes and Check (tone check)
+- Formats for X, LinkedIn, Instagram, Threads, Reddit, newsletters, email, text messages and work chat
+- Threads and Instagram carousels
+- Quick tweaks: shorter, warmer, more direct, funnier, regenerate, remix for another platform
+- Multiple voices, contacts ("write to my boss"), templates, snippets and a words list
+- Saved-post library with search
+- Optional voice input (off by default)
+- Light and dark mode
+- Daily backups, data export and reset
+- Installable as its own app window, plus an optional browser side-panel extension
+- Demo mode for easy local testing
 
-Keyboard: **Ctrl/⌘ + Enter** writes. On results, **1–9** copies a version, **e** edits, **s** saves, **t** then **s/w/d/f** tweaks, and **?** lists the rest.
+## Product Preview
+
+### Landing Page
+
+![CopyDogg landing page](docs/screenshots/landing-hero.png)
+
+### Voice Setup
+
+![First-run voice setup](docs/screenshots/onboarding.png)
+
+### Writing Screen
+
+![Writing screen with three generated posts](docs/screenshots/writing-results.png)
+
+### Library
+
+![Saved posts library](docs/screenshots/library.png)
+
+### Voice Profile
+
+![Voice profile with tone dials](docs/screenshots/profile.png)
+
+### Settings
+
+![Settings page](docs/screenshots/settings.png)
 
 ## How It Works
 
-1. You teach CopyDogg your voice once, in onboarding: platforms, sample posts, and one rewrite.
-2. The AI reads those samples and drafts a voice profile — tone dials, hard rules, and per-platform notes.
-3. On `/app`, you type an idea (or paste something to reply to, rewrite, or check).
-4. CopyDogg builds a prompt from your voice profile plus what you typed, and streams 2–3 versions back from Claude or Gemini.
-5. You save, edit, or tweak a version. Edits and likes feed back into "Retune" later.
-6. Everything — profile, rules, and every generated post — is written to one local JSON file.
+1. You pick the platforms you post on and paste a few of your posts.
+2. You rewrite one deliberately bland post your way.
+3. The AI reads those samples and drafts your voice profile: tone dials, hard rules and per-platform notes.
+4. You tweak the profile until it feels right.
+5. On the writing screen, you pick a platform and type an idea in a few words.
+6. CopyDogg builds a prompt from your voice profile plus your idea, and streams 2–3 versions back.
+7. Posts you like, edit or save teach it more about your voice over time.
 
 ## Tech Stack
 
-- Next.js 16 (App Router) + TypeScript
+- Next.js 16 (App Router)
+- React
+- TypeScript
 - Tailwind CSS v4
-- Claude API via the official `@anthropic-ai/sdk`, or Gemini via its REST API (`lib/llm.ts`)
-- No database, no ORM — a single JSON file, read and written through `lib/store.ts`
+- Claude API via the official `@anthropic-ai/sdk`, or Gemini via its REST API
+- No database: one JSON file, read and written through `lib/store.ts`
 
 ## Common Commands
 
 ```bash
 npm install
-npm run dev      # local dev server (localhost:3000, this machine only)
+npm run dev
 npm run lint
-npx tsc --noEmit # type-check
+npx tsc --noEmit
 npm run build
-npm start         # production server, after a build (also this machine only)
+npm start
 ```
 
 ## Environment Variables
 
-Only needed once you want real (non-demo) output.
+Create `.env.local` only when connecting an AI provider.
 
 ```bash
-cp .env.example .env.local      # Windows: copy .env.example .env.local
+copy .env.example .env.local
+```
+
+On macOS/Linux:
+
+```bash
+cp .env.example .env.local
 ```
 
 | Variable | Required | What It Does |
@@ -136,98 +189,161 @@ cp .env.example .env.local      # Windows: copy .env.example .env.local
 | `GEMINI_API_KEY` | One key for real posts | Your Gemini API key from Google AI Studio. Leave both keys empty for demo mode. |
 | `AI_PROVIDER` | No | `claude` or `gemini`. Only needed when both keys are set; Claude wins otherwise. |
 | `GEMINI_MODEL` | No | Gemini model name. Defaults to `gemini-flash-latest`. |
-| `COPYDOGG_PASSWORD` | No | Asks for this password once per device. Set it if anyone else can reach your copy — see [Security](#security-model-summary). |
-| `COPYDOGG_TRUST_PROXY` | No | Set to `1` only behind a reverse proxy you control, so rate limits use the real client IP. Leave it off otherwise. |
+| `COPYDOGG_PASSWORD` | No | Asks for this password once per device. Set it if anyone else can reach your copy. |
+| `COPYDOGG_TRUST_PROXY` | No | Set to `1` only behind a reverse proxy you control, so rate limits use the real client IP. |
 | `COPYDOGG_DATA_DIR` | No | Where the data file lives. Defaults to `./data`. |
+| `COPYDOGG_SITE_ONLY` | No | Public intro website only: serves the landing page alone. **Never set it on a copy you use.** |
 
-Restart the app after changing any of these.
+Restart the app after changing any of these. See [.env.example](./.env.example) for the full list.
 
 ## Project Status
 
-**Current status: personal tool, stable for single-user local/self-hosted use.**
+**Current Status: Personal Tool, Stable For Single-User Use**
 
-CopyDogg is actively developed and is suitable for:
-- Running your own copy locally or on a home server/VPS you control
-- Personal, single-user use — it was never designed for multiple accounts
+CopyDogg is in active development and currently suitable for:
+- Running your own copy on your laptop
+- Running it on a home server or VPS you control (with a password)
+- Personal, single-user writing
+- Contributing to open-source development
 
 **Not suitable for:**
-- Multi-user or multi-tenant use of any kind — there is exactly one voice profile store per install, with no accounts or user separation
-- Serverless hosts (Vercel, Netlify Functions) — their filesystem resets between requests, so your data would disappear. See [Running it somewhere other than your laptop](#running-it-somewhere-other-than-your-laptop).
+- Multiple users or teams: there is one data file per install, with no accounts
+- Serverless hosts (Vercel, Netlify Functions): their filesystem resets, so your data would disappear
+- Hosting for other people on your API key
+
+See [ROADMAP.md](./ROADMAP.md) for what's planned next.
 
 ## Known Limitations
 
-- **Testing**: no automated test suite yet — changes are verified by hand, type-checking, and linting.
-- **Rate limiting**: the built-in limits on `/unlock` and the AI-calling API routes are in-memory and per-process — they reset on restart and don't hold up across multiple server instances. Fine for one person on one server; not a substitute for a real gateway if you ever change that.
-- **Prompt injection**: user text sent to the AI is fenced and labeled as content, not instructions, but this isn't a hard guarantee — acceptable for a single-user personal tool, not for anything handling untrusted third-party input.
-- **Voice input** depends on the browser's own speech recognition; Firefox doesn't support it.
-- **Offline**: no offline support — it's a normal server-backed web app, not a static/offline-first PWA (the install support just gives it its own window).
+- **Testing**: No automated test suite yet; changes are checked by hand, type-checking and linting
+- **Rate Limiting**: In-memory and per process; resets on restart
+- **Prompt Injection**: Pasted text is fenced as content, but that isn't a hard guarantee
+- **Single User**: One data file, no accounts or user separation
+- **Voice Input**: Depends on the browser's speech recognition; Firefox doesn't support it
+- **Offline Support**: No offline functionality; it needs the local server running
+- **Hosting**: Needs a persistent disk, so serverless hosts can only run the landing page
 
 ## Security Model Summary
 
-CopyDogg has no accounts and no database service, so most of what a typical web app's "security model" covers doesn't apply. What's actually there:
+CopyDogg uses a small, layered security approach suited to a single-user tool:
 
-- **Localhost only by default**: `npm run dev` and `npm start` bind to `localhost`, and with no password set the app refuses any request whose `Host` isn't `localhost` / `127.0.0.1`. That blocks other devices on your network and DNS-rebinding attacks from websites you visit. Writes from another origin are rejected too.
-- **Optional password gate** (`COPYDOGG_PASSWORD`, `lib/passwordGate.ts`): off by default. When set, the cookie is an expiring (30 days) HMAC-signed token with a scrypt-stretched key, `httpOnly` + `sameSite=strict` + `secure` on HTTPS. Every server action re-checks it. Rate-limited to 5 attempts/minute.
-- **Rate limiting** (`lib/rateLimit.ts`): a simple in-memory limit (per client IP only when `COPYDOGG_TRUST_PROXY=1`, otherwise one shared bucket) on `/unlock` and every route that calls the AI provider, so a stray script or brute-force attempt can't run unattended.
-- **API key**: only ever read server-side (`lib/llm.ts`); never sent to the browser.
-- **Data file path**: backup filenames are validated against a strict pattern before touching the filesystem — no path traversal.
+- **Localhost Only by Default**: The app refuses requests from other host names unless a password is set
+- **Cross-Site Write Protection**: Writes from other websites are rejected
+- **Optional Password Gate**: Signed, expiring cookie with a scrypt-stretched key
+- **Rate Limiting**: On unlocking and on every route that calls the AI
+- **Server-Side API Keys**: Keys are read only on the server, never sent to the browser
 
-**Want it reachable from your phone, a VPS or a tunnel?** Set `COPYDOGG_PASSWORD`, serve it over HTTPS, and start it with `npx next start -H 0.0.0.0` (the default scripts bind to localhost). Without a password, anyone who can reach the URL could generate posts on your API key and read your saved posts.
+**Critical Security Requirements:**
+- Never commit `.env.local` or the `data/` folder
+- Never prefix an API key with `NEXT_PUBLIC_`
+- Set `COPYDOGG_PASSWORD` and use HTTPS before exposing your copy beyond `localhost`
+- Use an API key with a spending limit
 
-## Your Data & Privacy
+See [SECURITY.md](./SECURITY.md) for complete security documentation.
 
-Everything (voice profile, rules, topics, generated and saved posts) is stored in `data/copydogg.json` — plain JSON, so you can read it, back it up by copying it, or move it to another machine. The `data/` folder is git-ignored, so it never ends up in a commit. CopyDogg also keeps a daily backup (the last 14) in `data/backups/`; restore one from Settings, where your current data is backed up first automatically.
+## Privacy and Your Data
 
-Settings → **Export my data** downloads a copy, and **Reset everything** empties the file.
+🔒 **Your Writing Stays on Your Machine**
 
-The only thing that leaves your machine is what's needed to write: your voice profile, your idea or pasted text, and a few posts you liked or edited, sent to the AI provider you picked (Claude or Gemini). If you turn on voice input, your browser's speech service also hears what you dictate.
+CopyDogg stores everything in one file on your computer, including:
+- Your voice profile, tone dials and rules
+- Every post you've generated, edited or saved
+- Your contacts, templates, snippets and ideas
 
-## Running It Somewhere Other Than Your Laptop
+**What leaves your machine:**
+- The prompt sent to your AI provider (Claude or Gemini): your voice profile, your idea or pasted text, and a few posts you liked
+- Your voice, only if you turn on voice input: your browser's speech service hears what you dictate
+- Nothing else: no analytics, telemetry or crash reporting
 
-CopyDogg needs a machine with a normal, persistent disk, because it writes to a file. That covers a home server, a small VPS, a Raspberry Pi, or any container host with a mounted volume (point `COPYDOGG_DATA_DIR` at it).
+See [docs/PRIVACY.md](./docs/PRIVACY.md) for detailed privacy information.
 
-It is **not** suited to serverless hosts like Vercel or Netlify Functions — their filesystem resets between requests, so your data would disappear.
+## Testing
+
+**Current Testing Status: Manual**
+
+The project currently has:
+- Type-checking and linting on every pull request (GitHub Actions)
+- A production build check in CI
+- Manual testing procedures (see [CONTRIBUTING.md](./CONTRIBUTING.md#testing-guidelines))
+- No automated test suite (planned)
+
+**Planned Testing Improvements:**
+- Unit tests for prompt building and data normalization
+- API route tests for generation and voice setup
+- Security tests for the localhost check and password gate
+- End-to-end tests for setup and writing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for testing guidelines.
 
 ## Folder Structure
 
 ```
 CopyDogg/
-├── app/                    # Next.js App Router: pages, API routes, layout
-│   ├── api/                # Server routes (generate, voice-extract, tone-check, ...)
-│   ├── app/                 # The main product: writing screen, library, profile, settings
+├── app/                     # Next.js pages and API routes
+│   ├── api/                 # Server routes (generate, voice setup, tone check, export)
+│   ├── app/                 # The main app: writing screen, library, profile, settings
 │   ├── onboarding/          # First-run voice setup
-│   ├── unlock/               # Password gate screen
-│   ├── manifest.ts, icon.tsx # PWA manifest and generated app icons
-│   └── page.tsx, layout.tsx  # Landing page and root layout
-├── components/              # Reusable UI (Button, Card, Field, ...) and the landing page
-│   └── ui/                  # Design-system primitives
-├── lib/                     # Server logic: Claude prompts, the JSON store, rate limiting, etc.
-├── docs/                    # Product plan and design-system tokens (source of truth for both)
-├── extension/                # Optional side-panel browser extension (see its own README)
-├── proxy.ts                  # Next.js 16's proxy/middleware file: the password gate
-└── .env.example               # Environment variable template
+│   ├── unlock/              # Password gate screen
+│   └── page.tsx             # Landing page
+├── components/              # Reusable UI components and the landing page
+│   └── ui/                  # Design-system primitives (Button, Card, Field...)
+├── lib/                     # Server logic
+│   ├── claude.ts            # Builds every prompt
+│   ├── llm.ts               # Sends prompts to Claude or Gemini
+│   └── store.ts             # The JSON data file
+├── docs/                    # Product plan, design system, privacy, screenshots
+├── extension/               # Optional browser side-panel extension
+├── public/                  # Static files (signature, intro video)
+├── .github/                 # CI, issue templates, pull request template
+├── proxy.ts                 # Request checks: localhost, password gate, website mode
+└── *.md                     # Project documentation
 ```
+
+## Important Notice Before Exposing It
+
+Before making your copy reachable from anywhere other than `localhost`, review:
+
+- `COPYDOGG_PASSWORD` is set to a strong password
+- It's served over HTTPS
+- Your API key has a spending limit
+- `COPYDOGG_DATA_DIR` points to a disk you back up
+- It's not on a serverless host
+
+Read [SECURITY.md](./SECURITY.md) and [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) first.
 
 ## Project Files To Know
 
 | File/Folder | Purpose |
 |---|---|
-| `lib/claude.ts` | The one place prompts are built: post generation and reading your voice during setup |
-| `lib/llm.ts` | Sends those prompts to Claude or Gemini, whichever key is set |
-| `lib/store.ts` | The JSON file store — the single source of truth for all your data |
-| `lib/platformRules.ts` | Each platform's format rules and onboarding prompts |
-| `lib/rateLimit.ts` / `lib/passwordGate.ts` | The two pieces of the security model described above |
-| `docs/product-plan.md` | The full feature spec and build order |
-| `docs/design-system.md` | Colors, type, and component tokens — the source of truth for every style in the app |
-| `.env.example` | Every environment variable, documented |
+| `app` | Website pages and API routes |
+| `components` | Reusable UI components |
+| `lib/claude.ts` | The one place prompts are built |
+| `lib/llm.ts` | Sends prompts to Claude or Gemini |
+| `lib/store.ts` | The JSON data file: the single source of truth for your data |
+| `docs/design-system.md` | Colors, type and components: the source of truth for every style |
+| `docs/product-plan.md` | The full feature spec |
+| `.env.example` | Environment variable template |
+| `SETUP.md` | Detailed setup guide |
+| `SECURITY.md` | Security notes |
 
 ## Contributing
 
-This started as a personal weekend build, so there's no formal contribution process yet — issues and pull requests are welcome. Keep changes in the spirit of `CLAUDE.md`'s constraints: single self-hosted JSON file, no new accounts or external services, one working screen for the core loop.
+Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+> **⚠️ SELF-HOSTED, SINGLE-USER TOOL**
+>
+> CopyDogg is built for **one person running their own copy**. It has no accounts and no user separation, so **don't host it for other people**, and don't expose your copy beyond `localhost` without a password and HTTPS.
+>
+> Anyone who can reach an unprotected copy can generate posts on your API key and read your saved posts.
+>
+> **Required reading before exposing your copy:**
+> - [SECURITY.md](./SECURITY.md) - Security model and requirements
+> - [SETUP.md](./SETUP.md) - Complete setup guide
+> - [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) - Checklist for running it beyond your laptop
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT License. See [LICENSE](./LICENSE).
 
 ## Author
 
